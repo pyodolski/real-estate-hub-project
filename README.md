@@ -1,15 +1,31 @@
-# software-engineering-project
+## Spring Initializr
+- Project: Gradle 
+- Language: Java
+- Spring Boot: 3.3.55
+- Dependencies:
+- Spring Web
+- Spring Data JPA
+- PostgreSQL Driver
+- Validation
+- Lombok
+- Flyway(DB 마이그레이션)
 
-> **과목**: 2025‑2 영남대학교 소프트웨어 공학 
+## Superbase
+- pooler
 
-## 📝 주제
-_미정 (TBD)_
-- 주제 선정 후 레포 최신화 예정입니다
+## yml-local
+```yaml
+# local 환경 설정
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=disable
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:1234}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
 
-## 👥 팀원
-- 박차오름 (프론트)  
-- 표주원 (백엔드)
-- 박진우  
-- 김동근  
-- 김도림  
-- 김진선 (프론트)
+flyway:
+  enabled: false
+
