@@ -5,6 +5,8 @@ import com.realestate.app.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "ownership_claims")
@@ -37,6 +39,46 @@ public class OwnershipClaim {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id")
     private User admin;
+
+    // 신청자 정보
+    @Column(name = "applicant_name", nullable = false)
+    private String applicantName; // 신청자 실명
+
+    @Column(name = "applicant_phone", nullable = false)
+    private String applicantPhone; // 신청자 연락처
+
+    @Column(name = "relationship_to_property", nullable = false)
+    private String relationshipToProperty; // 매물과의 관계 (소유자, 임차인 등)
+
+    @Column(name = "additional_info", columnDefinition = "TEXT")
+    private String additionalInfo; // 추가 설명
+
+    // === 지도 API 연동을 위한 위치 정보 ===
+    @Column(name = "property_address")
+    private String propertyAddress; // 지도에서 선택한 주소
+
+    @Column(name = "location_x")
+    private Double locationX; // 경도 (longitude)
+
+    @Column(name = "location_y")
+    private Double locationY; // 위도 (latitude)
+
+    @Column(name = "building_name")
+    private String buildingName; // 건물명
+
+    @Column(name = "detailed_address")
+    private String detailedAddress; // 상세 주소 (동/호수 등)
+
+    @Column(name = "postal_code")
+    private String postalCode; // 우편번호
+
+    // 첨부 문서들
+    @OneToMany(mappedBy = "claim", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OwnershipDocument> documents = new ArrayList<>();
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason; // 거절 사유
 
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt; // 심사 완료 시각
