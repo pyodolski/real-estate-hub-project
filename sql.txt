@@ -44,14 +44,42 @@
 }
 
 // Table ownership_claims {
-  id             bigint [pk, increment]                 // 신청 고유 ID
-  user_id        bigint [not null, ref: > users.id]     // 신청자 (소유자)
-  property_id    bigint [ref: > properties.id]          // 매물 ID
-  status         varchar(16) [note: 'pending|approved|rejected'] // 심사 상태
-  admin_id       bigint [ref: > users.id]               // 심사 관리자 ID
-  reviewed_at    timestamp                              // 심사 완료 시각
-  created_at     timestamp                              // 신청일
-  updated_at     timestamp                              // 수정일 (현재시간 - updated_at → 마감일 1주일)
+  id                      bigint [pk, increment]        // 신청 고유 ID
+  user_id                 bigint [not null, ref: > users.id] // 신청자 (소유자)
+  property_id             bigint [ref: > properties.id] // 매물 ID
+  status                  varchar(16) [note: 'PENDING|APPROVED|REJECTED'] // 심사 상태
+  admin_id                bigint [ref: > users.id]      // 심사 관리자 ID
+  
+  // 신청자 정보
+  applicant_name          varchar(255) [not null]       // 신청자 실명
+  applicant_phone         varchar(32) [not null]        // 신청자 연락처
+  relationship_to_property varchar(255) [not null]      // 매물과의 관계 (소유자, 임차인 등)
+  additional_info         text                          // 추가 설명
+  
+  // 지도 API 연동 위치 정보
+  property_address        text                          // 지도에서 선택한 주소
+  location_x              double                        // 경도 (longitude)
+  location_y              double                        // 위도 (latitude)
+  building_name           varchar(255)                  // 건물명
+  detailed_address        varchar(255)                  // 상세 주소 (동/호수 등)
+  postal_code             varchar(10)                   // 우편번호
+  
+  rejection_reason        text                          // 거절 사유
+  reviewed_at             timestamp                     // 심사 완료 시각
+  created_at              timestamp                     // 신청일
+  updated_at              timestamp                     // 수정일 (현재시간 - updated_at → 마감일 1주일)
+}
+
+// Table ownership_documents {
+  id               bigint [pk, increment]               // 문서 고유 ID
+  claim_id         bigint [not null, ref: > ownership_claims.id] // 신청 ID
+  document_type    varchar(32) [not null, note: 'PROPERTY_DEED|IDENTITY_CARD|RESIDENCE_CERTIFICATE|TAX_CERTIFICATE|OTHER'] // 문서 타입
+  original_filename varchar(255) [not null]            // 원본 파일명
+  stored_filename   varchar(255) [not null]            // 저장된 파일명
+  file_path        varchar(500) [not null]             // 파일 경로
+  file_size        bigint                              // 파일 크기 (bytes)
+  content_type     varchar(100)                        // MIME 타입
+  uploaded_at      timestamp [not null]                // 업로드 시각
 }
 
 // Table property_images {
@@ -188,3 +216,31 @@
   zoom_level int                                        // 줌 레벨
   updated_at timestamp                                  // 갱신일
 }
+
+// === 자산 승인 시스템 관련 추가 정보 ===
+
+// ownership_claims.status 상태값
+// - PENDING: 심사 대기 중
+// - APPROVED: 승인됨 (자산 소유권 인정)
+// - REJECTED: 거절됨 (서류 미비 등)
+
+// ownership_documents.document_type 문서 타입
+// - PROPERTY_DEED: 등기부등본 (부동산 소유권 증명)
+// - IDENTITY_CARD: 신분증 (주민등록증, 운전면허증 등)
+// - RESIDENCE_CERTIFICATE: 주민등록등본 (거주지 확인)
+// - TAX_CERTIFICATE: 납세증명서 (세금 납부 확인)
+// - OTHER: 기타 서류 (계약서, 상속증명서 등)
+
+// relationship_to_property 관계 예시
+// - "소유자": 부동산 실소유자
+// - "임차인": 전세/월세 계약자
+// - "상속인": 상속받은 부동산
+// - "공동소유자": 지분 소유자
+// - "기타": 기타 관계 (상세 설명 필요)
+
+// 지도 API 연동 플로우
+// 1. 사용자가 지도에서 위치 클릭/검색
+// 2. 좌표(location_x, location_y) 및 주소 정보 자동 입력
+// 3. 상세 주소(동/호수) 수동 입력
+// 4. 필수 서류 첨부 후 신청
+// 5. 관리자가 위치 정보와 서류를 종합 검토하여 승인/거절
