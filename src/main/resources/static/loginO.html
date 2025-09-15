@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부동산 매물 찾기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Styles */
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        /* Custom scrollbar for better aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+
+    <div class="relative w-full h-full">
+        <!-- =================================================================== -->
+        <!-- 지도 및 필터 패널                                                     -->
+        <!-- =================================================================== -->
+        <main class="w-full h-full">
+            <!-- 지도 영역 (실제 지도 API로 대체될 부분) -->
+            <div class="absolute inset-0 bg-gray-300 flex items-center justify-center">
+                <p class="text-gray-500 text-2xl">[ 지도 영역 ]</p>
+            </div>
+
+            <!-- 상단 검색 및 필터 바 -->
+            <div id="search-bar-container" class="absolute top-6 flex flex-row flex-wrap items-center gap-3 z-10 transition-all duration-300 ease-in-out" style="left: 474px; right: 99px;">
+                <!-- Search Bar -->
+                <div class="flex items-center bg-white rounded-full shadow-lg px-4 py-2 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mr-3 flex-shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="동, 지하철역, 대학교, 매물번호" class="w-56 focus:outline-none bg-transparent text-sm">
+                </div>
+            
+                <!-- Filter Buttons -->
+                <div class="bg-white rounded-full shadow-lg">
+                    <button class="px-4 py-3 text-gray-700 text-sm font-medium hover:bg-gray-100 rounded-full">주거형태</button>
+                </div>
+                <div class="bg-white rounded-full shadow-lg">
+                    <button class="px-4 py-3 text-gray-700 text-sm font-medium hover:bg-gray-100 rounded-full">거래방식</button>
+                </div>
+                <div class="bg-white rounded-full shadow-lg">
+                    <button class="px-4 py-3 text-gray-700 text-sm font-medium hover:bg-gray-100 rounded-full">전용면적</button>
+                </div>
+                <div class="bg-white rounded-full shadow-lg">
+                    <button class="px-4 py-3 text-gray-700 text-sm font-medium hover:bg-gray-100 rounded-full">층수</button>
+                </div>
+                <div class="bg-white rounded-full shadow-lg">
+                    <button class="px-4 py-3 text-gray-700 text-sm font-medium hover:bg-gray-100 rounded-full">옵션</button>
+                </div>
+                <div class="bg-white rounded-full shadow-lg">
+                    <button class="px-5 py-3 text-gray-700 font-semibold text-sm flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        전체필터
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- =================================================================== -->
+        <!-- 왼쪽 매물 정보 패널 (슬라이드 기능 추가)                              -->
+        <!-- =================================================================== -->
+        <aside id="side-panel" class="absolute top-0 left-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform transition-all duration-300 ease-in-out">
+             <!-- 전체화면에서 돌아오는 버튼 -->
+            <button id="collapse-fullscreen-button" class="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-200 transition-colors hidden z-50" title="패널 축소">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <!-- 상단 메뉴 및 정렬 -->
+            <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+                <button class="bg-gray-800 text-white font-bold py-2 px-6 rounded-md text-lg">내집</button>
+                <div id="add-listing-container" class="flex items-center gap-2 transition-all duration-300 ease-in-out">
+                    <button class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md text-sm hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        새 매물 등록
+                    </button>
+                </div>
+            </div>
+
+            <!-- 매물 개수 및 페이지네이션 -->
+            <div class="flex justify-between items-center mb-6 flex-shrink-0">
+                <p class="font-bold text-gray-800">10,822개의 매물</p>
+                <div class="flex items-center space-x-1">
+                    <button class="px-3 py-1 border rounded-md bg-gray-200">1</button>
+                    <button class="px-3 py-1 border rounded-md hover:bg-gray-100">2</button>
+                    <button class="px-3 py-1 border rounded-md hover:bg-gray-100">3</button>
+                    <button class="px-3 py-1 border rounded-md hover:bg-gray-100">4</button>
+                </div>
+            </div>
+
+            <!-- 스크롤 가능한 콘텐츠 영역 -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                <!-- 추천 매물 -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-xl font-bold text-gray-800">추천매물</h2>
+                        <select class="border rounded-md p-2 text-sm">
+                            <option>기본순</option>
+                            <option>가격순</option>
+                            <option>최신순</option>
+                        </select>
+                    </div>
+                    <div id="recommended-list" class="grid grid-cols-2 gap-4">
+                        <!-- JavaScript로 추천 매물 아이템이 여기에 추가됩니다. -->
+                    </div>
+                </div>
+
+                <!-- 구분선 -->
+                <div class="border-t my-6"></div>
+
+                <!-- 일반 매물 -->
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-3">일반 매물</h2>
+                    <div id="property-list" class="flex flex-col space-y-4">
+                        <!-- JavaScript로 일반 매물 아이템이 여기에 추가됩니다. -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 패널 열기 버튼 -->
+        <button id="open-panel-button" class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out opacity-0 pointer-events-none" style="left: 0px;" title="패널 열기">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+
+        <!-- 패널 닫기 버튼 -->
+        <button id="close-panel-button" class="absolute top-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out" style="left: 450px; transform: translateY(calc(-50% + 2.5rem));" title="패널 닫기">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+
+        <!-- 패널 확장 버튼 -->
+        <button id="expand-panel-button" class="absolute top-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out" style="left: 450px; transform: translateY(calc(-50% - 2.5rem));" title="패널 확장">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+            </svg>
+        </button>
+
+
+        <!-- =================================================================== -->
+        <!-- 오른쪽 상세 정보 패널 (슬라이드 기능 추가)                            -->
+        <!-- =================================================================== -->
+        <aside id="right-side-panel" class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-20 transform transition-transform duration-300 ease-in-out">
+            <div class="flex flex-col items-center space-y-2">
+                <!-- 상단 아이콘 버튼들 -->
+                <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10m-9-10"/>
+                    </svg>
+                </button>
+                <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                    </svg>
+                </button>
+                <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                    </svg>
+                </button>
+                <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                </button>
+                 <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 01-3.46 0M8 8a4 4 0 018 0c0 5.5 2 6 2 6H6s2-.5 2-6z"/>
+                    </svg>
+                </button>
+                 <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="w-full aspect-square bg-[#FF3737] hover:brightness-95 transition-all rounded-2xl p-2 flex items-center justify-center">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+                </svg>
+            </button>
+        </aside>
+
+        <!-- 오른쪽 패널 토글 버튼 -->
+        <button id="right-panel-toggle-button" class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-l-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out" style="right: 75px;">
+            <svg id="right-open-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <svg id="right-close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+    </div>
+
+    <script>
+        // --- 샘플 데이터 ---
+        const properties = [
+            { image: 'https://images.unsplash.com/photo-15701294TT492-45c003edd2be?q=80&w=2070&auto=format&fit=crop', price: '전세 1억 3,500', location: '관악구 봉천동', details: '원룸 ∙ 방 1개 ∙ 2층 ∙ 33.06m²', tags: ['집주인 인증', '추천', '확인'], isRecommended: true },
+            { image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop', price: '전세 1억 9,800', location: '관악구 신림동', details: '기타 ∙ 방 1개 ∙ 고층 ∙ 13.74m²', tags: ['직거래', '추천'], isRecommended: true },
+            { image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop', price: '월세 3000/80', location: '동작구 상도동', details: '투룸 ∙ 방 2개 ∙ 3층 ∙ 45.12m²', tags: ['추천'], isRecommended: false },
+            { image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop', price: '매매 5억 2,000', location: '강남구 역삼동', details: '아파트 ∙ 방 3개 ∙ 15층 ∙ 84.9m²', tags: ['확인'], isRecommended: true },
+            { image: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=2074&auto=format&fit=crop', price: '전세 2억 5,000', location: '마포구 서교동', details: '오피스텔 ∙ 방 1개 ∙ 10층 ∙ 28.5m²', tags: ['집주인 인증'], isRecommended: false },
+            { image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop', price: '전세 3억 1,000', location: '서대문구 연희동', details: '빌라 ∙ 방 2개 ∙ 4층 ∙ 55.0m²', tags: ['직거래'], isRecommended: true }
+        ];
+
+        const propertyList = document.getElementById('property-list');
+        const recommendedList = document.getElementById('recommended-list');
+
+        // --- 매물 카드 생성 함수 ---
+        function createPropertyCard(property) {
+            const tagsHTML = property.tags.map(tag => {
+                let colorClass = 'bg-blue-100 text-blue-800';
+                if (tag === '직거래') colorClass = 'bg-green-100 text-green-800';
+                if (tag === '확인') colorClass = 'bg-gray-200 text-gray-800';
+                return `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded ${colorClass}">${tag}</span>`;
+            }).join('');
+
+            return `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]">
+                    <div class="relative">
+                        <img src="${property.image}" alt="매물 사진" class="w-full h-40 object-cover">
+                        <button class="absolute top-2 right-2 bg-white/70 p-1.5 rounded-full hover:bg-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg text-gray-900">${property.price}</h3>
+                        <p class="text-gray-600 text-sm">${property.location}</p>
+                        <p class="text-gray-500 text-xs my-2">${property.details}</p>
+                        <div class="mt-3">
+                            ${tagsHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 데이터 렌더링 ---
+        properties.forEach(prop => {
+            const cardHTML = createPropertyCard(prop);
+            if (prop.isRecommended) {
+                recommendedList.innerHTML += cardHTML;
+            } else {
+                propertyList.innerHTML += cardHTML;
+            }
+        });
+
+        // --- 상태 변수 ---
+        let isPanelOpen = true;
+        let isPanelExpanded = false;
+
+        // --- DOM 요소 ---
+        const sidePanel = document.getElementById('side-panel');
+        const searchBarContainer = document.getElementById('search-bar-container');
+        const mainContent = document.querySelector('main');
+        const rightSidePanel = document.getElementById('right-side-panel');
+        const rightToggleButton = document.getElementById('right-panel-toggle-button');
+        
+        // 왼쪽 패널 컨트롤 버튼
+        const openPanelButton = document.getElementById('open-panel-button');
+        const closePanelButton = document.getElementById('close-panel-button');
+        const expandPanelButton = document.getElementById('expand-panel-button');
+        const collapseFullscreenButton = document.getElementById('collapse-fullscreen-button');
+        const addListingContainer = document.getElementById('add-listing-container');
+
+        // 매물 목록 컨테이너
+        const recommendedListContainer = document.getElementById('recommended-list');
+        const propertyListContainer = document.getElementById('property-list');
+        
+        // --- UI 업데이트 로직 ---
+        function updateUIVisibility() {
+            // Part 1: 패널 크기 및 그리드 레이아웃 관리 (isPanelExpanded 기반)
+            if (isPanelExpanded) {
+                sidePanel.classList.remove('w-[450px]');
+                sidePanel.classList.add('w-full', 'z-50');
+                addListingContainer.classList.add('mr-16');
+                
+                const expandedGridClasses = ['md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5'];
+                const expandedGridClassesForSingleCol = ['sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5'];
+                recommendedListContainer.classList.add(...expandedGridClasses);
+                propertyListContainer.classList.remove('flex', 'flex-col', 'space-y-4');
+                propertyListContainer.classList.add('grid', 'gap-4', ...expandedGridClassesForSingleCol);
+            } else {
+                sidePanel.classList.add('w-[450px]');
+                sidePanel.classList.remove('w-full', 'z-50');
+                addListingContainer.classList.remove('mr-16');
+
+                const expandedGridClasses = ['md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5'];
+                const expandedGridClassesForSingleCol = ['sm:grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4', 'xl:grid-cols-5'];
+                recommendedListContainer.classList.remove(...expandedGridClasses);
+                propertyListContainer.classList.add('flex', 'flex-col', 'space-y-4');
+                propertyListContainer.classList.remove('grid', 'gap-4', ...expandedGridClassesForSingleCol);
+            }
+
+            // Part 2: 다른 모든 요소의 가시성 관리
+            if (isPanelExpanded) {
+                mainContent.classList.add('hidden');
+                rightSidePanel.classList.add('hidden');
+                rightToggleButton.classList.add('hidden');
+                
+                openPanelButton.classList.add('opacity-0', 'pointer-events-none');
+                closePanelButton.classList.add('opacity-0', 'pointer-events-none');
+                expandPanelButton.classList.add('opacity-0', 'pointer-events-none');
+                
+                collapseFullscreenButton.classList.remove('hidden');
+            } else {
+                mainContent.classList.remove('hidden');
+                rightSidePanel.classList.remove('hidden');
+                rightToggleButton.classList.remove('hidden');
+                
+                collapseFullscreenButton.classList.add('hidden');
+                
+                // Part 3: 열기/닫기 상태 관리 (확장되지 않았을 때만)
+                if (isPanelOpen) {
+                    sidePanel.classList.remove('-translate-x-full');
+                    searchBarContainer.style.left = '474px';
+
+                    closePanelButton.style.left = '450px';
+                    expandPanelButton.style.left = '450px';
+                    
+                    closePanelButton.classList.remove('opacity-0', 'pointer-events-none');
+                    expandPanelButton.classList.remove('opacity-0', 'pointer-events-none');
+                    openPanelButton.classList.add('opacity-0', 'pointer-events-none');
+                } else { // Panel is closed
+                    sidePanel.classList.add('-translate-x-full');
+                    searchBarContainer.style.left = '24px';
+                    
+                    closePanelButton.style.left = '0px';
+                    expandPanelButton.style.left = '0px';
+
+                    closePanelButton.classList.add('opacity-0', 'pointer-events-none');
+                    expandPanelButton.classList.add('opacity-0', 'pointer-events-none');
+                    openPanelButton.classList.remove('opacity-0', 'pointer-events-none');
+                }
+            }
+        }
+
+        // --- 이벤트 리스너 ---
+        closePanelButton.addEventListener('click', () => {
+            isPanelOpen = false;
+            updateUIVisibility();
+        });
+
+        openPanelButton.addEventListener('click', () => {
+            isPanelOpen = true;
+            updateUIVisibility();
+        });
+
+        expandPanelButton.addEventListener('click', () => {
+            isPanelExpanded = true;
+            updateUIVisibility();
+        });
+
+        collapseFullscreenButton.addEventListener('click', () => {
+            isPanelExpanded = false;
+            updateUIVisibility();
+        });
+
+        // --- 오른쪽 패널 토글 로직 ---
+        const rightOpenIcon = document.getElementById('right-open-icon');
+        const rightCloseIcon = document.getElementById('right-close-icon');
+        let isRightPanelOpen = true;
+
+        rightToggleButton.addEventListener('click', () => {
+            isRightPanelOpen = !isRightPanelOpen;
+            if (isRightPanelOpen) {
+                // 패널 열기
+                rightSidePanel.classList.remove('translate-x-full');
+                rightToggleButton.style.right = '75px';
+                searchBarContainer.style.right = '99px';
+                rightOpenIcon.classList.add('hidden');
+                rightCloseIcon.classList.remove('hidden');
+            } else {
+                // 패널 닫기
+                rightSidePanel.classList.add('translate-x-full');
+                rightToggleButton.style.right = '0px';
+                searchBarContainer.style.right = '24px';
+                rightOpenIcon.classList.remove('hidden');
+                rightCloseIcon.classList.add('hidden');
+            }
+        });
+
+        // 초기 UI 상태 설정
+        updateUIVisibility();
+    </script>
+</body>
+</html>
+
