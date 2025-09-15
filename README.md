@@ -18,17 +18,15 @@
 
 ## yml-local
 ```yaml
-# local 환경 설정
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=disable
-    username: ${DB_USER:postgres}
+    url: jdbc:postgresql://${DB_HOST:aws-1-ap-northeast-2.pooler.supabase.com}:${DB_PORT:6543}/${DB_NAME:postgres}?sslmode=require&prepareThreshold=0
+    username: ${DB_USER:postgres.qrncuvrmkwzwhimvppbl}
     password: ${DB_PASSWORD:1234}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
       connection-timeout: 30000
 
-flyway:
-  enabled: false
-
+  flyway:
+    enabled: false

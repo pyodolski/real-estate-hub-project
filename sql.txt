@@ -1,0 +1,246 @@
+// Table users {
+  id             bigint [pk, increment]                 // 사용자 고유 ID
+  email          varchar(255) [not null, unique]        // 이메일 (로그인용, 고유)
+  username       varchar(255) [not null]                // 사용자명 (닉네임)
+  password_hash  text [not null]                        // 비밀번호 해시
+  role_id        varchar(16) [not null, note: 'regular|broker|admin'] // 사용자 역할
+  is_active      boolean [not null, default: true]      // 계정 활성 상태
+  property_cnt   integer                                // 등록 매물 수
+  intro          text                                   // 프로필 소개문
+  profile_image_url text                                // 프로필 사진 URL
+  phone_number   varchar(32)                            // 전화번호
+  created_at     timestamp                              // 계정 생성일
+  updated_at     timestamp                              // 최근 수정일
+}
+
+// Table broker_profiles {
+  user_id            bigint [pk, ref: > users.id]       // 중개인 사용자 ID (users와 1:1)
+  license_number     varchar(255) [unique]              // 중개사 면허 번호
+  agency_name        varchar(255)                       // 소속 중개사무소 이름
+  intro              text                               // 프로필 소개문
+  profile_image_url  text                               // 프로필 사진 URL
+  created_at         timestamp                          // 생성일
+  updated_at         timestamp                          // 수정일
+}
+
+// Table properties {
+  id             bigint [pk, increment]                 // 매물 고유 ID
+  title          text                                   // 매물 제목
+  address        text                                   // 매물 주소 (지번/도로명)
+  price          decimal(14,2)                          // 매물 가격
+  area_m2        decimal(8,2)                           // 면적 (㎡)
+  status         varchar(16) [note: 'available|pending|sold|hidden'] // 거래 상태
+  listing_type   varchar(16) [note: 'owner|broker']     // 등록 유형
+  owner_id       bigint [ref: > users.id]               // 소유자 (일반 회원)
+  broker_id      bigint [ref: > broker_profiles.user_id]// 중개인 ID (기업회원)
+  claim_id       bigint [ref: > ownership_claims.id]    // 소유 증명 FK
+  region_code    varchar(20)                            // 행정구역 코드
+  location_x     double                                 // 위도
+  location_y     double                                 // 경도
+  building_year  int                                    // 준공년도
+  anomaly_alert  boolean                                // 이상치 여부 (0/1)
+  created_at     timestamp                              // 등록일
+  updated_at     timestamp                              // 수정일
+}
+
+// Table ownership_claims {
+  id                      bigint [pk, increment]        // 신청 고유 ID
+  user_id                 bigint [not null, ref: > users.id] // 신청자 (소유자)
+  property_id             bigint [ref: > properties.id] // 매물 ID
+  status                  varchar(16) [note: 'PENDING|APPROVED|REJECTED'] // 심사 상태
+  admin_id                bigint [ref: > users.id]      // 심사 관리자 ID
+  
+  // 신청자 정보
+  applicant_name          varchar(255) [not null]       // 신청자 실명
+  applicant_phone         varchar(32) [not null]        // 신청자 연락처
+  relationship_to_property varchar(255) [not null]      // 매물과의 관계 (소유자, 임차인 등)
+  additional_info         text                          // 추가 설명
+  
+  // 지도 API 연동 위치 정보
+  property_address        text                          // 지도에서 선택한 주소
+  location_x              double                        // 경도 (longitude)
+  location_y              double                        // 위도 (latitude)
+  building_name           varchar(255)                  // 건물명
+  detailed_address        varchar(255)                  // 상세 주소 (동/호수 등)
+  postal_code             varchar(10)                   // 우편번호
+  
+  rejection_reason        text                          // 거절 사유
+  reviewed_at             timestamp                     // 심사 완료 시각
+  created_at              timestamp                     // 신청일
+  updated_at              timestamp                     // 수정일 (현재시간 - updated_at → 마감일 1주일)
+}
+
+// Table ownership_documents {
+  id               bigint [pk, increment]               // 문서 고유 ID
+  claim_id         bigint [not null, ref: > ownership_claims.id] // 신청 ID
+  document_type    varchar(32) [not null, note: 'PROPERTY_DEED|IDENTITY_CARD|RESIDENCE_CERTIFICATE|TAX_CERTIFICATE|OTHER'] // 문서 타입
+  original_filename varchar(255) [not null]            // 원본 파일명
+  stored_filename   varchar(255) [not null]            // 저장된 파일명
+  file_path        varchar(500) [not null]             // 파일 경로
+  file_size        bigint                              // 파일 크기 (bytes)
+  content_type     varchar(100)                        // MIME 타입
+  uploaded_at      timestamp [not null]                // 업로드 시각
+}
+
+// Table property_images {
+  id          bigint [pk, increment]                    // 이미지 고유 ID
+  property_id bigint [ref: > properties.id]             // 매물 ID
+  image_url   text                                      // 이미지 URL
+}
+
+// Table property_reviews {
+  id          bigint [pk, increment]                    // 리뷰 고유 ID
+  property_id bigint [ref: > properties.id]             // 매물 ID
+  user_id     bigint [ref: > users.id]                  // 작성자 ID
+  rating      int [note: '1~5']                         // 평점 (1~5)
+  comment     text                                      // 리뷰 내용
+  created_at  timestamp                                 // 작성일
+  updated_at  timestamp                                 // 수정일
+  indexes {
+    uniq_prop_user: (property_id, user_id) [unique]     // 유저당 매물 1회 리뷰 제한
+  }
+}
+
+// Table price_anomalies {
+  id          bigint [pk, increment]                    // 이상치 기록 ID
+  property_id bigint [ref: > properties.id]             // 매물 ID
+  score       double                                    // 이상치 점수
+  reason      text                                      // 이상치 판정 사유
+}
+
+// Table favorites {
+  user_id     bigint [ref: > users.id]                  // 사용자 ID
+  property_id bigint [ref: > properties.id]             // 매물 ID
+  created_at  timestamp                                 // 즐겨찾기 추가일
+  indexes {
+    pk_user_prop: (user_id, property_id) [pk]           // 중복 방지 (복합 PK)
+  }
+}
+
+// Table comparison_groups {
+  id          bigint [pk, increment]                    // 비교 그룹 ID
+  user_id     bigint [ref: > users.id]                  // 소유 사용자
+  group_name  varchar(255)                              // 그룹 이름
+  created_at  timestamp                                 // 생성일
+  updated_at  timestamp                                 // 수정일
+}
+
+// Table comparison_items {
+  id          bigint [pk, increment]                    // 비교 아이템 ID
+  group_id    bigint [ref: > comparison_groups.id]      // 그룹 ID
+  property_id bigint [ref: > properties.id]             // 매물 ID
+  indexes {
+    uniq_group_prop: (group_id, property_id) [unique]   // 그룹 내 중복 방지
+  }
+}
+
+// Table real_estate_transactions {
+  id               bigint [pk, increment]               // 거래 ID
+  property_id      bigint [ref: > properties.id]        // 매물 ID (선택)
+  address          text                                 // 거래 주소
+  transaction_date date                                 // 거래 일자
+  price            decimal(14,2)                        // 거래 금액
+  size_sqm         decimal(8,2)                         // 거래 면적
+}
+
+// Table property_offers {
+  id              bigint [pk, increment]                // 오퍼 ID
+  property_id     bigint [ref: > properties.id]         // 매물 ID
+  type            varchar(16) [note: 'SALE|JEONSE|WOLSE'] // 거래 유형
+  total_price     decimal(14,2)                         // 매매가 (SALE 전용)
+  deposit         decimal(14,2)                         // 보증금 (JEONSE/WOLSE)
+  monthly_rent    decimal(14,2)                         // 월세액 (WOLSE 전용)
+  maintenance_fee decimal(14,2)                         // 관리비
+  negotiable      boolean                               // 협의 가능 여부
+  available_from  date                                  // 입주 가능일
+  is_active       boolean                               // 유효 여부
+  created_at      timestamp                             // 생성일
+  updated_at      timestamp                             // 수정일
+}
+
+// Table price_alerts {
+  id            bigint [pk, increment]                  // 알림 ID
+  user_id       bigint [ref: > users.id]                // 사용자 ID
+  property_id   bigint [ref: > properties.id]           // 매물 ID
+  target_value  decimal(14,2)                           // 목표 가격
+  tolerance_pct decimal(5,2)                            // 허용 오차율 (%)
+  created_at    timestamp                               // 생성일
+  updated_at    timestamp                               // 수정일
+}
+
+// Table score_alerts {
+  id             bigint [pk, increment]                 // 조건 알림 ID
+  user_id        bigint [ref: > users.id]               // 조건 사용자
+  condition_type varchar(32) [note: 'total|traffic|amenities|price|condition|description']
+  target_score   int                                    // 조건 점수 최소치
+  created_at     timestamp                              // 생성일
+  updated_at     timestamp                              // 수정일
+}
+
+// Table alert_notifications {
+  id             bigint [pk, increment]                 // 알림 ID
+  user_id        bigint [ref: > users.id]               // 사용자
+  property_id    bigint [ref: > properties.id]          // 매물 (nullable)
+  price_alert_id bigint [ref: > price_alerts.id]        // 가격 알림 (nullable)
+  score_alert_id bigint [ref: > score_alerts.id]        // 점수 알림 (nullable)
+  alert_type     varchar(16) [note: 'budget|score']
+  message        text
+  sent_at        timestamp
+  is_read        boolean [default: false]
+}
+
+// Table chat_rooms {
+  id          bigint [pk, increment]                    // 채팅방 ID
+  property_id bigint [ref: > properties.id]             // 매물
+  user1_id    bigint [ref: > users.id]                  // 사용자 1
+  user2_id    bigint [ref: > users.id]                  // 사용자 2
+  created_at  timestamp
+  indexes {
+    uniq_room: (property_id, user1_id, user2_id) [unique] // 동일 매물+동일 사용자 조합 방지
+  }
+}
+
+// Table chat_messages {
+  id        bigint [pk, increment]                      // 메시지 ID
+  room_id   bigint [ref: > chat_rooms.id]               // 채팅방
+  sender_id bigint [ref: > users.id]                    // 보낸 사용자
+  content   text                                        // 메시지
+  sent_at   timestamp                                   // 전송 시각
+  is_read   boolean                                     // 읽음 여부
+}
+
+// Table user_map_state {
+  user_id    bigint [pk, ref: > users.id]               // 사용자 ID (1:1)
+  location_x double                                     // 마지막 지도 중심 X
+  location_y double                                     // 마지막 지도 중심 Y
+  zoom_level int                                        // 줌 레벨
+  updated_at timestamp                                  // 갱신일
+}
+
+// === 자산 승인 시스템 관련 추가 정보 ===
+
+// ownership_claims.status 상태값
+// - PENDING: 심사 대기 중
+// - APPROVED: 승인됨 (자산 소유권 인정)
+// - REJECTED: 거절됨 (서류 미비 등)
+
+// ownership_documents.document_type 문서 타입
+// - PROPERTY_DEED: 등기부등본 (부동산 소유권 증명)
+// - IDENTITY_CARD: 신분증 (주민등록증, 운전면허증 등)
+// - RESIDENCE_CERTIFICATE: 주민등록등본 (거주지 확인)
+// - TAX_CERTIFICATE: 납세증명서 (세금 납부 확인)
+// - OTHER: 기타 서류 (계약서, 상속증명서 등)
+
+// relationship_to_property 관계 예시
+// - "소유자": 부동산 실소유자
+// - "임차인": 전세/월세 계약자
+// - "상속인": 상속받은 부동산
+// - "공동소유자": 지분 소유자
+// - "기타": 기타 관계 (상세 설명 필요)
+
+// 지도 API 연동 플로우
+// 1. 사용자가 지도에서 위치 클릭/검색
+// 2. 좌표(location_x, location_y) 및 주소 정보 자동 입력
+// 3. 상세 주소(동/호수) 수동 입력
+// 4. 필수 서류 첨부 후 신청
+// 5. 관리자가 위치 정보와 서류를 종합 검토하여 승인/거절
