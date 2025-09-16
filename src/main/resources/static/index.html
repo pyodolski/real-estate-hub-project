@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <title>RealEstate Map</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="/css/map.css"/>
+    <!-- Naver Map: 반드시 본인 키로 교체 -->
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
+</head>
+<body>
+<header id="topbar">
+    <button id="btnFix">현재 위치 고정</button>
+    <select id="statusFilter">
+        <option value="">상태 전체</option>
+        <option value="AVAILABLE">AVAILABLE</option>
+        <option value="CONTRACTED">CONTRACTED</option>
+        <option value="SOLD">SOLD</option>
+    </select>
+    <span id="hint">지도만 먼저! (API 없이도 동작)</span>
+</header>
+
+<main id="container">
+    <div id="map"></div>
+    <aside id="sidebar">
+        <h3>상세</h3>
+        <div id="detail">마커를 클릭하세요</div>
+        <button id="btnFav" style="display:none;">☆ 즐겨찾기</button>
+        <h4>즐겨찾기</h4>
+        <ul id="favList"></ul>
+    </aside>
+</main>
+
+<!-- ES modules -->
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

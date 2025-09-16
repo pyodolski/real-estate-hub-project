@@ -1,0 +1,20 @@
+src/main/resources/static/
+├─ index.html                  # 네이버 지도 + 사이드바 + 필터 패널 뼈대
+├─ css/
+│  └─ map.css                  # 레이아웃/사이드바/마커 색상 스타일
+└─ js/
+   ├─ main.js                  # 앱 진입점: 초기화, 이벤트 와이어링
+   ├─ map/
+   │  ├─ initMap.js            # 지도 생성, 마지막 위치 로드, 이벤트 바인딩(줌/팬)
+   │  ├─ markers.js            # 상태별 마커 렌더/갱신, 클릭 핸들러
+   │  └─ iconFactory.js        # 매물 상태→아이콘/색상 매핑
+   ├─ api/
+   │  ├─ propertiesApi.js      # 1.1.x 범위조회/상세조회 API
+   │  ├─ favoritesApi.js       # 2.x 즐겨찾기 추가/삭제/조회 API
+   │  └─ userSettingsApi.js    # 3.x 마지막 위치 저장/조회 API
+   ├─ ui/
+   │  ├─ sidebar.js            # 4.x 상세정보 사이드바 렌더/업데이트
+   │  └─ filterPanel.js        # 1.1.4 필터 UI + 상태관리
+   └─ utils/
+      ├─ debounce.js           # 지도 이벤트 요청 디바운스
+      └─ eventBus.js           # 모듈 간 간단 이벤트 버스
