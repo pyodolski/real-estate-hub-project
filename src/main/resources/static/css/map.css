@@ -1,0 +1,11 @@
+html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+#topbar { padding: 8px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 8px; align-items: center; }
+#container { display: flex; height: calc(100% - 48px); }
+#map { flex: 1; }
+#sidebar { width: 320px; border-left: 1px solid #e5e7eb; padding: 12px; overflow: auto; }
+
+.marker-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #111; background: #999; }
+.marker-dot.AVAILABLE { background: #22c55e; }
+.marker-dot.CONTRACTED { background: #f59e0b; }
+.marker-dot.SOLD { background: #ef4444; }
+.marker-dot.active { box-shadow: 0 0 0 3px rgba(59,130,246,.5); }
