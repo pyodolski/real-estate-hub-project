@@ -1,7 +1,7 @@
 package com.realestate.app.domain.auth.security;
 
-import com.realestate.app.domain.auth.jwt.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,13 +13,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.realestate.app.domain.auth.jwt.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
+
 
 @Configuration
 @RequiredArgsConstructor
@@ -29,6 +37,10 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
@@ -46,6 +58,10 @@ public class SecurityConfig {
 
                         // ✅ 인증 없이 접근해야 하는 공개 API
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/", "/loginX.html", "/signup.html", "/loginO.html", "/admin.html", "/intermediary.html").permitAll()
+                        .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+                        .requestMatchers("/error").permitAll()
 
                         // 🔒 그 외는 인증 필요
                         .anyRequest().authenticated()
@@ -61,6 +77,21 @@ public class SecurityConfig {
         return http.build();
     }
 
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
     // ✅ CORS (프론트 포트가 다르면 꼭 필요)
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
