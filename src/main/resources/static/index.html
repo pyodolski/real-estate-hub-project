@@ -1,37 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="utf-8"/>
-    <title>RealEstate Map</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <link rel="stylesheet" href="/css/map.css"/>
-    <!-- Naver Map: 반드시 본인 키로 교체 -->
-    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
-</head>
-<body>
-<header id="topbar">
-    <button id="btnFix">현재 위치 고정</button>
-    <select id="statusFilter">
-        <option value="">상태 전체</option>
-        <option value="AVAILABLE">AVAILABLE</option>
-        <option value="CONTRACTED">CONTRACTED</option>
-        <option value="SOLD">SOLD</option>
-    </select>
-    <span id="hint">지도만 먼저! (API 없이도 동작)</span>
-</header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>부동산 서비스</title>
+  </head>
+  <body>
+    <script>
+      // 로그인 상태 확인 후 적절한 페이지로 리다이렉트
+      const accessToken = localStorage.getItem("accessToken");
 
-<main id="container">
-    <div id="map"></div>
-    <aside id="sidebar">
-        <h3>상세</h3>
-        <div id="detail">마커를 클릭하세요</div>
-        <button id="btnFav" style="display:none;">☆ 즐겨찾기</button>
-        <h4>즐겨찾기</h4>
-        <ul id="favList"></ul>
-    </aside>
-</main>
-
-<!-- ES modules -->
-<script type="module" src="/js/main.js"></script>
-</body>
+      if (accessToken) {
+        // 토큰이 있으면 사용자 정보를 확인하여 역할별 페이지로 이동
+        fetch("/api/users/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              // 토큰이 유효하지 않으면 로그인 페이지로
+              throw new Error("Invalid token");
+            }
+          })
+          .then((userData) => {
+            // 역할별 페이지로 리다이렉트
+            switch (userData.roleId) {
+              case "regular":
+                window.location.href = "loginO.html";
+                break;
+              case "broker":
+                window.location.href = "intermediary.html";
+                break;
+              case "admin":
+                window.location.href = "admin.html";
+                break;
+              default:
+                window.location.href = "loginO.html";
+                break;
+            }
+          })
+          .catch((error) => {
+            // 토큰이 유효하지 않으면 제거하고 로그인 페이지로
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            window.location.href = "loginX.html";
+          });
+      } else {
+        // 토큰이 없으면 로그인 페이지로
+        window.location.href = "loginX.html";
+      }
+    </script>
+  </body>
 </html>

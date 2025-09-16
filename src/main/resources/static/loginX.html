@@ -130,16 +130,16 @@
 
     <script>
       // 페이지 로드 시 자동 로그아웃 (토큰 제거)
-      window.addEventListener('DOMContentLoaded', function() {
+      window.addEventListener("DOMContentLoaded", function () {
         // localStorage에서 모든 인증 토큰 제거
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
         // sessionStorage에서도 토큰 제거 (혹시 있을 수 있는 경우)
-        sessionStorage.removeItem('accessToken');
-        sessionStorage.removeItem('refreshToken');
-        
-        console.log('자동 로그아웃 완료 - 모든 토큰이 제거되었습니다.');
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
+
+        console.log("자동 로그아웃 완료 - 모든 토큰이 제거되었습니다.");
       });
 
       // 폼 제출 처리
@@ -166,63 +166,76 @@
 
           try {
             // 1. 로그인 API 호출
-            const loginResponse = await fetch('/api/auth/login', {
-              method: 'POST',
+            const loginResponse = await fetch("/api/auth/login", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 email: email,
-                password: password
-              })
+                password: password,
+              }),
             });
 
             if (!loginResponse.ok) {
               const errorData = await loginResponse.text();
-              throw new Error(errorData || '로그인에 실패했습니다.');
+              throw new Error(errorData || "로그인에 실패했습니다.");
             }
 
             const tokenData = await loginResponse.json();
-            
+
             // 2. 액세스 토큰을 localStorage에 저장
-            localStorage.setItem('accessToken', tokenData.accessToken);
-            localStorage.setItem('refreshToken', tokenData.refreshToken);
+            localStorage.setItem("accessToken", tokenData.accessToken);
+            localStorage.setItem("refreshToken", tokenData.refreshToken);
 
             // 3. 사용자 정보 가져오기
-            const userResponse = await fetch('/api/users/me', {
-              method: 'GET',
+            const userResponse = await fetch("/api/users/me", {
+              method: "GET",
               headers: {
-                'Authorization': `Bearer ${tokenData.accessToken}`,
-                'Content-Type': 'application/json'
-              }
+                Authorization: `Bearer ${tokenData.accessToken}`,
+                "Content-Type": "application/json",
+              },
             });
 
             if (!userResponse.ok) {
-              throw new Error('사용자 정보를 가져올 수 없습니다.');
+              throw new Error("사용자 정보를 가져올 수 없습니다.");
             }
 
             const userData = await userResponse.json();
-            
+
+            // 사용자 정보도 localStorage에 저장 (필요시 사용)
+            localStorage.setItem(
+              "currentUser",
+              JSON.stringify({
+                userId: userData.id,
+                email: userData.email,
+                username: userData.username,
+                role: userData.roleId,
+              })
+            );
+
             // 4. 역할별 페이지 리다이렉트
-            switch(userData.roleId) {
-              case 'regular':
-                window.location.href = 'loginO.html';
+            switch (userData.roleId) {
+              case "regular":
+                window.location.href = "loginO.html";
                 break;
-              case 'broker':
-                window.location.href = 'intermediary.html';
+              case "broker":
+                window.location.href = "intermediary.html";
                 break;
-              case 'admin':
-                window.location.href = 'admin.html';
+              case "admin":
+                window.location.href = "admin.html";
                 break;
               default:
-                window.location.href = 'loginO.html';
+                window.location.href = "loginO.html";
                 break;
             }
-
           } catch (error) {
-            console.error('로그인 오류:', error);
-            alert(error.message || '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
-            
+            console.error("로그인 오류:", error);
+            alert(
+              error.message ||
+                "로그인 중 오류가 발생했습니다. 다시 시도해주세요."
+            );
+
             // 버튼 상태 복원
             submitButton.innerHTML = originalText;
             submitButton.disabled = false;

@@ -17,7 +17,13 @@ public class AuthController {
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public void signup(@Valid @RequestBody SignupRequest req) { auth.signup(req); }
+    public void signup(@Valid @RequestBody SignupRequest req) { 
+        try {
+            auth.signup(req);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+    }
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest req) { return auth.login(req); }

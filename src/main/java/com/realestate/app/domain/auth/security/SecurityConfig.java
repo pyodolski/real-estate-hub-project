@@ -50,8 +50,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/loginX.html", "/signup.html", "/loginO.html", "/admin.html", "/intermediary.html").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // 자산 승인 시스템 API (임시로 모든 접근 허용)
-                        .requestMatchers("/api/ownership/**").permitAll()
+                        // 자산 승인 시스템 API (인증 필요)
+                        .requestMatchers("/api/ownership/**").authenticated()
 
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()

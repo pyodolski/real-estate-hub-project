@@ -1,5 +1,6 @@
 package com.realestate.app.domain.ownership;
 
+import com.realestate.app.domain.auth.security.AuthUser;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimCreateRequest;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimRequest;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimResponse;
@@ -10,6 +11,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.net.MalformedURLException;
@@ -29,7 +31,7 @@ public class OwnershipClaimController {
     // 파일과 함께 자산 증명 신청 (지도 API 연동 지원)
     @PostMapping(value = "/claims", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public OwnershipClaimResponse createClaim(
-            @RequestParam("userId") Long userId,
+            @AuthenticationPrincipal AuthUser currentUser,
             @RequestParam("propertyId") Long propertyId,
             @RequestParam("applicantName") String applicantName,
             @RequestParam("applicantPhone") String applicantPhone,
@@ -47,7 +49,7 @@ public class OwnershipClaimController {
             @RequestParam(value = "documentTypes", required = false) List<String> documentTypes) {
         
         OwnershipClaimCreateRequest request = new OwnershipClaimCreateRequest();
-        request.setUserId(userId);
+        request.setUserId(currentUser.getId());
         request.setPropertyId(propertyId);
         request.setApplicantName(applicantName);
         request.setApplicantPhone(applicantPhone);
@@ -76,17 +78,17 @@ public class OwnershipClaimController {
     }
 
     // 내 보유 자산/신청 내역 조회
-    @GetMapping("/my-claims/{userId}")
-    public List<OwnershipClaimResponse> getMyClaims(@PathVariable Long userId) {
-        return claimService.getUserClaims(userId);
+    @GetMapping("/my-claims")
+    public List<OwnershipClaimResponse> getMyClaims(@AuthenticationPrincipal AuthUser currentUser) {
+        return claimService.getUserClaims(currentUser.getId());
     }
 
     // 특정 신청 상세 조회
     @GetMapping("/claims/{claimId}")
     public OwnershipClaimResponse getClaimDetail(
             @PathVariable Long claimId,
-            @RequestParam Long userId) {
-        return claimService.getClaimDetail(claimId, userId);
+            @AuthenticationPrincipal AuthUser currentUser) {
+        return claimService.getClaimDetail(claimId, currentUser.getId());
     }
 
     // 문서 다운로드
@@ -117,13 +119,21 @@ public class OwnershipClaimController {
 
     // 모든 신청 조회 (관리자용)
     @GetMapping("/admin/claims")
-    public List<OwnershipClaimResponse> getAllClaims() {
+    public List<OwnershipClaimResponse> getAllClaims(@AuthenticationPrincipal AuthUser admin) {
+        if (!"admin".equals(admin.getRole())) {
+            throw new IllegalArgumentException("관리자 권한이 필요합니다.");
+        }
         return claimService.getAllClaims();
     }
 
     // 특정 신청 상세 조회 (관리자용)
     @GetMapping("/admin/claims/{claimId}")
-    public OwnershipClaimResponse getClaimDetailForAdmin(@PathVariable Long claimId) {
+    public OwnershipClaimResponse getClaimDetailForAdmin(
+            @PathVariable Long claimId,
+            @AuthenticationPrincipal AuthUser admin) {
+        if (!"admin".equals(admin.getRole())) {
+            throw new IllegalArgumentException("관리자 권한이 필요합니다.");
+        }
         return claimService.getClaimDetailForAdmin(claimId);
     }
 
@@ -131,18 +141,24 @@ public class OwnershipClaimController {
     @PostMapping("/admin/claims/{claimId}/approve")
     public OwnershipClaimResponse approveClaim(
             @PathVariable Long claimId,
-            @RequestParam Long adminId) {
-        return claimService.approveClaim(claimId, adminId);
+            @AuthenticationPrincipal AuthUser admin) {
+        if (!"admin".equals(admin.getRole())) {
+            throw new IllegalArgumentException("관리자 권한이 필요합니다.");
+        }
+        return claimService.approveClaim(claimId, admin.getId());
     }
 
     // 신청 거절 (관리자용)
     @PostMapping("/admin/claims/{claimId}/reject")
     public OwnershipClaimResponse rejectClaim(
             @PathVariable Long claimId,
-            @RequestParam Long adminId,
+            @AuthenticationPrincipal AuthUser admin,
             @RequestBody Map<String, String> request) {
+        if (!"admin".equals(admin.getRole())) {
+            throw new IllegalArgumentException("관리자 권한이 필요합니다.");
+        }
         String rejectionReason = request.get("rejectionReason");
-        return claimService.rejectClaim(claimId, adminId, rejectionReason);
+        return claimService.rejectClaim(claimId, admin.getId(), rejectionReason);
     }
 
     // 문서 타입 목록 조회
