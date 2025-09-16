@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>매물 등록 관리</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter & Noto Sans KR) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- 상단 네비게이션 바 -->
+    <header class="bg-white shadow-md w-full z-10 flex-shrink-0">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <!-- 로고 -->
+            <a href="#" class="text-2xl font-bold text-indigo-600">Admin Logo</a>
+            
+            <!-- 로그아웃 버튼 -->
+            <button class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+                </svg>
+                로그아웃
+            </button>
+        </nav>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="flex-grow container mx-auto p-6 lg:p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">매물 등록 요청 관리</h1>
+        
+        <!-- 목록 헤더 (데스크톱 뷰) -->
+        <div class="hidden md:grid grid-cols-12 gap-4 px-4 pb-3 border-b border-gray-200 text-sm font-medium text-gray-500">
+            <div class="col-span-2">요청자 이름</div>
+            <div class="col-span-2">아이디</div>
+            <div class="col-span-2">연락처</div>
+            <div class="col-span-4">매물 정보</div>
+            <div class="col-span-2 text-right">관리</div>
+        </div>
+        
+        <!-- 매물 요청 목록 컨테이너 -->
+        <div id="request-list-container" class="flex flex-col gap-3 mt-3">
+            <!-- JavaScript로 매물 요청 항목이 여기에 추가됩니다. -->
+        </div>
+    </main>
+
+    <script>
+        // --- 샘플 데이터 (첨부파일 정보 추가) ---
+        const registrationRequests = [
+            {
+                uploaderId: 'user123',
+                uploaderName: '김민준',
+                contact: '010-1234-5678',
+                propertyName: '강남 자이언트 오피스텔',
+                address: '서울특별시 강남구 역삼동 123-45, 101동 503호',
+                attachments: [
+                    { type: 'image', url: 'https://placehold.co/150x100/EFEFEF/333333?text=ID_Card.jpg', name: '신분증 사본' },
+                    { type: 'image', url: 'https://placehold.co/150x100/EFEFEF/333333?text=Property_Doc.png', name: '등기부등본' },
+                    { type: 'file', name: 'Registration_Form.pdf' }
+                ]
+            },
+            {
+                uploaderId: 'seller_kim_very_long_id_example',
+                uploaderName: '박서연',
+                contact: '010-8765-4321',
+                propertyName: '마포 리버뷰 아파트 (한강 조망권 최상)',
+                address: '서울특별시 마포구 합정동 55-6, 203동 1201호',
+                attachments: [
+                    { type: 'image', url: 'https://placehold.co/150x100/EFEFEF/333333?text=Document1.jpg', name: '건축물대장' },
+                    { type: 'file', name: 'Family_Relations.pdf' }
+                ]
+            },
+            {
+                uploaderId: 'happyhouse',
+                uploaderName: '이도현',
+                contact: '010-5555-9999',
+                propertyName: '판교 테크노밸리 빌라',
+                address: '경기도 성남시 분당구 삼평동 789-10, A동 302호',
+                attachments: [] // 첨부파일이 없는 경우
+            },
+             {
+                uploaderId: 'newbuild',
+                uploaderName: '최유나',
+                contact: '010-2468-1357',
+                propertyName: '송도 센트럴파크 신축 원룸',
+                address: '인천광역시 연수구 송도동 11-22, 1004호',
+                attachments: [
+                    { type: 'image', url: 'https://placehold.co/150x100/EFEFEF/333333?text=ID_Card.jpg', name: '신분증 사본' }
+                ]
+            }
+        ];
+
+        const requestListContainer = document.getElementById('request-list-container');
+
+        // --- 첨부파일 미리보기 생성 함수 ---
+        function createAttachmentPreviews(attachments) {
+            if (!attachments || attachments.length === 0) {
+                return '<p class="text-sm text-gray-500">첨부된 파일이 없습니다.</p>';
+            }
+            return `
+                <h4 class="text-base font-semibold text-gray-700 mb-3">첨부 서류</h4>
+                <div class="flex flex-wrap gap-4">
+                    ${attachments.map(att => {
+                        if (att.type === 'image') {
+                            return `
+                                <a href="${att.url}" target="_blank" class="block group" title="${att.name}">
+                                    <img src="${att.url}" alt="${att.name}" class="h-24 w-32 rounded-md border object-cover transition-transform group-hover:scale-105">
+                                </a>
+                            `;
+                        } else if (att.type === 'file') {
+                            return `
+                                <div class="flex items-center p-3 bg-gray-100 rounded-md border h-24" title="${att.name}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                    <span class="ml-2 text-sm text-gray-800 truncate">${att.name}</span>
+                                </div>
+                            `;
+                        }
+                        return '';
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        // --- 매물 요청 항목 생성 함수 ---
+        function createRequestItem(request, index) {
+            const detailsId = `details-${index}`;
+            return `
+                <div class="bg-white rounded-lg shadow-sm transition-shadow hover:shadow-md">
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-x-4 gap-y-3 items-center">
+                        <!-- 요청자 이름 -->
+                        <div class="md:col-span-2">
+                            <p class="text-base font-semibold text-gray-800 truncate" title="${request.uploaderName}">${request.uploaderName}</p>
+                        </div>
+                        <!-- 요청자 ID -->
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-600 truncate" title="${request.uploaderId}">${request.uploaderId}</p>
+                        </div>
+                        <!-- 연락처 -->
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-600 truncate" title="${request.contact}">${request.contact}</p>
+                        </div>
+                        <!-- 매물 정보 -->
+                        <div class="col-span-1 md:col-span-4">
+                            <p class="text-base font-bold text-indigo-700 truncate" title="${request.propertyName}">${request.propertyName}</p>
+                            <p class="text-sm text-gray-600 truncate" title="${request.address}">${request.address}</p>
+                        </div>
+                        <!-- 관리 버튼 -->
+                        <div class="col-span-1 md:col-span-2 flex items-center justify-start md:justify-end gap-2">
+                             <button class="toggle-details-btn p-2 rounded-md hover:bg-gray-100 transition-colors" data-target="${detailsId}" title="첨부파일 보기">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-full sm:w-auto">승인</button>
+                            <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md transition-colors w-full sm:w-auto">거절</button>
+                        </div>
+                    </div>
+                    <!-- 첨부파일 미리보기 (숨김 영역) -->
+                    <div id="${detailsId}" class="hidden p-4 border-t border-gray-200 bg-gray-50">
+                        ${createAttachmentPreviews(request.attachments)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 데이터 렌더링 ---
+        function renderRequestList() {
+            if (registrationRequests.length > 0) {
+                requestListContainer.innerHTML = registrationRequests.map(createRequestItem).join('');
+            } else {
+                requestListContainer.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                        <p class="text-gray-500">새로운 매물 등록 요청이 없습니다.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // --- 페이지 로드 및 이벤트 리스너 설정 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRequestList();
+
+            requestListContainer.addEventListener('click', function(event) {
+                const toggleButton = event.target.closest('.toggle-details-btn');
+                if (toggleButton) {
+                    const targetId = toggleButton.dataset.target;
+                    const detailsPanel = document.getElementById(targetId);
+                    const icon = toggleButton.querySelector('svg');
+
+                    if (detailsPanel) {
+                        detailsPanel.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

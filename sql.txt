@@ -217,7 +217,6 @@
   updated_at timestamp                                  // 갱신일
 }
 
-// === 자산 승인 시스템 관련 추가 정보 ===
 
 // ownership_claims.status 상태값
 // - PENDING: 심사 대기 중
