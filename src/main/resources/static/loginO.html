@@ -517,6 +517,7 @@
                 isChatPanelOpen = false;
                 chatPanel.classList.add('translate-x-full');
                 updateRightToggleButtonPosition();
+                updateChatPanelPosition(false);
                 return;
             }
             
@@ -528,12 +529,22 @@
                 searchBarContainer.style.right = '99px';
                 rightOpenIcon.classList.add('hidden');
                 rightCloseIcon.classList.remove('hidden');
+                // 오른쪽 패널이 열릴 때는 애니메이션 완료 후 채팅 패널 위치 조정
+                updateChatPanelPosition(true);
             } else {
-                // 패널 닫기
+                // 패널 닫기 - 채팅 패널도 함께 닫기
                 rightSidePanel.classList.add('translate-x-full');
                 searchBarContainer.style.right = '24px';
                 rightOpenIcon.classList.remove('hidden');
                 rightCloseIcon.classList.add('hidden');
+                
+                // 채팅 패널도 함께 닫기
+                if (isChatPanelOpen) {
+                    isChatPanelOpen = false;
+                    chatPanel.classList.add('translate-x-full');
+                }
+                // 오른쪽 패널이 닫힐 때는 즉시 채팅 패널 위치 조정
+                updateChatPanelPosition(false);
             }
             updateRightToggleButtonPosition();
         });
@@ -552,6 +563,23 @@
             }
         }
 
+        function updateChatPanelPosition(delayed = false) {
+            if (isRightPanelOpen) {
+                if (delayed) {
+                    // 오른쪽 패널 애니메이션 완료 후 채팅 패널 위치 조정 (300ms 후)
+                    setTimeout(() => {
+                        chatPanel.style.right = '75px';
+                    }, 300);
+                } else {
+                    // 즉시 위치 조정
+                    chatPanel.style.right = '75px';
+                }
+            } else {
+                // 오른쪽 패널이 닫혀있을 때: -450px (채팅 패널을 완전히 화면 밖으로) - 즉시 적용
+                chatPanel.style.right = '-450px';
+            }
+        }
+
         chatButton.addEventListener('click', () => {
             isChatPanelOpen = !isChatPanelOpen;
             if (isChatPanelOpen) {
@@ -562,17 +590,20 @@
                 chatPanel.classList.add('translate-x-full');
             }
             updateRightToggleButtonPosition();
+            updateChatPanelPosition(false);
         });
 
         closeChatPanel.addEventListener('click', () => {
             isChatPanelOpen = false;
             chatPanel.classList.add('translate-x-full');
             updateRightToggleButtonPosition();
+            updateChatPanelPosition(false);
         });
 
         // 초기 UI 상태 설정
         updateUIVisibility();
         updateRightToggleButtonPosition();
+        updateChatPanelPosition(false);
     </script>
 </body>
 </html>
