@@ -195,6 +195,91 @@
         </aside>
 
         <!-- =================================================================== -->
+        <!-- 프로필 패널                                                        -->
+        <!-- =================================================================== -->
+        <aside id="profile-panel" class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out" style="right: 75px;">
+            <!-- 프로필 패널 헤더 -->
+            <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+                <h2 class="text-xl font-bold text-gray-800">프로필 수정</h2>
+                <button id="close-profile-panel" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="프로필 패널 닫기">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 스크롤 가능한 프로필 수정 영역 -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                <form id="profile-form" class="space-y-6">
+                    <!-- 프로필 사진 -->
+                    <div class="flex flex-col items-center space-y-4">
+                        <div class="relative">
+                            <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                                <img id="profile-image" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" alt="프로필 사진" class="w-full h-full object-cover">
+                            </div>
+                            <button type="button" class="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <input type="file" id="profile-image-input" accept="image/*" class="hidden">
+                    </div>
+
+                    <!-- 기본 정보 -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">이름/닉네임</label>
+                            <input type="text" id="username" name="username" value="홍길동" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                            <input type="email" id="email" name="email" value="user@example.com" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed">
+                            <p class="text-xs text-gray-500 mt-1">이메일은 변경할 수 없습니다.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
+                            <input type="tel" id="phone" name="phone" value="010-1234-5678" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">소개글</label>
+                            <textarea id="intro" name="intro" rows="4" placeholder="자신을 소개하는 글을 작성해주세요..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none">부동산에 관심이 많은 일반 사용자입니다.</textarea>
+                            <p class="text-xs text-gray-500 mt-1">최대 200자까지 입력할 수 있습니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 계정 통계 -->
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                        <h3 class="text-sm font-semibold text-gray-700">활동 통계</h3>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <p class="text-2xl font-bold text-blue-600">12</p>
+                                <p class="text-xs text-gray-500">찜한 매물</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-green-600">3</p>
+                                <p class="text-xs text-gray-500">작성한 리뷰</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 저장/취소 버튼 -->
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" id="cancel-profile-edit" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            취소
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </aside>
+
+        <!-- =================================================================== -->
         <!-- 오른쪽 상세 정보 패널 (슬라이드 기능 추가)                            -->
         <!-- =================================================================== -->
         <aside id="right-side-panel" class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-20 transform transition-transform duration-300 ease-in-out">
@@ -228,7 +313,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 01-3.46 0M8 8a4 4 0 018 0c0 5.5 2 6 2 6H6s2-.5 2-6z"/>
                     </svg>
                 </button>
-                 <button class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                 <button id="profile-button" class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
@@ -395,6 +480,7 @@
         let isPanelOpen = true;
         let isPanelExpanded = false;
         let isChatPanelOpen = false;
+        let isProfilePanelOpen = false;
 
         // --- DOM 요소 ---
         const sidePanel = document.getElementById('side-panel');
@@ -405,6 +491,9 @@
         const chatPanel = document.getElementById('chat-panel');
         const chatButton = document.getElementById('chat-button');
         const closeChatPanel = document.getElementById('close-chat-panel');
+        const profilePanel = document.getElementById('profile-panel');
+        const profileButton = document.getElementById('profile-button');
+        const closeProfilePanel = document.getElementById('close-profile-panel');
         
         // 왼쪽 패널 컨트롤 버튼
         const openPanelButton = document.getElementById('open-panel-button');
@@ -512,15 +601,25 @@
         let isRightPanelOpen = true;
 
         rightToggleButton.addEventListener('click', () => {
-            // 채팅 패널이 열려있으면 먼저 채팅 패널을 닫음
+            // 프로필 패널이 열려있으면 먼저 프로필 패널을 닫음
+            if (isProfilePanelOpen) {
+                isProfilePanelOpen = false;
+                profilePanel.classList.add('translate-x-full');
+                updateRightToggleButtonPosition();
+                updateProfilePanelPosition(false);
+                return;
+            }
+            
+            // 채팅 패널이 열려있으면 채팅 패널을 닫음
             if (isChatPanelOpen) {
                 isChatPanelOpen = false;
                 chatPanel.classList.add('translate-x-full');
                 updateRightToggleButtonPosition();
+                updateChatPanelPosition(false);
                 return;
             }
             
-            // 채팅 패널이 닫혀있으면 오른쪽 패널을 토글
+            // 모든 패널이 닫혀있으면 오른쪽 패널을 토글
             isRightPanelOpen = !isRightPanelOpen;
             if (isRightPanelOpen) {
                 // 패널 열기
@@ -528,20 +627,36 @@
                 searchBarContainer.style.right = '99px';
                 rightOpenIcon.classList.add('hidden');
                 rightCloseIcon.classList.remove('hidden');
+                // 오른쪽 패널이 열릴 때는 애니메이션 완료 후 패널들 위치 조정
+                updateChatPanelPosition(true);
+                updateProfilePanelPosition(true);
             } else {
-                // 패널 닫기
+                // 패널 닫기 - 모든 패널들 함께 닫기
                 rightSidePanel.classList.add('translate-x-full');
                 searchBarContainer.style.right = '24px';
                 rightOpenIcon.classList.remove('hidden');
                 rightCloseIcon.classList.add('hidden');
+                
+                // 모든 패널들 함께 닫기
+                if (isChatPanelOpen) {
+                    isChatPanelOpen = false;
+                    chatPanel.classList.add('translate-x-full');
+                }
+                if (isProfilePanelOpen) {
+                    isProfilePanelOpen = false;
+                    profilePanel.classList.add('translate-x-full');
+                }
+                // 오른쪽 패널이 닫힐 때는 즉시 패널들 위치 조정
+                updateChatPanelPosition(false);
+                updateProfilePanelPosition(false);
             }
             updateRightToggleButtonPosition();
         });
 
         // --- 채팅 패널 토글 로직 ---
         function updateRightToggleButtonPosition() {
-            if (isChatPanelOpen && isRightPanelOpen) {
-                // 채팅 패널이 열려있고 오른쪽 패널도 열려있을 때: 525px (450px + 75px)
+            if ((isChatPanelOpen || isProfilePanelOpen) && isRightPanelOpen) {
+                // 채팅 패널이나 프로필 패널이 열려있고 오른쪽 패널도 열려있을 때: 525px (450px + 75px)
                 rightToggleButton.style.right = '525px';
             } else if (isRightPanelOpen) {
                 // 오른쪽 패널만 열려있을 때: 75px
@@ -549,6 +664,40 @@
             } else {
                 // 오른쪽 패널이 닫혀있을 때: 0px
                 rightToggleButton.style.right = '0px';
+            }
+        }
+
+        function updateChatPanelPosition(delayed = false) {
+            if (isRightPanelOpen) {
+                if (delayed) {
+                    // 오른쪽 패널 애니메이션 완료 후 채팅 패널 위치 조정 (300ms 후)
+                    setTimeout(() => {
+                        chatPanel.style.right = '75px';
+                    }, 300);
+                } else {
+                    // 즉시 위치 조정
+                    chatPanel.style.right = '75px';
+                }
+            } else {
+                // 오른쪽 패널이 닫혀있을 때: -450px (채팅 패널을 완전히 화면 밖으로) - 즉시 적용
+                chatPanel.style.right = '-450px';
+            }
+        }
+
+        function updateProfilePanelPosition(delayed = false) {
+            if (isRightPanelOpen) {
+                if (delayed) {
+                    // 오른쪽 패널 애니메이션 완료 후 프로필 패널 위치 조정 (300ms 후)
+                    setTimeout(() => {
+                        profilePanel.style.right = '75px';
+                    }, 300);
+                } else {
+                    // 즉시 위치 조정
+                    profilePanel.style.right = '75px';
+                }
+            } else {
+                // 오른쪽 패널이 닫혀있을 때: -450px (프로필 패널을 완전히 화면 밖으로) - 즉시 적용
+                profilePanel.style.right = '-450px';
             }
         }
 
@@ -562,17 +711,97 @@
                 chatPanel.classList.add('translate-x-full');
             }
             updateRightToggleButtonPosition();
+            updateChatPanelPosition(false);
         });
 
         closeChatPanel.addEventListener('click', () => {
             isChatPanelOpen = false;
             chatPanel.classList.add('translate-x-full');
             updateRightToggleButtonPosition();
+            updateChatPanelPosition(false);
+        });
+
+        // --- 프로필 패널 토글 로직 ---
+        profileButton.addEventListener('click', () => {
+            isProfilePanelOpen = !isProfilePanelOpen;
+            if (isProfilePanelOpen) {
+                // 프로필 패널 열기 - 다른 패널들 먼저 닫기
+                if (isChatPanelOpen) {
+                    isChatPanelOpen = false;
+                    chatPanel.classList.add('translate-x-full');
+                }
+                profilePanel.classList.remove('translate-x-full');
+            } else {
+                // 프로필 패널 닫기
+                profilePanel.classList.add('translate-x-full');
+            }
+            updateRightToggleButtonPosition();
+            updateChatPanelPosition(false);
+            updateProfilePanelPosition(false);
+        });
+
+        closeProfilePanel.addEventListener('click', () => {
+            isProfilePanelOpen = false;
+            profilePanel.classList.add('translate-x-full');
+            updateRightToggleButtonPosition();
+            updateProfilePanelPosition(false);
+        });
+
+        // --- 프로필 관련 기능 ---
+        // 프로필 사진 업로드
+        profilePanel.querySelector('button[type="button"]').addEventListener('click', () => {
+            document.getElementById('profile-image-input').click();
+        });
+
+        document.getElementById('profile-image-input').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-image').src = e.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // 프로필 폼 저장
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const profileData = {
+                username: formData.get('username'),
+                phone: formData.get('phone'),
+                intro: formData.get('intro')
+            };
+            
+            // 여기서 실제 API 호출 구현
+            console.log('프로필 업데이트:', profileData);
+            alert('프로필이 성공적으로 업데이트되었습니다.');
+            
+            // 패널 닫기
+            isProfilePanelOpen = false;
+            profilePanel.classList.add('translate-x-full');
+            updateRightToggleButtonPosition();
+            updateProfilePanelPosition(false);
+        });
+
+        // 프로필 수정 취소
+        document.getElementById('cancel-profile-edit').addEventListener('click', () => {
+            // 폼 리셋 (원래 데이터로 복구)
+            document.getElementById('profile-form').reset();
+            
+            // 패널 닫기
+            isProfilePanelOpen = false;
+            profilePanel.classList.add('translate-x-full');
+            updateRightToggleButtonPosition();
+            updateProfilePanelPosition(false);
         });
 
         // 초기 UI 상태 설정
         updateUIVisibility();
         updateRightToggleButtonPosition();
+        updateChatPanelPosition(false);
+        updateProfilePanelPosition(false);
     </script>
 </body>
 </html>
