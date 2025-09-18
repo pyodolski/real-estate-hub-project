@@ -61,7 +61,7 @@
             <div id="search-bar-container" class="absolute top-6 flex flex-row flex-wrap items-center gap-3 z-10 transition-all duration-300 ease-in-out" style="left: 474px; right: 99px;">
                 <!-- Search Bar -->
                 <div class="flex items-center bg-white rounded-full shadow-lg px-4 py-2 flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mr-3 flex-shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mr-3 flex-shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" placeholder="동, 지하철역, 대학교, 매물번호" class="w-56 focus:outline-none bg-transparent text-sm">
                 </div>
             
@@ -102,7 +102,7 @@
                                 <div class="relative mt-1">
                                     <input id="area-min-input" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="m²">
                                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">m²</span>
-                                </div>
+                </div>
                             </div>
                             <span class="text-gray-400">~</span>
                             <div class="flex-1">
@@ -159,13 +159,164 @@
                         <button data-type="CCTV" class="option-item whitespace-nowrap min-w-[64px] px-4 py-1.5 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">CCTV</button>
                     </div>
                 </div>
-                <div class="bg-white rounded-full shadow-lg">
-                    <button id = "all-filter-button" class="px-5 py-3 text-gray-700 font-semibold text-sm flex items-center gap-2">
+                <div id="all-filter-wrapper" class="relative inline-block bg-white rounded-full shadow-lg">
+                    <button id="all-filter-button" class="px-5 py-3 text-gray-700 font-semibold text-sm flex items-center gap-2 bg-white hover:bg-gray-100 rounded-full leading-tight focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
-                        전체필터
+                        <span class="block">전체필터</span>
+                        <span id="all-filter-selected-label" class="block text-[11px] text-blue-600 font-semibold mt-0.5 hidden"></span>
                     </button>
+                    <div id="all-filter-dropdown" class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg p-6 z-20 w-[600px] max-h-[80vh] overflow-y-auto hidden">
+                        <div class="space-y-6">
+                            <!-- 주거형태 -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">주거형태</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <button data-type="아파트" class="filter-house-type whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">아파트</button>
+                                    <button data-type="빌라" class="filter-house-type whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">빌라</button>
+                                    <button data-type="원/투룸" class="filter-house-type whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">원/투룸</button>
+                                </div>
+                            </div>
+
+                            <!-- 거래방식 -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">거래방식</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <button data-type="매매" class="filter-offer-type whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">매매</button>
+                                    <button data-type="전세" class="filter-offer-type whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">전세</button>
+                                    <button data-type="월세" class="filter-offer-type whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">월세</button>
+                                </div>
+                            </div>
+
+                            <!-- 전용면적 -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">전용면적</h3>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1">
+                                        <input id="filter-area-min" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최소 m²">
+                                    </div>
+                                    <span class="text-gray-400">~</span>
+                                    <div class="flex-1">
+                                        <input id="filter-area-max" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최대 m²">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 층수 -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">층수</h3>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1">
+                                        <input id="filter-floor-min" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최소 층">
+                                    </div>
+                                    <span class="text-gray-400">~</span>
+                                    <div class="flex-1">
+                                        <input id="filter-floor-max" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최대 층">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 준공년도 -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">준공년도</h3>
+                                <div class="flex items-center gap-3">
+                                    <input id="filter-build-year" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: 2020">
+                                </div>
+                            </div>
+
+                            <!-- 가격 (거래방식에 따라 동적 변경) -->
+                            <div id="price-section">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">가격</h3>
+                                
+                                <!-- 매매가 -->
+                                <div id="price-buy" class="hidden">
+                                    <label class="text-xs text-gray-500 mb-2 block">매매가</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1">
+                                            <input id="filter-buy-min" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최소 (만원)">
+                                        </div>
+                                        <span class="text-gray-400">~</span>
+                                        <div class="flex-1">
+                                            <input id="filter-buy-max" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최대 (만원)">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 전세가 -->
+                                <div id="price-jeonse" class="hidden">
+                                    <label class="text-xs text-gray-500 mb-2 block">전세가</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1">
+                                            <input id="filter-jeonse-min" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최소 (만원)">
+                                        </div>
+                                        <span class="text-gray-400">~</span>
+                                        <div class="flex-1">
+                                            <input id="filter-jeonse-max" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최대 (만원)">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 월세 -->
+                                <div id="price-monthly" class="hidden">
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="text-xs text-gray-500 mb-2 block">보증금</label>
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex-1">
+                                                    <input id="filter-deposit-min" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최소 (만원)">
+                                                </div>
+                                                <span class="text-gray-400">~</span>
+                                                <div class="flex-1">
+                                                    <input id="filter-deposit-max" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최대 (만원)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500 mb-2 block">월세</label>
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex-1">
+                                                    <input id="filter-monthly-min" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최소 (만원)">
+                                                </div>
+                                                <span class="text-gray-400">~</span>
+                                                <div class="flex-1">
+                                                    <input id="filter-monthly-max" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="최대 (만원)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 옵션 -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">옵션</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <button data-type="풀옵션" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">풀옵션</button>
+                                    <button data-type="에어컨" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">에어컨</button>
+                                    <button data-type="냉장고" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">냉장고</button>
+                                    <button data-type="세탁기" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">세탁기</button>
+                                    <button data-type="가스레인지" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">가스레인지</button>
+                                    <button data-type="인덕션레인지" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">인덕션레인지</button>
+                                    <button data-type="침대" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">침대</button>
+                                    <button data-type="전자레인지" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">전자레인지</button>
+                                    <button data-type="TV" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">TV</button>
+                                    <button data-type="책상" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">책상</button>
+                                    <button data-type="CCTV" class="filter-option whitespace-nowrap px-4 py-2 rounded-full text-sm text-gray-700 bg-gray-100 hover:bg-gray-200">CCTV</button>
+                                </div>
+                            </div>
+
+                            <!-- 적용/초기화 버튼 -->
+                            <div class="flex justify-between items-center pt-4 border-t">
+                                <button id="reset-filter" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                                    초기화
+                                </button>
+                                <button id="apply-filter" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                    적용
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -490,9 +641,10 @@
 
         <!-- 오른쪽 패널 토글 버튼 -->
         <button id="right-panel-toggle-button" class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-l-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out" style="right: 75px;">
-            <svg id="right-open-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            <svg id="right-close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg id="right-open-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <svg id="right-close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
+
     </div>
 
     <script>
@@ -1266,16 +1418,6 @@
         const houseTypeSelectedLabel = document.getElementById('house-type-selected-label');
         let selectedHouseTypes = new Set();
 
-        // 모든 드롭다운 닫기 함수
-        function closeAllDropdowns() {
-            houseTypeDropdown.classList.add('hidden');
-            offerTypeDropdown.classList.add('hidden');
-            areaDropdown.classList.add('hidden');
-            floorDropdown.classList.add('hidden');
-            if (typeof optionDropdown !== 'undefined' && optionDropdown) {
-                optionDropdown.classList.add('hidden');
-            }
-        }
 
         houseTypeButton.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1651,6 +1793,273 @@
                 const wrapper = document.getElementById('option-wrapper');
                 if (wrapper && !wrapper.contains(e.target)) {
                     optionDropdown.classList.add('hidden');
+                }
+            }
+        });
+
+        // ======================
+        // 모든 드롭다운 닫기 함수 (모든 변수 정의 후)
+        // ======================
+        const allFilterDropdown = document.getElementById('all-filter-dropdown');
+        
+        function closeAllDropdowns() {
+            houseTypeDropdown.classList.add('hidden');
+            offerTypeDropdown.classList.add('hidden');
+            areaDropdown.classList.add('hidden');
+            floorDropdown.classList.add('hidden');
+            optionDropdown.classList.add('hidden');
+            allFilterDropdown.classList.add('hidden');
+        }
+
+        // ======================
+        // 전체필터 드롭다운
+        // ======================
+        const allFilterButton = document.getElementById('all-filter-button');
+        const allFilterSelectedLabel = document.getElementById('all-filter-selected-label');
+        const applyFilter = document.getElementById('apply-filter');
+        const resetFilter = document.getElementById('reset-filter');
+
+        // 전체필터 드롭다운 내 필터 상태 (실제 필터 상태와 동일)
+        const filterFullOptionItems = ['에어컨', '냉장고', '세탁기', '가스레인지', '인덕션레인지', '침대', '전자레인지'];
+
+        // 전체필터 드롭다운 열기
+        allFilterButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = !allFilterDropdown.classList.contains('hidden');
+            closeAllDropdowns();
+            if (!isOpen) {
+                allFilterDropdown.classList.remove('hidden');
+                loadCurrentFiltersToDropdown();
+            }
+        });
+
+        // 현재 필터 상태를 드롭다운에 로드
+        function loadCurrentFiltersToDropdown() {
+            // 텍스트 입력값 로드
+            document.getElementById('filter-area-min').value = areaMinInput.value;
+            document.getElementById('filter-area-max').value = areaMaxInput.value;
+            document.getElementById('filter-floor-min').value = floorMinInput.value;
+            document.getElementById('filter-floor-max').value = floorMaxInput.value;
+            
+            updateFilterDropdownUI();
+            updatePriceFields();
+            updateAllFilterLabel();
+        }
+
+        // 드롭다운 내 UI 업데이트
+        function updateFilterDropdownUI() {
+            // 주거형태 버튼 업데이트 (실제 상태 반영)
+            document.querySelectorAll('.filter-house-type').forEach(b => {
+                const v = b.getAttribute('data-type');
+                const isActive = selectedHouseTypes.has(v);
+                b.classList.toggle('bg-blue-600', isActive);
+                b.classList.toggle('text-white', isActive);
+                b.classList.toggle('bg-gray-100', !isActive);
+                b.classList.toggle('text-gray-700', !isActive);
+            });
+
+            // 거래방식 버튼 업데이트 (실제 상태 반영)
+            document.querySelectorAll('.filter-offer-type').forEach(b => {
+                const v = b.getAttribute('data-type');
+                const isActive = selectedOfferTypes.has(v);
+                b.classList.toggle('bg-blue-600', isActive);
+                b.classList.toggle('text-white', isActive);
+                b.classList.toggle('bg-gray-100', !isActive);
+                b.classList.toggle('text-gray-700', !isActive);
+            });
+
+            // 옵션 버튼 업데이트 (실제 상태 반영)
+            document.querySelectorAll('.filter-option').forEach(b => {
+                const v = b.getAttribute('data-type');
+                if (v === '풀옵션') {
+                    const isFullOptionActive = filterFullOptionItems.every(item => selectedOptions.has(item));
+                    b.classList.toggle('bg-blue-600', isFullOptionActive);
+                    b.classList.toggle('text-white', isFullOptionActive);
+                    b.classList.toggle('bg-gray-100', !isFullOptionActive);
+                    b.classList.toggle('text-gray-700', !isFullOptionActive);
+                } else {
+                    const isActive = selectedOptions.has(v);
+                    b.classList.toggle('bg-blue-600', isActive);
+                    b.classList.toggle('text-white', isActive);
+                    b.classList.toggle('bg-gray-100', !isActive);
+                    b.classList.toggle('text-gray-700', !isActive);
+                }
+            });
+        }
+
+        // 전체필터 라벨 업데이트
+        function updateAllFilterLabel() {
+            const totalFilters = selectedHouseTypes.size + selectedOfferTypes.size + selectedOptions.size;
+            const hasAreaFilter = areaMinInput.value !== '' || areaMaxInput.value !== '';
+            const hasFloorFilter = floorMinInput.value !== '' || floorMaxInput.value !== '';
+            const hasBuildYearFilter = document.getElementById('filter-build-year').value !== '';
+            
+            const additionalFilters = (hasAreaFilter ? 1 : 0) + (hasFloorFilter ? 1 : 0) + (hasBuildYearFilter ? 1 : 0);
+            const totalCount = totalFilters + additionalFilters;
+            
+            if (totalCount > 0) {
+                allFilterSelectedLabel.textContent = `${totalCount}개 필터 적용`;
+                allFilterSelectedLabel.classList.remove('hidden');
+            } else {
+                allFilterSelectedLabel.textContent = '';
+                allFilterSelectedLabel.classList.add('hidden');
+            }
+        }
+
+        // 거래방식에 따른 가격 필드 표시/숨김
+        function updatePriceFields() {
+            const priceBuy = document.getElementById('price-buy');
+            const priceJeonse = document.getElementById('price-jeonse');
+            const priceMonthly = document.getElementById('price-monthly');
+            
+            // 모든 가격 필드 숨김
+            priceBuy.classList.add('hidden');
+            priceJeonse.classList.add('hidden');
+            priceMonthly.classList.add('hidden');
+            
+            // 선택된 거래방식에 따라 해당 필드만 표시
+            if (selectedOfferTypes.has('매매')) {
+                priceBuy.classList.remove('hidden');
+            }
+            if (selectedOfferTypes.has('전세')) {
+                priceJeonse.classList.remove('hidden');
+            }
+            if (selectedOfferTypes.has('월세')) {
+                priceMonthly.classList.remove('hidden');
+            }
+        }
+
+        // 드롭다운 내 주거형태 버튼 이벤트 (실제 상태 직접 변경)
+        document.querySelectorAll('.filter-house-type').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = btn.getAttribute('data-type');
+                if (selectedHouseTypes.has(value)) {
+                    selectedHouseTypes.delete(value);
+                } else {
+                    selectedHouseTypes.add(value);
+                }
+                updateHouseTypeUI();
+                updateFilterDropdownUI();
+                updateAllFilterLabel();
+            });
+        });
+
+        // 드롭다운 내 거래방식 버튼 이벤트 (실제 상태 직접 변경)
+        document.querySelectorAll('.filter-offer-type').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = btn.getAttribute('data-type');
+                if (selectedOfferTypes.has(value)) {
+                    selectedOfferTypes.delete(value);
+                } else {
+                    selectedOfferTypes.add(value);
+                }
+                updateOfferTypeUI();
+                updateFilterDropdownUI();
+                updatePriceFields();
+                updateAllFilterLabel();
+            });
+        });
+
+        // 드롭다운 내 옵션 버튼 이벤트 (실제 상태 직접 변경)
+        document.querySelectorAll('.filter-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = btn.getAttribute('data-type');
+                
+                if (value === '풀옵션') {
+                    const isFullOptionActive = filterFullOptionItems.every(item => selectedOptions.has(item));
+                    if (isFullOptionActive) {
+                        filterFullOptionItems.forEach(item => selectedOptions.delete(item));
+                    } else {
+                        filterFullOptionItems.forEach(item => selectedOptions.add(item));
+                    }
+                } else {
+                    if (selectedOptions.has(value)) {
+                        selectedOptions.delete(value);
+                    } else {
+                        selectedOptions.add(value);
+                    }
+                }
+                updateOptionUI();
+                updateFilterDropdownUI();
+                updateAllFilterLabel();
+            });
+        });
+
+        // 텍스트 입력 실시간 동기화
+        document.getElementById('filter-area-min').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            e.target.value = val;
+            areaMinInput.value = val;
+            syncAreaLabel();
+            updateAllFilterLabel();
+        });
+
+        document.getElementById('filter-area-max').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            e.target.value = val;
+            areaMaxInput.value = val;
+            syncAreaLabel();
+            updateAllFilterLabel();
+        });
+
+        document.getElementById('filter-floor-min').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            e.target.value = val;
+            floorMinInput.value = val;
+            syncFloorLabel();
+            updateAllFilterLabel();
+        });
+
+        document.getElementById('filter-floor-max').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            e.target.value = val;
+            floorMaxInput.value = val;
+            syncFloorLabel();
+            updateAllFilterLabel();
+        });
+
+        // 필터 초기화
+        resetFilter.addEventListener('click', () => {
+            selectedHouseTypes.clear();
+            selectedOfferTypes.clear();
+            selectedOptions.clear();
+            
+            // 모든 텍스트 입력 초기화
+            areaMinInput.value = '';
+            areaMaxInput.value = '';
+            floorMinInput.value = '';
+            floorMaxInput.value = '';
+            document.getElementById('filter-area-min').value = '';
+            document.getElementById('filter-area-max').value = '';
+            document.getElementById('filter-floor-min').value = '';
+            document.getElementById('filter-floor-max').value = '';
+            document.getElementById('filter-build-year').value = '';
+            
+            // 모든 UI 업데이트
+            updateHouseTypeUI();
+            updateOfferTypeUI();
+            updateOptionUI();
+            updateFilterDropdownUI();
+            syncAreaLabel();
+            syncFloorLabel();
+            updatePriceFields();
+            updateAllFilterLabel();
+        });
+
+        // 적용 버튼 클릭 시 드롭다운 닫기
+        applyFilter.addEventListener('click', () => {
+            allFilterDropdown.classList.add('hidden');
+        });
+
+        // 외부 클릭 시 전체필터 드롭다운 닫기
+        document.addEventListener('click', (e) => {
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                const wrapper = document.getElementById('all-filter-wrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    allFilterDropdown.classList.add('hidden');
                 }
             }
         });
