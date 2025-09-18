@@ -2,11 +2,11 @@
 import { debounce } from '../utils/debounce.js';
 import { renderMarkers, highlightMarker } from './markers.js';
 import { fetchPropertiesInBounds, fetchPropertyDetail } from '../api/propertiesApi.js';
-import { renderDetail, clearDetail } from '../ui/sidebar.js';
+import { clearDetail } from '../ui/sidebar.js';
 
 export async function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
-  app.map = new naver.maps.Map('map', { center, zoom: 13, zoomControl: true });
+  app.map = new naver.maps.Map('map', { center, zoom: 13, zoomControl: false });
 
   const statusFilterEl = document.getElementById('statusFilter');
 
