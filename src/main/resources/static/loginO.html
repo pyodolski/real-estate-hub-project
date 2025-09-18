@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="./css/map.css"/>
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
     <style>
         /* Custom Styles */
         body {
@@ -40,16 +42,19 @@
         <!-- 지도 및 필터 패널                                                     -->
         <!-- =================================================================== -->
         <main class="w-full h-full">
-            <!-- 지도 영역 (실제 지도 API로 대체될 부분) -->
+            <main id = "container">
+            <!-- 지도 영역 (실제 지도 API로 대체될 부분)
             <div class="absolute inset-0 bg-gray-300 flex items-center justify-center">
                 <p class="text-gray-500 text-2xl">[ 지도 영역 ]</p>
-            </div>
+            </div>-->
+                <div id="map"></div>
+            </main>
 
             <!-- 상단 검색 및 필터 바 -->
             <div id="search-bar-container" class="absolute top-6 flex flex-row flex-wrap items-center gap-3 z-10 transition-all duration-300 ease-in-out" style="left: 474px; right: 99px;">
                 <!-- Search Bar -->
                 <div class="flex items-center bg-white rounded-full shadow-lg px-4 py-2 flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mr-3 flex-shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mr-3 flex-shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" placeholder="동, 지하철역, 대학교, 매물번호" class="w-56 focus:outline-none bg-transparent text-sm">
                 </div>
             
@@ -328,11 +333,11 @@
 
         <!-- 오른쪽 패널 토글 버튼 -->
         <button id="right-panel-toggle-button" class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-l-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out" style="right: 75px;">
-            <svg id="right-open-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            <svg id="right-close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg id="right-open-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <svg id="right-close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
     </div>
-
+    <script type="module" src="./js/main.js"></script>
     <script>
         // --- 샘플 데이터 ---
         const chatData = [
