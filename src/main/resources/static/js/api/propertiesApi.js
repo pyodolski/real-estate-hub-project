@@ -1,9 +1,10 @@
 // src/main/resources/static/js/api/propertiesApi.js
 export async function fetchPropertiesInBounds({ swLat, swLng, neLat, neLng, filters }) {
   const sample = [
-    { id: 101, status: 'AVAILABLE',  lat: 37.5668, lng: 126.9783, title:'을지로 2룸', address:'서울 중구' },
-    { id: 102, status: 'CONTRACTED', lat: 37.5655, lng: 126.9760, title:'시청역 오피스텔', address:'서울 중구' },
-    { id: 103, status: 'SOLD',       lat: 37.5682, lng: 126.9801, title:'종로 신축', address:'서울 종로구' },
+    { id: 101, status: 'AVAILABLE',  lat: 37.5668, lng: 126.9783, title:'을지로 2룸', address:'서울 중구',price:125000000,method },
+    { id: 102, status: 'CONTRACTED', lat: 37.5655, lng: 126.9760, title:'시청역 오피스텔', address:'서울 중구',price:225000000 },
+    { id: 103, status: 'SOLD',       lat: 37.5682, lng: 126.9801, title:'종로 신축', address:'서울 종로구',price:325000000 },
+    { id: 104, status: 'SOLD',       lat: 37.5672, lng: 126.9851, title:'종로 신축', address:'서울 종로구',price:425000000 },
   ];
   const within = (p) => p.lat >= swLat && p.lat <= neLat && p.lng >= swLng && p.lng <= neLng;
   let list = sample.filter(within);
