@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "refresh_tokens", indexes = {
         @Index(name="idx_rt_user", columnList = "user_id")
 })
-@Getter @Setter //setter 수정
+@Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class RefreshToken {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
