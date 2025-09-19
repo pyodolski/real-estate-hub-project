@@ -22,7 +22,17 @@ public class PropertyOffer {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 16, nullable = false)
+    private OfferType2 housetype; // APART / BILLA / ONE
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 16, nullable = false)
     private OfferType type; // SALE / JEONSE / WOLSE
+
+    @Column(length = 16, nullable = false)
+    private BigDecimal floor;
+
+    @Column(length = 16, nullable = true)
+    private String oftion;
 
     @Column(name = "total_price", precision = 14, scale = 2)
     private BigDecimal totalPrice; // 매매가
@@ -60,5 +70,9 @@ public class PropertyOffer {
 
     public enum OfferType {
         SALE, JEONSE, WOLSE
+    }
+
+    public enum  OfferType2 {
+        APART, BILLA, ONE
     }
 }
