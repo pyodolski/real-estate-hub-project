@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script>
+        // 초기값 false로 두고 시작
+        var isProfilePanelOpen = false;
+        var isChatPanelOpen = false; // 이거도 같은 에러 났었죠
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부동산 매물 찾기</title>
@@ -13,6 +18,10 @@
 
     <link rel="stylesheet" href="./css/map.css"/>
     <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
+    <script>
+        // loginO.html 상단(해당 스크립트보다 먼저) 또는 공용 JS에
+        window.isChatPanelOpen = window.isChatPanelOpen ?? false;
+    </script>
     <style>
         /* Custom Styles */
         body {
