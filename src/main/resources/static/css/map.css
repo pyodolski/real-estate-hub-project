@@ -1,6 +1,6 @@
 html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 #topbar { padding: 8px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 8px; align-items: center; }
-#container { display: flex; height: calc(100% - 48px); }
+#container { display: flex; height: 100%; }
 #map { flex: 1; }
 /*#sidebar { width: 320px; border-left: 1px solid #e5e7eb; padding: 12px; overflow: auto; }*/
 

@@ -181,7 +181,7 @@
                         <span class="block">전체필터</span>
                         <span id="all-filter-selected-label" class="block text-[11px] text-blue-600 font-semibold mt-0.5 hidden"></span>
                     </button>
-                    <div id="all-filter-dropdown" class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg p-6 z-20 w-[600px] max-h-[80vh] overflow-y-auto hidden">
+                    <div id="all-filter-dropdown" class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg p-6 z-20 w-[450px] max-h-[80vh] overflow-y-auto hidden">
                         <div class="space-y-6">
                             <!-- 주거형태 -->
                             <div>
@@ -633,6 +633,51 @@
         </aside>
 
         <!-- =================================================================== -->
+        <!-- 내 매물 관리 패널                                                   -->
+        <!-- =================================================================== -->
+        <aside id="my-property-panel" class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out" style="right: 75px;">
+            <!-- 내 매물 관리 패널 헤더 -->
+            <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+                <h2 class="text-xl font-bold text-gray-800">내 매물 관리</h2>
+                <button id="close-my-property-panel" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="내 매물 관리 패널 닫기">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 내 매물 요약 및 새 등록 -->
+            <div class="mb-4 flex-shrink-0">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-800">총 매물</h3>
+                            <p class="text-2xl font-bold text-blue-600">3개</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-600">이번 달 조회수</p>
+                            <p class="text-lg font-semibold text-gray-800">1,247회</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    새 매물 등록
+                </button>
+            </div>
+
+            <!-- 스크롤 가능한 내 매물 목록 영역 -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                <div id="my-property-list" class="space-y-4">
+                    <!-- JavaScript로 내 매물 목록이 여기에 추가됩니다. -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- =================================================================== -->
         <!-- 오른쪽 상세 정보 패널 (슬라이드 기능 추가)                            -->
         <!-- =================================================================== -->
         <aside id="right-side-panel" class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-20 transform transition-transform duration-300 ease-in-out">
@@ -654,6 +699,11 @@
                         <rect x="14" y="3" width="7" height="7"/>
                         <rect x="3" y="14" width="7" height="7"/>
                         <rect x="14" y="14" width="7" height="7"/>
+                    </svg>
+                </button>
+                <button id="my-property-button" class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                 </button>
                 <button id="chat-button" class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
@@ -689,62 +739,6 @@
     <script type="module" src="./js/main.js"></script>
     <script>
         // --- 샘플 데이터 ---
-        const chatData = [
-            {
-                id: 1,
-                name: '김중개사',
-                lastMessage: '이 매물에 대해 문의주신 내용 답변드립니다.',
-                timestamp: '오후 3:24',
-                isRead: false,
-                profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-                property: '강남구 역삼동 아파트'
-            },
-            {
-                id: 2,
-                name: '박부동산',
-                lastMessage: '네, 언제든 연락주세요!',
-                timestamp: '오후 2:15',
-                isRead: true,
-                profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b436?w=100&h=100&fit=crop&crop=face',
-                property: '서초구 반포동 오피스텔'
-            },
-            {
-                id: 3,
-                name: '이공인중개사',
-                lastMessage: '방문 일정은 내일 오전 10시로 확정되었습니다.',
-                timestamp: '오전 11:30',
-                isRead: false,
-                profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-                property: '마포구 합정동 빌라'
-            },
-            {
-                id: 4,
-                name: '최부동산중개',
-                lastMessage: '해당 매물은 현재 거래 진행 중입니다.',
-                timestamp: '오전 9:45',
-                isRead: true,
-                profileImage: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face',
-                property: '송파구 잠실동 아파트'
-            },
-            {
-                id: 5,
-                name: '정부동산',
-                lastMessage: '계약서 검토 완료했습니다. 확인 부탁드려요.',
-                timestamp: '어제',
-                isRead: true,
-                profileImage: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop&crop=face',
-                property: '용산구 이촌동 오피스텔'
-            },
-            {
-                id: 6,
-                name: '한국부동산',
-                lastMessage: '추가 옵션에 대해 문의드립니다.',
-                timestamp: '어제',
-                isRead: true,
-                profileImage: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop&crop=face',
-                property: '강서구 화곡동 아파트'
-            }
-        ];
 
         // --- 알림 데이터 (샘플) ---
         const notificationData = [
@@ -824,6 +818,52 @@
                 icon: 'file-text',
                 iconColor: 'text-indigo-500',
                 bgColor: 'bg-indigo-50'
+            }
+        ];
+
+        // --- 내 매물 관리 데이터 (샘플) ---
+        const myProperties = [
+            {
+                id: 1,
+                title: '강남구 역삼동 오피스텔',
+                price: '전세 2억 8천만원',
+                location: '강남구 역삼동',
+                details: '오피스텔 ∙ 방 1개 ∙ 12층 ∙ 33.06m²',
+                status: 'active', // active, reserved, sold
+                statusText: '판매중',
+                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop',
+                views: 156,
+                inquiries: 8,
+                registeredDate: '2024-01-15',
+                badge: 'hot' // hot, new, none
+            },
+            {
+                id: 2,
+                title: '마포구 합정동 투룸 빌라',
+                price: '월세 500/65',
+                location: '마포구 합정동',
+                details: '빌라 ∙ 방 2개 ∙ 3층 ∙ 45.12m²',
+                status: 'reserved',
+                statusText: '예약중',
+                image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop',
+                views: 89,
+                inquiries: 12,
+                registeredDate: '2024-01-20',
+                badge: 'none'
+            },
+            {
+                id: 3,
+                title: '서초구 반포동 아파트',
+                price: '매매 4억 2천만원',
+                location: '서초구 반포동',
+                details: '아파트 ∙ 방 3개 ∙ 8층 ∙ 84.9m²',
+                status: 'sold',
+                statusText: '거래완료',
+                image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop',
+                views: 234,
+                inquiries: 15,
+                registeredDate: '2024-01-10',
+                badge: 'none'
             }
         ];
 
@@ -963,31 +1003,8 @@
             `;
         }
 
-        // --- 채팅 카드 생성 함수 ---
-        function createChatCard(chat) {
-            const unreadBadge = !chat.isRead ? '<span class="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">N</span>' : '';
-            const unreadStyle = !chat.isRead ? 'font-semibold' : '';
-            
-            return `
-                <div class="bg-white rounded-lg p-4 border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div class="flex items-center space-x-3">
-                        <div class="relative">
-                            <img src="${chat.profileImage}" alt="${chat.name}" class="w-12 h-12 rounded-full object-cover">
-                            ${!chat.isRead ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>' : ''}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-medium text-gray-900 truncate ${unreadStyle}">${chat.name}</h3>
-                                <span class="text-xs text-gray-500 ml-2">${chat.timestamp}</span>
-                            </div>
-                            <p class="text-sm text-gray-600 truncate ${unreadStyle}">${chat.lastMessage}</p>
-                            <p class="text-xs text-blue-600 mt-1 truncate">${chat.property}</p>
-                        </div>
-                        ${unreadBadge}
-                    </div>
-                </div>
-            `;
-        }
+        // --- 채팅 카드 생성 함수 (별도 파일로 이동됨) ---
+        // 채팅 관련 함수들은 chat-list.html로 분리됨
 
         // --- 즐겨찾기 매물 카드 생성 함수 (빨간색 하트 포함) ---
         function createFavoritePropertyCard(property) {
@@ -1081,12 +1098,89 @@
             }
         });
 
-        // 채팅 데이터 렌더링
-        const chatList = document.getElementById('chat-list');
-        chatData.forEach(chat => {
-            const chatCardHTML = createChatCard(chat);
-            chatList.innerHTML += chatCardHTML;
-        });
+        // 채팅 더미 데이터
+        const chatData = [
+            { 
+                id: 1, 
+                name: '김중개사', 
+                lastMessage: '이 매물에 대해 문의주신 내용 답변드립니다.', 
+                timestamp: '오후 3:24', 
+                isRead: false, 
+                profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face', 
+                property: '강남구 역삼동 아파트' 
+            },
+            { 
+                id: 2, 
+                name: '박부동산', 
+                lastMessage: '네, 언제든 연락주세요!', 
+                timestamp: '오후 2:15', 
+                isRead: true, 
+                profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b436?w=100&h=100&fit=crop&crop=face', 
+                property: '서초구 반포동 오피스텔' 
+            },
+            { 
+                id: 3, 
+                name: '이공인중개사', 
+                lastMessage: '방문 일정은 내일 오전 10시로 확정되었습니다.', 
+                timestamp: '오전 11:30', 
+                isRead: false, 
+                profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face', 
+                property: '마포구 합정동 빌라' 
+            }
+        ];
+
+        // 채팅 카드 생성 함수
+        function createChatCard(chat) {
+            const unreadBadge = !chat.isRead ? '<span class="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">N</span>' : '';
+            const unreadStyle = !chat.isRead ? 'font-semibold' : '';
+            
+            return `
+                <div class="bg-white rounded-lg p-4 border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <img src="${chat.profileImage}" alt="${chat.name}" class="w-12 h-12 rounded-full object-cover">
+                            ${!chat.isRead ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>' : ''}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-medium text-gray-900 truncate ${unreadStyle}">${chat.name}</h3>
+                                <span class="text-xs text-gray-500 ml-2">${chat.timestamp}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 truncate ${unreadStyle}">${chat.lastMessage}</p>
+                            <p class="text-xs text-blue-600 mt-1 truncate">${chat.property}</p>
+                        </div>
+                        ${unreadBadge}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 채팅 목록 렌더링 함수
+        function renderChatList(data = chatData) {
+            const chatListContainer = document.getElementById('chat-list');
+            if (chatListContainer) {
+                chatListContainer.innerHTML = '';
+                data.forEach(chat => {
+                    chatListContainer.innerHTML += createChatCard(chat);
+                });
+            }
+        }
+
+        // 채팅 검색 기능
+        function initializeChatSearch() {
+            const searchInput = document.querySelector('#chat-panel input[placeholder="채팅방 검색"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const filteredChats = chatData.filter(chat => 
+                        chat.name.toLowerCase().includes(searchTerm) ||
+                        chat.lastMessage.toLowerCase().includes(searchTerm) ||
+                        chat.property.toLowerCase().includes(searchTerm)
+                    );
+                    renderChatList(filteredChats);
+                });
+            }
+        }
 
         // --- 상태 변수 ---
         let isPanelOpen = true;
@@ -1189,21 +1283,37 @@
         closePanelButton.addEventListener('click', () => {
             isPanelOpen = false;
             updateUIVisibility();
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+            }
         });
 
         openPanelButton.addEventListener('click', () => {
             isPanelOpen = true;
             updateUIVisibility();
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+            }
         });
 
         expandPanelButton.addEventListener('click', () => {
             isPanelExpanded = true;
             updateUIVisibility();
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+            }
         });
 
         collapseFullscreenButton.addEventListener('click', () => {
             isPanelExpanded = false;
             updateUIVisibility();
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+            }
         });
 
         // --- 오른쪽 패널 토글 로직 ---
@@ -1398,6 +1508,13 @@
                 closeButton: document.getElementById('close-compare-panel'),
                 isOpen: false,
                 width: 450
+            },
+            'my-property': {
+                panel: document.getElementById('my-property-panel'),
+                button: document.getElementById('my-property-button'),
+                closeButton: document.getElementById('close-my-property-panel'),
+                isOpen: false,
+                width: 450
             }
         };
 
@@ -1410,7 +1527,7 @@
                 panel.panel.classList.add('translate-x-full');
                 panel.isOpen = false;
                 // 모든 카드 패널의 특별한 위치 처리
-                if (panel === allPanels.chat || panel === allPanels.profile || panel === allPanels.notification || panel === allPanels.favorite || panel === allPanels.compare) {
+                if (panel === allPanels.chat || panel === allPanels.profile || panel === allPanels.notification || panel === allPanels.favorite || panel === allPanels.compare || panel === allPanels['my-property']) {
                     panel.panel.style.right = isRightPanelOpen ? '75px' : '-450px';
                 } else {
                     // 다른 패널들은 기본값으로 복원
@@ -1425,6 +1542,11 @@
             } else {
                 rightToggleButton.style.right = '0px';
                 searchBarContainer.style.right = '24px';
+            }
+            
+            // 전체 필터 드롭다운 위치 조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
             }
         }
 
@@ -1467,6 +1589,84 @@
             });
         }
 
+        // --- 내 매물 관리 카드 생성 함수 ---
+        function createMyPropertyCard(property) {
+            let statusColor = 'bg-green-100 text-green-800';
+            let badgeHtml = '';
+            
+            if (property.status === 'reserved') {
+                statusColor = 'bg-yellow-100 text-yellow-800';
+            } else if (property.status === 'sold') {
+                statusColor = 'bg-gray-100 text-gray-600';
+            }
+            
+            if (property.badge === 'hot') {
+                badgeHtml = '<span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">HOT</span>';
+            } else if (property.badge === 'new') {
+                badgeHtml = '<span class="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">NEW</span>';
+            }
+
+            return `
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="relative">
+                        <img src="${property.image}" alt="매물 사진" class="w-full h-32 object-cover">
+                        ${badgeHtml}
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColor}">${property.statusText}</span>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-base text-gray-900 mb-1">${property.title}</h3>
+                        <p class="font-semibold text-blue-600 mb-1">${property.price}</p>
+                        <p class="text-gray-500 text-sm mb-3">${property.details}</p>
+                        
+                        <!-- 통계 정보 -->
+                        <div class="flex items-center justify-between text-xs text-gray-500 mb-3 bg-gray-50 p-2 rounded">
+                            <div class="flex items-center space-x-3">
+                                <span class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    ${property.views}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                    ${property.inquiries}
+                                </span>
+                            </div>
+                            <span>${property.registeredDate.replace('2024-', '')}</span>
+                        </div>
+                        
+                        <!-- 관리 버튼들 -->
+                        <div class="flex space-x-2">
+                            <button class="flex-1 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors">
+                                수정
+                            </button>
+                            <button class="flex-1 px-3 py-2 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors">
+                                통계
+                            </button>
+                            <button class="px-3 py-2 text-xs bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors">
+                                ⋯
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 내 매물 렌더링 함수
+        function renderMyProperties() {
+            const myPropertyList = document.getElementById('my-property-list');
+            myPropertyList.innerHTML = '';
+            myProperties.forEach(property => {
+                const cardHTML = createMyPropertyCard(property);
+                myPropertyList.innerHTML += cardHTML;
+            });
+        }
+
         // 특정 우측 패널 열기 (다른 패널은 모두 닫기)
         function openRightPanel(panelName) {
             const panel = allPanels[panelName];
@@ -1480,7 +1680,7 @@
             panel.isOpen = true;
             
             // 패널별 위치 설정
-            if (panelName === 'chat' || panelName === 'profile' || panelName === 'notification' || panelName === 'favorite' || panelName === 'compare') {
+            if (panelName === 'chat' || panelName === 'profile' || panelName === 'notification' || panelName === 'favorite' || panelName === 'compare' || panelName === 'my-property') {
                 // 모든 카드 패널: 오른쪽 버튼바(75px) 왼쪽에 정렬
                 panel.panel.style.right = `${RIGHT_SIDE_PANEL_WIDTH}px`;
                 
@@ -1517,13 +1717,15 @@
             if (panelName === 'favorite') renderFavoriteProperties();
             if (panelName === 'compare') renderCompareGroups();
             if (panelName === 'notification') renderNotifications();
+            if (panelName === 'my-property') renderMyProperties();
             if (panelName === 'chat') {
-                const chatList = document.getElementById('chat-list');
-                chatList.innerHTML = '';
-                chatData.forEach(chat => {
-                    const cardHTML = createChatCard(chat);
-                    chatList.innerHTML += cardHTML;
-                });
+                renderChatList();
+                initializeChatSearch();
+            }
+            
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
             }
         }
 
@@ -1543,6 +1745,10 @@
         const homeButton = document.getElementById('home-button');
         homeButton.addEventListener('click', () => {
             closeAllRightPanels();
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+            }
         });
 
         // 오른쪽 패널 토글 버튼 이벤트 리스너 추가 (통합 시스템)
@@ -1553,6 +1759,10 @@
             const hasOpenPanel = Object.values(allPanels).some(panel => panel.isOpen);
             if (hasOpenPanel) {
                 closeAllRightPanels();
+                // 전체 필터 드롭다운 위치 조정 (closeAllRightPanels에서 이미 호출하지만 확실히 하기 위해)
+                if (!allFilterDropdown.classList.contains('hidden')) {
+                    setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+                }
                 return;
             }
             
@@ -1572,6 +1782,11 @@
                 rightToggleButton.style.right = '0px';
                 // 오른쪽 패널이 닫히면 모든 카드 패널도 숨김
                 closeAllRightPanels();
+            }
+            
+            // 전체필터 패널이 열려있으면 위치 재조정
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                setTimeout(() => adjustAllFilterDropdownPosition(), 300);
             }
         });
 
@@ -1620,6 +1835,20 @@
         document.addEventListener('click', function(e) {
             if (e.target.textContent === '새 그룹 추가') {
                 addNewCompareGroup();
+            }
+        });
+
+        // --- 내 매물 관리 관련 기능 ---
+        // 새 매물 등록 기능
+        function addNewProperty() {
+            // 실제 구현에서는 새 매물 등록 폼을 표시하거나 다른 페이지로 이동
+            alert('새 매물 등록 페이지로 이동합니다.');
+        }
+
+        // 새 매물 등록 버튼 이벤트 리스너  
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('button') && e.target.closest('button').textContent.trim() === '새 매물 등록') {
+                addNewProperty();
             }
         });
 
@@ -2085,6 +2314,49 @@
         // 전체필터 드롭다운 내 필터 상태 (실제 필터 상태와 동일)
         const filterFullOptionItems = ['에어컨', '냉장고', '세탁기', '가스레인지', '인덕션레인지', '침대', '전자레인지'];
 
+        // 전체필터 패널 위치 및 크기 조정 함수
+        function adjustAllFilterDropdownPosition() {
+            const dropdown = allFilterDropdown;
+            const leftPanelWidth = isPanelOpen ? (isPanelExpanded ? window.innerWidth : 450) : 0;
+            
+            // 오른쪽 패널들 중 열려있는 것이 있는지 확인
+            let rightPanelWidth = 0;
+            const hasOpenRightPanel = Object.values(allPanels).some(panel => panel.isOpen);
+            if (isRightPanelOpen) {
+                rightPanelWidth = 75; // 기본 아이콘 패널
+                if (hasOpenRightPanel) {
+                    rightPanelWidth += 450; // 카드 패널
+                }
+            }
+            
+            // 사용 가능한 공간 계산
+            const availableWidth = window.innerWidth - leftPanelWidth - rightPanelWidth;
+            const minDropdownWidth = 350; // 최소 너비
+            
+            // 드롭다운 너비 계산 (최소 350px, 최대 450px)
+            let dropdownWidth = Math.min(450, Math.max(minDropdownWidth, availableWidth - 40)); // 40px는 여백
+            
+            // 기본적으로 버튼 바로 아래 표시 (CSS의 left: 0, top: full 활용)
+            let dropdownLeft = 0;
+            
+            // 버튼과 드롭다운의 위치 계산
+            const buttonRect = allFilterButton.getBoundingClientRect();
+            const rightEdge = buttonRect.left + dropdownWidth;
+            const screenRightEdge = window.innerWidth - rightPanelWidth - 20; // 20px 여백
+            
+            // 오른쪽으로 벗어날 때만 조정
+            if (rightEdge > screenRightEdge) {
+                // 화면을 벗어나는 만큼만 왼쪽으로 이동
+                const overflow = rightEdge - screenRightEdge;
+                dropdownLeft = -overflow;
+            }
+            
+            // 스타일 적용 - 버튼 바로 아래 유지하면서 필요시만 조정
+            dropdown.style.width = `${dropdownWidth}px`;
+            dropdown.style.left = `${dropdownLeft}px`;
+            dropdown.style.transform = 'none';
+        }
+
         // 전체필터 드롭다운 열기
         allFilterButton.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -2093,6 +2365,8 @@
             if (!isOpen) {
                 allFilterDropdown.classList.remove('hidden');
                 loadCurrentFiltersToDropdown();
+                // 위치 및 크기 조정
+                setTimeout(() => adjustAllFilterDropdownPosition(), 10);
             }
         });
 
@@ -2324,6 +2598,13 @@
                 if (wrapper && !wrapper.contains(e.target)) {
                     allFilterDropdown.classList.add('hidden');
                 }
+            }
+        });
+
+        // 창 크기 변경 시 전체필터 패널 위치 재조정
+        window.addEventListener('resize', () => {
+            if (!allFilterDropdown.classList.contains('hidden')) {
+                adjustAllFilterDropdownPosition();
             }
         });
 
