@@ -6,14 +6,20 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_messages")
+@Table(
+        name = "chat_messages",
+        indexes = {
+                @Index(name = "idx_msg_room_id_id_asc", columnList = "room_id, id"),
+                @Index(name = "idx_msg_room_sender_unread", columnList = "room_id, sender_id, is_read")
+        }
+)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class ChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 메시지 ID
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)

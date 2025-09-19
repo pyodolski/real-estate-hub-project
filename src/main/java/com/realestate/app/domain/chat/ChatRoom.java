@@ -19,7 +19,7 @@ public class ChatRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 채팅방 ID
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
@@ -32,6 +32,10 @@ public class ChatRoom {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user2_id", nullable = false)
     private User user2;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user3_id")
+    private User user3;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

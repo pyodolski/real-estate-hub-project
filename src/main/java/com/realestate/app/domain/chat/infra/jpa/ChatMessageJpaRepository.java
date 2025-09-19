@@ -26,14 +26,30 @@ public interface ChatMessageJpaRepository extends JpaRepository<ChatMessage, Lon
     """)
     int countUnread(@Param("roomId") Long roomId, @Param("me") Long me);
 
-    @Modifying
+    // ✅ 핵심: null 허용 + 이미 읽은 건 제외 + 벌크업데이트 후 캐시 동기화
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-      update ChatMessage m set m.isRead = true
-      where m.room.id = :roomId and m.sender.id <> :me and m.id <= :lastReadId
+      update ChatMessage m
+         set m.isRead = true
+       where m.room.id = :roomId
+         and m.sender.id <> :me
+         and m.isRead = false
+         and (:lastReadId is null or m.id <= :lastReadId)
     """)
     int markReadUpTo(@Param("roomId") Long roomId,
                      @Param("me") Long me,
                      @Param("lastReadId") Long lastReadId);
+
+    // (옵션) 상대가 보낸 미읽음 전체 읽음 처리
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+      update ChatMessage m
+         set m.isRead = true
+       where m.room.id = :roomId
+         and m.sender.id <> :me
+         and m.isRead = false
+    """)
+    int markAllOpponentRead(@Param("roomId") Long roomId, @Param("me") Long me);
 
     @Query("""
       select m from ChatMessage m

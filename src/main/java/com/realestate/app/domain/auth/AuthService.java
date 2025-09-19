@@ -77,7 +77,7 @@ public class AuthService {
                 .build();
         rtRepo.save(rt);
 
-        return new TokenResponse(access, refresh, 3600);
+        return new TokenResponse(access, refresh, 3600L);
     }
 
     public void logout(Long userId, String refreshToken) {
