@@ -18,12 +18,24 @@ export async function initMap(app) {
     const v = statusFilterEl?.value || '';
     const filters = v ? { status: v } : {};
 
-    const list = await fetchPropertiesInBounds({
-      swLat: sw.y, swLng: sw.x, neLat: ne.y, neLng: ne.x, filters
-    });
-
-    renderMarkers(app, list, onMarkerClick);
-    clearDetail();
+    try {
+      const list = await fetchPropertiesInBounds({
+        swLat: sw.y, swLng: sw.x, neLat: ne.y, neLng: ne.x, filters
+      });
+      console.log('properties list:', list, 'length=', Array.isArray(list) ? list.length : 'N/A');
+      new naver.maps.Marker({
+        position: new naver.maps.LatLng(37.5665, 126.9780),
+        map: app.map,
+      });
+      renderMarkers(app, list, onMarkerClick);
+      clearDetail();
+    } catch (e) {
+      console.error('목록 조회 실패:', e);
+      if (String(e?.message).includes('Unauthorized')) {
+        alert('로그인이 필요합니다. 다시 로그인해주세요.');
+        location.href = '/loginX.html';
+      }
+    }
   }, 200);
 
   // 지도 이동/줌 후 재조회
