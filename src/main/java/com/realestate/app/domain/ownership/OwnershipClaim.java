@@ -1,7 +1,7 @@
 package com.realestate.app.domain.ownership;
 
 import com.realestate.app.domain.property.Property;
-import com.realestate.app.domain.user.User;
+import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -26,9 +26,9 @@ public class OwnershipClaim {
     @JoinColumn(name = "user_id", nullable = false)
     private User applicant;
 
-    // 매물 (properties.id)
+    // 매물 (properties.id) - 승인 후 생성되므로 nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "property_id", nullable = false)
+    @JoinColumn(name = "property_id")
     private Property property;
 
     @Enumerated(EnumType.STRING)

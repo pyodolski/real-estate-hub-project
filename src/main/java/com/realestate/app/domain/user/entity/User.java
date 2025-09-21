@@ -1,8 +1,10 @@
-package com.realestate.app.domain.user;
+package com.realestate.app.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -49,6 +51,10 @@ public class User {
 
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;   // 전화번호
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserTag> userTags = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

@@ -1,8 +1,12 @@
 package com.realestate.app.domain.auth.jwt;
 
 import com.realestate.app.domain.auth.security.AuthUser;
-import com.realestate.app.domain.user.User;
-import io.jsonwebtoken.*;
+import com.realestate.app.domain.user.entity.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

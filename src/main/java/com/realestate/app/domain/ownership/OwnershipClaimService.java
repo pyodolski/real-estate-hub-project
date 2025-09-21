@@ -5,8 +5,8 @@ import com.realestate.app.domain.ownership.dto.OwnershipClaimResponse;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimRequest;
 import com.realestate.app.domain.property.Property;
 import com.realestate.app.domain.property.repository.PropertyRepository;
-import com.realestate.app.domain.user.User;
-import com.realestate.app.domain.user.UserRepository;
+import com.realestate.app.domain.user.entity.User;
+import com.realestate.app.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -29,15 +30,35 @@ public class OwnershipClaimService {
 
     // 파일과 함께 자산 증명 신청
     public OwnershipClaimResponse createOwnershipClaim(OwnershipClaimCreateRequest request) {
-        // 중복 신청 체크
-        if (claimRepository.existsByApplicant_IdAndProperty_Id(request.getUserId(), request.getPropertyId())) {
-            throw new IllegalStateException("이미 해당 매물에 신청이 존재합니다.");
-        }
-
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
-        Property property = propertyRepository.findById(request.getPropertyId())
-                .orElseThrow(() -> new IllegalArgumentException("매물이 존재하지 않습니다."));
+        
+        Property property = null;
+        if (request.getPropertyId() != null) {
+            // 기존 매물에 대한 신청인 경우
+            property = propertyRepository.findById(request.getPropertyId())
+                    .orElseThrow(() -> new IllegalArgumentException("매물이 존재하지 않습니다."));
+            
+            // 중복 신청 체크
+            if (claimRepository.existsByApplicant_IdAndProperty_Id(request.getUserId(), request.getPropertyId())) {
+                throw new IllegalStateException("이미 해당 매물에 신청이 존재합니다.");
+            }
+        } else {
+            // 새로운 매물 등록을 위한 신청인 경우
+            // 같은 주소로 이미 신청한 내역이 있는지 체크
+            if (request.getPropertyAddress() != null) {
+                boolean existingSimilarClaim = claimRepository.findAllByApplicant_Id(request.getUserId())
+                        .stream()
+                        .anyMatch(claim -> 
+                            claim.getPropertyAddress() != null && 
+                            claim.getPropertyAddress().equals(request.getPropertyAddress()) &&
+                            claim.getStatus() == OwnershipClaim.Status.PENDING
+                        );
+                if (existingSimilarClaim) {
+                    throw new IllegalStateException("같은 주소로 심사 중인 신청이 이미 존재합니다.");
+                }
+            }
+        }
 
         // 신청 정보 저장
         OwnershipClaim claim = OwnershipClaim.builder()
@@ -100,7 +121,7 @@ public class OwnershipClaimService {
     public List<OwnershipClaimResponse> getUserClaims(Long userId) {
         return claimRepository.findAllByApplicant_Id(userId).stream()
                 .map(this::convertToResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     // 특정 신청 상세 조회
@@ -121,7 +142,7 @@ public class OwnershipClaimService {
     public List<OwnershipClaimResponse> getAllClaims() {
         return claimRepository.findAll().stream()
                 .map(this::convertToResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     // 관리자용: 특정 신청 상세 조회 (권한 체크 없음)
@@ -145,7 +166,67 @@ public class OwnershipClaimService {
         claim.setAdmin(admin);
         claim.setReviewedAt(LocalDateTime.now());
 
-        return convertToResponse(claimRepository.save(claim));
+        OwnershipClaim savedClaim = claimRepository.save(claim);
+
+        // 승인 시 Property 자동 생성
+        createPropertyFromClaim(savedClaim);
+
+        return convertToResponse(savedClaim);
+    }
+
+    // 승인된 신청으로부터 Property 생성
+    private void createPropertyFromClaim(OwnershipClaim claim) {
+        // 이미 Property가 연결되어 있으면 생성하지 않음
+        if (claim.getProperty() != null) {
+            return;
+        }
+
+        // 기본 매물 제목 생성
+        String title = generatePropertyTitle(claim);
+
+        Property property = Property.builder()
+                .title(title)
+                .address(claim.getPropertyAddress() != null ? claim.getPropertyAddress() : "주소 정보 없음")
+                .status(Property.Status.AVAILABLE)
+                .listingType(Property.ListingType.OWNER)
+                .owner(claim.getApplicant())
+                .claim(claim)
+                .locationX(claim.getLocationX())
+                .locationY(claim.getLocationY())
+                .anomalyAlert(false)
+                .build();
+
+        Property savedProperty = propertyRepository.save(property);
+        
+        // 역참조 설정
+        claim.setProperty(savedProperty);
+        claimRepository.save(claim);
+    }
+
+    // 매물 제목 자동 생성
+    private String generatePropertyTitle(OwnershipClaim claim) {
+        StringBuilder title = new StringBuilder();
+        
+        if (claim.getBuildingName() != null && !claim.getBuildingName().trim().isEmpty()) {
+            title.append(claim.getBuildingName());
+        } else if (claim.getPropertyAddress() != null) {
+            // 주소에서 동/구 정보 추출하여 제목 생성
+            String[] addressParts = claim.getPropertyAddress().split(" ");
+            if (addressParts.length >= 2) {
+                title.append(addressParts[addressParts.length - 2]).append(" ");
+                title.append(addressParts[addressParts.length - 1]);
+            } else {
+                title.append("매물");
+            }
+        } else {
+            title.append("매물");
+        }
+        
+        if (claim.getDetailedAddress() != null && !claim.getDetailedAddress().trim().isEmpty()) {
+            title.append(" ").append(claim.getDetailedAddress());
+        }
+        
+        return title.toString();
     }
 
     // 관리자용: 신청 거절
@@ -189,7 +270,7 @@ public class OwnershipClaimService {
                             .build();
                 })
                 .map(documentRepository::save)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private OwnershipClaimResponse convertToResponse(OwnershipClaim claim) {
@@ -202,13 +283,13 @@ public class OwnershipClaimService {
                         .fileSize(doc.getFileSize())
                         .uploadedAt(doc.getUploadedAt())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
 
         return OwnershipClaimResponse.builder()
                 .claimId(claim.getId())
-                .propertyId(claim.getProperty().getId())
-                .title(claim.getProperty().getTitle())
-                .address(claim.getProperty().getAddress())
+                .propertyId(claim.getProperty() != null ? claim.getProperty().getId() : null)
+                .title(claim.getProperty() != null ? claim.getProperty().getTitle() : null)
+                .address(claim.getProperty() != null ? claim.getProperty().getAddress() : claim.getPropertyAddress())
                 .status(claim.getStatus().name())
                 .applicantName(claim.getApplicantName())
                 .applicantPhone(claim.getApplicantPhone())

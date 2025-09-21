@@ -58,8 +58,8 @@ public class ChatService {
                 .orElseGet(() -> {
                     var room = ChatRoom.builder()
                             .property(em.getReference(com.realestate.app.domain.property.Property.class, propertyId))
-                            .user1(em.getReference(com.realestate.app.domain.user.User.class, t.u1))
-                            .user2(em.getReference(com.realestate.app.domain.user.User.class, t.u2))
+                            .user1(em.getReference(com.realestate.app.domain.user.entity.User.class, t.u1))
+                            .user2(em.getReference(com.realestate.app.domain.user.entity.User.class, t.u2))
                             .user3(t.u3 == null ? null : em.getReference(com.realestate.app.domain.user.User.class, t.u3))
                             .build();
                     return roomRepo.save(room);
@@ -88,7 +88,7 @@ public class ChatService {
         if (!isMember(room, senderId))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "방 참여자가 아님");
 
-        User sender = em.find(User.class, senderId);
+        User sender = em.find(com.realestate.app.domain.user.entity.User.class, senderId);
         if (sender == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "보낸 유저 없음: " + senderId);
 
         ChatMessage msg = ChatMessage.builder()
