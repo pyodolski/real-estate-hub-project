@@ -29,8 +29,8 @@ public class  ChatService {
                 .orElseGet(() -> {
                     var room = ChatRoom.builder()
                             .property(em.getReference(com.realestate.app.domain.property.Property.class, propertyId))
-                            .user1(em.getReference(com.realestate.app.domain.user.User.class, u1))
-                            .user2(em.getReference(com.realestate.app.domain.user.User.class, u2))
+                            .user1(em.getReference(com.realestate.app.domain.user.entity.User.class, u1))
+                            .user2(em.getReference(com.realestate.app.domain.user.entity.User.class, u2))
                             .build();
                     return roomRepo.save(room);
                 });
@@ -51,7 +51,7 @@ public class  ChatService {
         if (content == null || content.isBlank()) throw new IllegalArgumentException("빈 메시지");
         var msg = ChatMessage.builder()
                 .room(em.getReference(ChatRoom.class, roomId))
-                .sender(em.getReference(com.realestate.app.domain.user.User.class, senderId))
+                .sender(em.getReference(com.realestate.app.domain.user.entity.User.class, senderId))
                 .content(content)
                 .isRead(false)
                 .build();

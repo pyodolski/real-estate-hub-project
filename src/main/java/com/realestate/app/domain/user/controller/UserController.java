@@ -1,5 +1,10 @@
-package com.realestate.app.domain.user;
+package com.realestate.app.domain.user.controller;
 
+import com.realestate.app.domain.user.service.UserService;
+
+
+import com.realestate.app.domain.auth.dto.UserResponse;
+import com.realestate.app.domain.user.dto.ChangePasswordRequest;
 import com.realestate.app.domain.auth.security.AuthUser;
 import com.realestate.app.domain.user.dto.UpdateProfileRequest;
 import com.realestate.app.domain.user.dto.VerifyPasswordRequest;
@@ -16,10 +21,9 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public User me(@AuthenticationPrincipal AuthUser me) {
-        return userService.getMyProfile(me.getId());
+    public com.realestate.app.domain.auth.dto.UserResponse me(@AuthenticationPrincipal AuthUser me) {
+        return userService.getMyProfileDto(me.getId());
     }
-
     @PostMapping("/verify-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void verifyPassword(@AuthenticationPrincipal AuthUser me,
@@ -28,9 +32,16 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateMe(@AuthenticationPrincipal AuthUser me,
-                         @Valid @RequestBody UpdateProfileRequest req) {
-        userService.updateProfile(me.getId(), req);
+    public UserResponse updateMe(@AuthenticationPrincipal AuthUser me,
+                                 @Valid @RequestBody UpdateProfileRequest req) {
+        return userService.updateProfile(me.getId(), req);
     }
+
+    @PostMapping("/me/change-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(@AuthenticationPrincipal AuthUser me,
+                               @Valid @RequestBody ChangePasswordRequest req) {
+        userService.changePassword(me.getId(), req);
+    }
+
 }

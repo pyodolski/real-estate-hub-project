@@ -1,6 +1,6 @@
-package com.realestate.app.domain.auth;
+package com.realestate.app.domain.auth.entity;
 
-import com.realestate.app.domain.user.User;
+import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 

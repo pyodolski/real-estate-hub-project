@@ -19,12 +19,8 @@ public class AuthController {
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public void signup(@Valid @RequestBody SignupRequest req) { 
-        try {
-            auth.signup(req);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+    public UserResponse signup(@Valid @RequestBody SignupRequest req) {
+        return auth.signup(req);
     }
 
     @PostMapping("/login")
@@ -49,16 +45,21 @@ public class AuthController {
         return new TokenResponse(tokens.accessToken(), null, tokens.expiresInSeconds());
     }
 
+
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@AuthenticationPrincipal AuthUser me,
-                       @Valid @RequestBody LogoutRequest req,
+                       @CookieValue(value = "rt", required = false) String rtCookie,
                        HttpServletResponse res) {
-        auth.logout(me.getId(), req.refreshToken());
-
-        // ✅ 쿠키 제거
+        if (rtCookie != null && !rtCookie.isBlank()) {
+            if (me != null) {
+                auth.logout(me.getId(), rtCookie);   // 사용자 일치 확인 포함한 기존 로직
+            } else {
+                auth.logoutByToken(rtCookie);        // 사용자 없이 토큰만 폐기 (아래 추가 메서드)
+            }
+        }
         ResponseCookie clear = ResponseCookie.from("rt", "")
-                .httpOnly(true).secure(true).sameSite("Lax")
+                .httpOnly(true).secure(false).sameSite("Lax")
                 .path("/").maxAge(0).build();
         res.addHeader("Set-Cookie", clear.toString());
     }
