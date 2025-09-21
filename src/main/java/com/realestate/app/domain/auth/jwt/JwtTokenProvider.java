@@ -1,6 +1,6 @@
 package com.realestate.app.domain.auth.jwt;
 
-import com.realestate.app.domain.user.User;
+import com.realestate.app.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;

@@ -1,4 +1,4 @@
-package com.realestate.app.domain.auth;
+package com.realestate.app.domain.auth.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;

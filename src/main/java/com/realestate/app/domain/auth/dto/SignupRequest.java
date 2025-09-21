@@ -12,5 +12,6 @@ public record SignupRequest(
         String profileImageUrl,
         // broker 전용
         String licenseNumber,
-        String agencyName
+        String agencyName,
+        java.util.List<TagSelection> tags
 ) {}

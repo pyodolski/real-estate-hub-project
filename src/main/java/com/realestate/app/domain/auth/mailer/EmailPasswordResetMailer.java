@@ -1,4 +1,4 @@
-package com.realestate.app.domain.auth;
+package com.realestate.app.domain.auth.mailer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

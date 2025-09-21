@@ -1,17 +1,29 @@
 package com.realestate.app.domain.auth;
 
 import com.realestate.app.domain.auth.dto.*;
+import com.realestate.app.domain.auth.entity.PasswordResetToken;
+import com.realestate.app.domain.auth.entity.RefreshToken;
 import com.realestate.app.domain.auth.jwt.JwtTokenProvider;
+import com.realestate.app.domain.auth.mailer.PasswordResetMailer;
+import com.realestate.app.domain.auth.repository.PasswordResetTokenRepository;
+import com.realestate.app.domain.auth.repository.RefreshTokenRepository;
 import com.realestate.app.domain.broker_profile.BrokerProfile;
 import com.realestate.app.domain.broker_profile.BrokerProfileRepository;
-import com.realestate.app.domain.user.User;
-import com.realestate.app.domain.user.UserRepository;
+import com.realestate.app.domain.user.entity.Tag;
+import com.realestate.app.domain.user.entity.User;
+import com.realestate.app.domain.user.entity.UserTag;
+import com.realestate.app.domain.user.repository.TagRepository;
+import com.realestate.app.domain.user.repository.UserRepository;
+import com.realestate.app.domain.user.repository.UserTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,8 +38,15 @@ public class AuthService {
     private final JwtTokenProvider jwt;
     private final PasswordResetTokenRepository prtRepo;
     private final PasswordResetMailer resetMailer;
+    private final TagRepository tagRepository;
+    private final UserTagRepository userTagRepository;
 
-    public void signup(SignupRequest req) {
+    private static final int MAX_TAGS_PER_USER = 30;
+    private static final int MAX_GROUP_LEN = 64;
+    private static final int MAX_KEY_LEN   = 64;
+    private static final int MAX_LABEL_LEN = 128;
+
+    public UserResponse signup(SignupRequest req) {
         if (userRepo.existsByEmail(req.email()))
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
 
@@ -55,6 +74,66 @@ public class AuthService {
                     .build();
             brokerRepo.save(bp);
         }
+
+        // ===== 태그 처리 시작 =====
+        var selections = java.util.Optional.ofNullable(req.tags()).orElse(java.util.List.of())
+                .stream()
+                .filter(java.util.Objects::nonNull)
+                .map(ts -> new TagSelection(
+                        safeTrim(ts.groupCode(), MAX_GROUP_LEN),
+                        safeTrim(ts.keyCode(),   MAX_KEY_LEN),
+                        safeTrim(ts.label(),     MAX_LABEL_LEN)
+                ))
+                .filter(ts -> !ts.groupCode().isBlank() && !ts.keyCode().isBlank())
+                .distinct()
+                .limit(MAX_TAGS_PER_USER)
+                .toList();
+
+        Map<String, TagSelection> uniq = new LinkedHashMap<>();
+        for (var ts : selections) {
+            uniq.putIfAbsent(ts.groupCode()+"|"+ts.keyCode(), ts);
+        }
+
+        for (var sel : uniq.values()) {
+            Tag tag = tagRepository.findByGroupCodeAndKeyCode(sel.groupCode(), sel.keyCode())
+                    .orElseGet(() -> tagRepository.save(
+                            Tag.builder()
+                                    .groupCode(sel.groupCode())
+                                    .keyCode(sel.keyCode())
+                                    .label(sel.label() == null || sel.label().isBlank() ? sel.keyCode() : sel.label())
+                                    .isActive(true)
+                                    .build()
+                    ));
+
+            if (user.getUserTags() == null) {
+                user.setUserTags(new HashSet<>());
+            }
+
+            user.getUserTags().add(UserTag.builder().user(user).tag(tag).build());
+        }
+
+        var simpleTags = user.getUserTags().stream()
+                .map(ut -> new UserResponse.SimpleTag(
+                        ut.getTag().getGroupCode(),
+                        ut.getTag().getKeyCode(),
+                        ut.getTag().getLabel()
+                ))
+                .toList();
+
+        return new UserResponse(
+                user.getId(), user.getEmail(), user.getUsername(), user.getRoleId(),
+                user.getPhoneNumber(), user.getIntro(), user.getProfileImageUrl(),
+                simpleTags
+        );
+    }
+
+    private static String safeTrim(String s, int max) {
+        if (s == null) return "";
+        String t = s.trim();
+        return t.length() > max ? t.substring(0, max) : t;
+    }
+    public void logoutByToken(String refreshToken) {
+        rtRepo.findByToken(refreshToken).ifPresent(rt -> rt.setRevoked(true));
     }
 
     public TokenResponse login(LoginRequest req) {

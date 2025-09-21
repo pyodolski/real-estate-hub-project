@@ -1,14 +1,13 @@
 package com.realestate.app.domain.user.dto;
 
+import com.realestate.app.domain.auth.dto.TagSelection;
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
 
 public record UpdateProfileRequest(
-        String username,
-        String phoneNumber,
         String intro,
         String profileImageUrl,
-        // broker 전용
-        String licenseNumber,
-        String agencyName,
-        @NotBlank String currentPassword
+
+        @NotBlank String currentPassword,
+        List<TagSelection> tags
 ) {}

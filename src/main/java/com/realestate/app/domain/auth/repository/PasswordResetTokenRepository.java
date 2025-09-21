@@ -1,4 +1,6 @@
-package com.realestate.app.domain.auth;
+package com.realestate.app.domain.auth.repository;
+
+import com.realestate.app.domain.auth.entity.PasswordResetToken;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,7 +1,7 @@
 package com.realestate.app.domain.property;
 import com.realestate.app.domain.broker_profile.BrokerProfile;
 import com.realestate.app.domain.ownership.OwnershipClaim;
-import com.realestate.app.domain.user.User;
+import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
