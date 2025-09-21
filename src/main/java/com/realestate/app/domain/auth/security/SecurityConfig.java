@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**"
                         ).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/ws-stomp/**").permitAll()
 
                         // 인증 없이 접근해야 하는 공개 API
                         .requestMatchers("/api/auth/**").permitAll()
