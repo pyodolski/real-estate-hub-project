@@ -4,7 +4,7 @@ import com.realestate.app.domain.ownership.dto.OwnershipClaimCreateRequest;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimResponse;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimRequest;
 import com.realestate.app.domain.property.Property;
-import com.realestate.app.domain.property.PropertyRepository;
+import com.realestate.app.domain.property.repository.PropertyRepository;
 import com.realestate.app.domain.user.User;
 import com.realestate.app.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;

@@ -47,7 +47,7 @@ public class SecurityConfig {
 
                         // 인증 없이 접근해야 하는 공개 API
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/", "/loginX.html", "/signup.html", "/loginO.html", "/admin.html", "/intermediary.html").permitAll()
+                        .requestMatchers("/", "/loginX.html", "/signup.html", "/loginO.html", "/admin.html", "/intermediary.html","/reset-password", "/reset-password.html").permitAll()
                         .requestMatchers("/error").permitAll()
 
                         // 자산 승인 시스템 API (인증 필요)
