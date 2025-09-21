@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/ownership")
@@ -27,12 +28,13 @@ public class OwnershipClaimController {
 
     private final OwnershipClaimService claimService;
     private final OwnershipDocumentRepository documentRepository;
+    private final MapApiService mapApiService;
 
     // 파일과 함께 자산 증명 신청 (지도 API 연동 지원)
     @PostMapping(value = "/claims", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public OwnershipClaimResponse createClaim(
             @AuthenticationPrincipal AuthUser currentUser,
-            @RequestParam("propertyId") Long propertyId,
+            @RequestParam(value = "propertyId", required = false) Long propertyId,
             @RequestParam("applicantName") String applicantName,
             @RequestParam("applicantPhone") String applicantPhone,
             @RequestParam("relationshipToProperty") String relationshipToProperty,
@@ -48,9 +50,10 @@ public class OwnershipClaimController {
             @RequestParam(value = "documents", required = false) List<MultipartFile> documents,
             @RequestParam(value = "documentTypes", required = false) List<String> documentTypes) {
         
-        OwnershipClaimCreateRequest request = new OwnershipClaimCreateRequest();
-        request.setUserId(currentUser.getId());
-        request.setPropertyId(propertyId);
+        try {
+            OwnershipClaimCreateRequest request = new OwnershipClaimCreateRequest();
+            request.setUserId(currentUser.getId());
+            request.setPropertyId(propertyId);
         request.setApplicantName(applicantName);
         request.setApplicantPhone(applicantPhone);
         request.setRelationshipToProperty(relationshipToProperty);
@@ -64,11 +67,16 @@ public class OwnershipClaimController {
         request.setDetailedAddress(detailedAddress);
         request.setPostalCode(postalCode);
         
-        // 파일 정보 설정
-        request.setDocuments(documents);
-        request.setDocumentTypes(documentTypes);
-        
-        return claimService.createOwnershipClaim(request);
+            // 파일 정보 설정
+            request.setDocuments(documents);
+            request.setDocumentTypes(documentTypes);
+            
+            return claimService.createOwnershipClaim(request);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("매물 등록 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     // 기존 방식 (하위 호환성, JSON 요청)
@@ -180,24 +188,26 @@ public class OwnershipClaimController {
     public Map<String, Object> getAddressFromCoordinates(
             @RequestParam double latitude,
             @RequestParam double longitude) {
-        // 실제 구현시 MapApiService 사용
+        MapApiService.AddressInfo addressInfo = mapApiService.getAddressFromCoordinates(latitude, longitude);
+        
         return Map.of(
-                "roadAddress", "서울 강남구 강남대로 396",
-                "jibunAddress", "서울 강남구 역삼동 825",
-                "buildingName", "강남역",
-                "postalCode", "06292",
-                "regionCode", "1168010100"
+                "roadAddress", addressInfo.getRoadAddress() != null ? addressInfo.getRoadAddress() : "",
+                "jibunAddress", addressInfo.getJibunAddress() != null ? addressInfo.getJibunAddress() : "",
+                "buildingName", addressInfo.getBuildingName() != null ? addressInfo.getBuildingName() : "",
+                "postalCode", addressInfo.getPostalCode() != null ? addressInfo.getPostalCode() : "",
+                "regionCode", addressInfo.getRegionCode() != null ? addressInfo.getRegionCode() : ""
         );
     }
 
     // 주소로 좌표 검색 (Geocoding)
     @GetMapping("/map/coordinates")
     public Map<String, Object> getCoordinatesFromAddress(@RequestParam String address) {
-        // 실제 구현시 MapApiService 사용
+        MapApiService.CoordinateInfo coordinateInfo = mapApiService.getCoordinatesFromAddress(address);
+        
         return Map.of(
-                "latitude", 37.4979,
-                "longitude", 127.0276,
-                "accuracy", "EXACT"
+                "latitude", coordinateInfo.getLatitude(),
+                "longitude", coordinateInfo.getLongitude(),
+                "accuracy", coordinateInfo.getAccuracy()
         );
     }
 
@@ -207,10 +217,15 @@ public class OwnershipClaimController {
             @RequestParam double latitude,
             @RequestParam double longitude,
             @RequestParam(defaultValue = "500") int radius) {
-        // 실제 구현시 MapApiService 사용
-        return List.of(
-                Map.of("name", "강남역", "category", "지하철역", "address", "서울 강남구 강남대로 396", "distance", 0),
-                Map.of("name", "강남파이낸스센터", "category", "오피스빌딩", "address", "서울 강남구 테헤란로 152", "distance", 200)
-        );
+        List<MapApiService.BuildingInfo> buildings = mapApiService.searchNearbyBuildings(latitude, longitude, radius);
+        
+        return buildings.stream()
+                .map(building -> Map.<String, Object>of(
+                        "name", building.getName(),
+                        "category", building.getCategory(),
+                        "address", building.getAddress(),
+                        "distance", building.getDistance()
+                ))
+                .collect(java.util.stream.Collectors.toList());
     }
 }
