@@ -605,6 +605,102 @@
                 <div id="notification-list" class="space-y-3">
                     <!-- JavaScript로 알림 목록이 여기에 추가됩니다. -->
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- =================================================================== -->
+      <!-- 왼쪽 매물 정보 패널 (슬라이드 기능 추가)                              -->
+      <!-- =================================================================== -->
+      <aside
+        id="side-panel"
+        class="absolute top-0 left-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-30 transform transition-all duration-300 ease-in-out"
+      >
+        <!-- 전체화면에서 돌아오는 버튼 -->
+        <button
+          id="collapse-fullscreen-button"
+          class="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-200 transition-colors hidden z-50"
+          title="패널 축소"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 text-gray-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+            ></path>
+          </svg>
+        </button>
+        <!-- 상단 메뉴 및 정렬 -->
+        <div
+          class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0"
+        >
+          <button
+            class="bg-gray-800 text-white font-bold py-2 px-6 rounded-md text-lg"
+          >
+            내집
+          </button>
+          <div
+            id="add-listing-container"
+            class="flex items-center gap-2 transition-all duration-300 ease-in-out"
+          >
+            <button
+              class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md text-sm hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              새 매물 등록
+            </button>
+          </div>
+        </div>
+
+        <!-- 매물 개수 및 페이지네이션 -->
+        <div class="flex justify-between items-center mb-6 flex-shrink-0">
+          <p class="font-bold text-gray-800">10,822개의 매물</p>
+          <div class="flex items-center space-x-1">
+            <button class="px-3 py-1 border rounded-md bg-gray-200">1</button>
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-100">
+              2
+            </button>
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-100">
+              3
+            </button>
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-100">
+              4
+            </button>
+          </div>
+        </div>
+
+        <!-- 스크롤 가능한 콘텐츠 영역 -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+          <!-- 추천 매물 -->
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="text-xl font-bold text-gray-800">추천매물</h2>
+              <select class="border rounded-md p-2 text-sm">
+                <option>기본순</option>
+                <option>가격순</option>
+                <option>최신순</option>
+              </select>
+
             </div>
         </aside>
 
@@ -837,29 +933,175 @@
                 iconColor: 'text-yellow-500',
                 bgColor: 'bg-yellow-50'
             },
-            {
-                id: 6,
-                type: 'system',
-                title: '시스템 업데이트',
-                message: '더 나은 서비스 제공을 위해 시스템이 업데이트되었습니다. 새로운 필터 기능을 사용해보세요.',
-                timestamp: '1일 전',
-                isRead: true,
-                icon: 'settings',
-                iconColor: 'text-purple-500',
-                bgColor: 'bg-purple-50'
+          ],
+        },
+      ];
+
+      const properties = [
+        {
+          image:
+            "https://images.unsplash.com/photo-15701294TT492-45c003edd2be?q=80&w=2070&auto=format&fit=crop",
+          price: "전세 1억 3,500",
+          location: "관악구 봉천동",
+          details: "원룸 ∙ 방 1개 ∙ 2층 ∙ 33.06m²",
+          tags: ["집주인 인증", "추천", "확인"],
+          isRecommended: true,
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop",
+          price: "전세 1억 9,800",
+          location: "관악구 신림동",
+          details: "기타 ∙ 방 1개 ∙ 고층 ∙ 13.74m²",
+          tags: ["직거래", "추천"],
+          isRecommended: true,
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
+          price: "월세 3000/80",
+          location: "동작구 상도동",
+          details: "투룸 ∙ 방 2개 ∙ 3층 ∙ 45.12m²",
+          tags: ["추천"],
+          isRecommended: false,
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
+          price: "매매 5억 2,000",
+          location: "강남구 역삼동",
+          details: "아파트 ∙ 방 3개 ∙ 15층 ∙ 84.9m²",
+          tags: ["확인"],
+          isRecommended: true,
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=2074&auto=format&fit=crop",
+          price: "전세 2억 5,000",
+          location: "마포구 서교동",
+          details: "오피스텔 ∙ 방 1개 ∙ 10층 ∙ 28.5m²",
+          tags: ["집주인 인증"],
+          isRecommended: false,
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop",
+          price: "전세 3억 1,000",
+          location: "서대문구 연희동",
+          details: "빌라 ∙ 방 2개 ∙ 4층 ∙ 55.0m²",
+          tags: ["직거래"],
+          isRecommended: true,
+        },
+      ];
+        const properties = [
+            { 
+                id: 101,
+                image: 'https://images.unsplash.com/photo-15701294TT492-45c003edd2be?q=80&w=2070&auto=format&fit=crop', 
+                price: '전세 1억 3,500', 
+                location: '관악구 봉천동', 
+                details: '원룸 ∙ 방 1개 ∙ 2층 ∙ 33.06m²', 
+                tags: ['집주인 인증', '추천', '확인'], 
+                isRecommended: true,
+                buildingYear: 2018,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장'],
+                description: '관악구 봉천동에 위치한 깔끔한 원룸입니다. 교통이 편리하고 주변 상권이 발달되어 있습니다.',
+                brokerName: '김부동',
+                brokerPhone: '010-1234-5678',
+                status: 'AVAILABLE'
             },
-            {
-                id: 7,
-                type: 'contract',
-                title: '계약서 검토 완료',
-                message: '마포구 합정동 빌라 계약서 검토가 완료되었습니다. 최종 검토 결과를 확인해주세요.',
-                timestamp: '2일 전',
-                isRead: true,
-                icon: 'file-text',
-                iconColor: 'text-indigo-500',
-                bgColor: 'bg-indigo-50'
+            { 
+                id: 102,
+                image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop', 
+                price: '전세 1억 9,800', 
+                location: '관악구 신림동', 
+                details: '기타 ∙ 방 1개 ∙ 고층 ∙ 13.74m²', 
+                tags: ['직거래', '추천'], 
+                isRecommended: true,
+                buildingYear: 2020,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장', '엘리베이터'],
+                description: '관악구 신림동의 고층 원룸입니다. 넓은 전망과 깔끔한 인테리어를 자랑합니다.',
+                brokerName: '이중개',
+                brokerPhone: '010-9876-5432',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 103,
+                image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop', 
+                price: '월세 3000/80', 
+                location: '동작구 상도동', 
+                details: '투룸 ∙ 방 2개 ∙ 3층 ∙ 45.12m²', 
+                tags: ['추천'], 
+                isRecommended: false,
+                buildingYear: 2019,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장'],
+                description: '동작구 상도동의 넓은 투룸입니다. 가족이 거주하기에 적합한 공간입니다.',
+                brokerName: '박부동산',
+                brokerPhone: '010-5555-7777',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 104,
+                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop', 
+                price: '매매 5억 2,000', 
+                location: '강남구 역삼동', 
+                details: '아파트 ∙ 방 3개 ∙ 15층 ∙ 84.9m²', 
+                tags: ['확인'], 
+                isRecommended: true,
+                buildingYear: 2022,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장', '엘리베이터', '관리사무소', 'CCTV'],
+                description: '강남구 역삼동의 프리미엄 아파트입니다. 최신 시설과 우수한 관리로 주거 환경이 뛰어납니다.',
+                brokerName: '최부동',
+                brokerPhone: '010-1111-2222',
+                status: 'CONTRACTED'
+            },
+            { 
+                id: 105,
+                image: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=2074&auto=format&fit=crop', 
+                price: '전세 2억 5,000', 
+                location: '마포구 서교동', 
+                details: '오피스텔 ∙ 방 1개 ∙ 10층 ∙ 28.5m²', 
+                tags: ['집주인 인증'], 
+                isRecommended: false,
+                buildingYear: 2021,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장', '엘리베이터'],
+                description: '마포구 서교동의 현대적인 오피스텔입니다. 홍대 상권과 가까워 생활이 편리합니다.',
+                brokerName: '정중개',
+                brokerPhone: '010-3333-4444',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 106,
+                image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop', 
+                price: '전세 3억 1,000', 
+                location: '서대문구 연희동', 
+                details: '빌라 ∙ 방 2개 ∙ 4층 ∙ 55.0m²', 
+                tags: ['직거래'], 
+                isRecommended: true,
+                buildingYear: 2017,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장'],
+                description: '서대문구 연희동의 조용한 빌라입니다. 한적한 주거 환경을 원하는 분께 추천합니다.',
+                brokerName: '윤부동산',
+                brokerPhone: '010-6666-7777',
+                status: 'AVAILABLE'
             }
         ];
+
+      const propertyList = document.getElementById("property-list");
+      const recommendedList = document.getElementById("recommended-list");
+      const favoriteList = document.getElementById("favorite-list");
+      const compareList = document.getElementById("compare-list");
+
+      // --- 알림 아이콘 생성 함수 ---
+      function getNotificationIcon(iconType, colorClass) {
+        const icons = {
+          "trending-down": `<path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>`,
+          home: `<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10m-9-10"/>`,
+          "message-circle": `<path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>`,
+          "check-circle": `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+          bell: `<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>`,
+          settings: `<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>`,
+          "file-text": `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>`,
+        };
 
         // --- 내 매물 관리 데이터 (샘플) ---
         const myProperties = [
@@ -1046,8 +1288,19 @@
                 return `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded ${colorClass}">${tag}</span>`;
             }).join('');
 
-            return `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]">
+
+      // --- 매물 카드 생성 함수 ---
+      function createPropertyCard(property) {
+        const tagsHTML = property.tags
+          .map((tag) => {
+            let colorClass = "bg-blue-100 text-blue-800";
+            if (tag === "직거래") colorClass = "bg-green-100 text-green-800";
+            if (tag === "확인") colorClass = "bg-gray-200 text-gray-800";
+            return `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded ${colorClass}">${tag}</span>`;
+          })
+          .join("");
+        return `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02] cursor-pointer property-card" data-property-id="${property.id}">
                     <div class="relative">
                         <img src="${property.image}" alt="매물 사진" class="w-full h-40 object-cover">
                         <button class="absolute top-2 right-2 bg-white/70 p-1.5 rounded-full hover:bg-white">
@@ -1159,7 +1412,6 @@
                 });
             }
         }
-
         // --- 상태 변수 ---
         let isPanelOpen = true;
         let isPanelExpanded = false;
@@ -1213,7 +1465,6 @@
                 propertyListContainer.classList.add('flex', 'flex-col', 'space-y-4');
                 propertyListContainer.classList.remove('grid', 'gap-4', ...expandedGridClassesForSingleCol);
             }
-
             // Part 2: 다른 모든 요소의 가시성 관리
             if (isPanelExpanded) {
                 mainContent.classList.add('hidden');
@@ -2659,8 +2910,8 @@
       updateChatPanelPosition(false);
       updateProfilePanelPosition(false);
 
-      // 로그아웃 버튼 이벤트 리스너 추가
-      const logoutButton = document.getElementById("logout-button");
+       // 로그아웃 버튼 이벤트 리스너 추가
+       const logoutButton = document.getElementById("logout-button");
       if (logoutButton) {
         logoutButton.addEventListener("click", function () {
           if (confirm("로그아웃 하시겠습니까?")) {
@@ -2681,6 +2932,7 @@
           showPropertyRegistrationModal();
         });
       }
+     
         // 초기 UI 상태 설정
         updateUIVisibility();
         updateRightToggleButtonPosition();
@@ -2735,6 +2987,270 @@
             }
           }
         });
+
+
+        // ===================================================================
+        // 매물 상세 페이지 관련 기능
+        // ===================================================================
+        
+        // 매물 상세 페이지 요소들
+        const propertyDetailOverlayA = document.getElementById('property-detail-overlay-a');
+        const propertyDetailOverlayB = document.getElementById('property-detail-overlay-b');
+        const closePropertyDetailBtnA = document.getElementById('close-property-detail-a');
+        const closePropertyDetailBtnB = document.getElementById('close-property-detail-b');
+        // 좌측 패널 제어 버튼 (상단에서 이미 선언됨)
+        
+        // 현재 활성화된 패널 추적 (A 또는 B)
+        let activePanel = null;
+        let currentOpenPropertyId = null;
+        
+        // 매물 상세 페이지 열기 (A 또는 B 패널 선택)
+        function openPropertyDetail(propertyId) {
+            const newProperty = properties.find(p => p.id === propertyId);
+            if (!newProperty) return;
+
+            // 같은 매물을 다시 클릭한 경우 (토글 동작)
+            if (currentOpenPropertyId === propertyId) {
+                if (activePanel) {
+                    closePropertyDetail(activePanel);
+                    activePanel = null;
+                    currentOpenPropertyId = null;
+                }
+                return;
+            }
+
+            // 다른 매물을 클릭한 경우: 닫고 열기 동시 애니메이션
+            const oldActivePanel = activePanel; // 현재 활성화된 패널 (닫힐 패널)
+            const nextActivePanel = (activePanel === 'a') ? 'b' : 'a'; // 다음에 활성화될 패널 (열릴 패널)
+
+            const overlayToOpen = nextActivePanel === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
+            const overlayToClose = oldActivePanel === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
+
+            // 1. 현재 활성화된 패널이 있다면 닫기 애니메이션 시작
+            if (oldActivePanel) {
+                overlayToClose.classList.add('-translate-x-full');
+            }
+            
+            // 2. 새로운 패널에 데이터 업데이트 및 열기 애니메이션 시작
+            // (z-index를 높여 닫히는 패널 위로 올라오도록 함)
+            overlayToOpen.style.opacity = '1'; // 패널 표시
+            overlayToOpen.style.pointerEvents = 'auto'; // 클릭 이벤트 활성화
+            overlayToOpen.style.zIndex = '21'; // 닫히는 패널(z-20)보다 높게 설정
+            updatePropertyDetail(propertyId, nextActivePanel); // 새 패널에 데이터 채우기
+            overlayToOpen.classList.remove('-translate-x-full'); // 열기 애니메이션 시작
+
+            // 상세 페이지가 열릴 때: 좌측 패널 버튼 UI 조정
+            adjustLeftPanelButtonsForDetail(true);
+
+            // 3. 상태 업데이트
+            activePanel = nextActivePanel;
+            currentOpenPropertyId = propertyId;
+
+            // 4. 닫힌 패널의 z-index 원상 복구 (애니메이션 완료 후)
+            // 즉시 변경 시 깜빡임 발생할 수 있으므로 애니메이션 시간 이후에 변경
+            if (oldActivePanel) {
+                setTimeout(() => {
+                    overlayToClose.style.zIndex = '20';
+                }, 300); // TailwindCSS transition duration과 맞춤
+            }
+        }
+        
+        // 매물 상세 정보 내용 업데이트 (패널 지정)
+        function updatePropertyDetail(propertyId, panel) {
+            const property = properties.find(p => p.id === propertyId);
+            if (!property) return;
+
+            const suffix = panel; // 'a' 또는 'b'
+            
+            // 매물 정보 채우기
+            document.getElementById(`detail-property-image-${suffix}`).src = property.image;
+            document.getElementById(`detail-property-title-${suffix}`).textContent = property.location;
+            const locationElement = document.getElementById(`detail-property-location-${suffix}`);
+            if (locationElement) {
+                locationElement.style.display = 'none';
+            }
+            document.getElementById(`detail-property-price-${suffix}`).textContent = property.price;
+            document.getElementById(`detail-property-details-${suffix}`).textContent = property.details;
+            document.getElementById(`detail-building-year-${suffix}`).textContent = property.buildingYear + '년';
+            document.getElementById(`detail-property-area-${suffix}`).textContent = property.details.split(' ∙ ')[3] || '';
+            document.getElementById(`detail-property-description-${suffix}`).textContent = property.description;
+            document.getElementById(`detail-broker-name-${suffix}`).textContent = property.brokerName;
+            document.getElementById(`detail-broker-phone-${suffix}`).textContent = property.brokerPhone;
+
+            // 평면도(임시) 노출: details의 첫 항목이 '아파트'인 경우만 보이기
+            const isApartment = (property.details || '').split(' ∙ ')[0] === '아파트';
+            const floorplanWrapper = document.getElementById(`detail-floorplan-wrapper-${suffix}`);
+            if (floorplanWrapper) {
+                floorplanWrapper.style.display = isApartment ? 'block' : 'none';
+            }
+
+            // 임시 상세 항목들: 비워둠
+            const emptyFields = [
+                `detail-room-bath-${suffix}`,
+                `detail-direction-${suffix}`,
+                `detail-room-structure-${suffix}`,
+                `detail-duplex-${suffix}`,
+                `detail-parking-${suffix}`,
+                `detail-move-in-date-${suffix}`,
+                `detail-maintenance-fee-${suffix}`,
+                `detail-household-count-${suffix}`
+            ];
+            emptyFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+            
+            // 상태 표시
+            const statusElement = document.getElementById(`detail-property-status-${suffix}`);
+            const statusMap = {
+                'AVAILABLE': { text: '거래가능', class: 'bg-green-100 text-green-800' },
+                'CONTRACTED': { text: '계약중', class: 'bg-yellow-100 text-yellow-800' },
+                'SOLD': { text: '거래완료', class: 'bg-gray-100 text-gray-800' }
+            };
+            const status = statusMap[property.status] || statusMap['AVAILABLE'];
+            statusElement.textContent = status.text;
+            statusElement.className = `px-3 py-1 rounded-full text-sm font-semibold ${status.class}`;
+            
+            // 옵션 표시
+            const optionsContainer = document.getElementById(`detail-property-options-${suffix}`);
+            optionsContainer.innerHTML = '';
+            property.options.forEach(option => {
+                const optionElement = document.createElement('span');
+                optionElement.className = 'bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full';
+                optionElement.textContent = option;
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+        
+        // 매물 상세 페이지 닫기 (패널 지정)
+        function closePropertyDetail(panelToHide) {
+            const overlay = panelToHide === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
+            overlay.classList.add('-translate-x-full');
+            overlay.style.zIndex = '20'; // 닫힐 때는 z-index를 기본값으로
+            // 상세 페이지 토글로 닫히는 경우에도 좌측 버튼 UI 복구
+            adjustLeftPanelButtonsForDetail(false);
+        }
+
+        // 모든 매물 상세 페이지 닫기
+        function closeAllPropertyDetails() {
+            // 두 패널 모두 완전히 숨기기
+            propertyDetailOverlayA.classList.add('-translate-x-full');
+            propertyDetailOverlayB.classList.add('-translate-x-full');
+            
+            // opacity와 pointer-events 초기화
+            propertyDetailOverlayA.style.opacity = '0';
+            propertyDetailOverlayB.style.opacity = '0';
+            propertyDetailOverlayA.style.pointerEvents = 'none';
+            propertyDetailOverlayB.style.pointerEvents = 'none';
+            propertyDetailOverlayA.style.zIndex = '';
+            propertyDetailOverlayB.style.zIndex = '';
+            
+            // 상태 초기화
+            activePanel = null;
+            currentOpenPropertyId = null;
+
+            // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
+            adjustLeftPanelButtonsForDetail(false);
+        }
+
+        // 상세 페이지 표시 상태에 맞춰 좌측 패널 버튼 조정
+        function adjustLeftPanelButtonsForDetail(isDetailOpen) {
+            if (!closePanelButton || !expandPanelButton) return;
+
+            if (isDetailOpen) {
+                // 상세 페이지가 열리면 닫기 버튼을 상세 패널 오른쪽 경계로 이동시켜 함께 보이게 함
+                const overlayRight = 450 + (window.innerWidth * 0.5);
+                closePanelButton.style.left = `${overlayRight}px`;
+                closePanelButton.style.display = '';
+                closePanelButton.style.zIndex = '22';
+
+                // 확장 버튼 반투명 및 호버/포커스 시 복원
+                expandPanelButton.style.opacity = '0.4';
+                expandPanelButton.__enterHandler = () => { expandPanelButton.style.opacity = '1'; };
+                expandPanelButton.__leaveHandler = () => { expandPanelButton.style.opacity = '0.4'; };
+                expandPanelButton.addEventListener('mouseenter', expandPanelButton.__enterHandler);
+                expandPanelButton.addEventListener('mouseleave', expandPanelButton.__leaveHandler);
+                expandPanelButton.addEventListener('focus', expandPanelButton.__enterHandler);
+                expandPanelButton.addEventListener('blur', expandPanelButton.__leaveHandler);
+            } else {
+                // 상세 페이지가 닫히면 좌측 닫기 버튼 위치/층위 원복
+                closePanelButton.style.left = '450px';
+                closePanelButton.style.zIndex = '';
+
+                // 확장 버튼 원복
+                expandPanelButton.style.opacity = '';
+                if (expandPanelButton.__enterHandler) {
+                    expandPanelButton.removeEventListener('mouseenter', expandPanelButton.__enterHandler);
+                    expandPanelButton.removeEventListener('mouseleave', expandPanelButton.__leaveHandler);
+                    expandPanelButton.removeEventListener('focus', expandPanelButton.__enterHandler);
+                    expandPanelButton.removeEventListener('blur', expandPanelButton.__leaveHandler);
+                    delete expandPanelButton.__enterHandler;
+                    delete expandPanelButton.__leaveHandler;
+                }
+            }
+        }
+
+        // 상세 페이지가 열려 있을 때 윈도우 리사이즈 시 닫기 버튼 위치 보정
+        window.addEventListener('resize', () => {
+            if (activePanel) {
+                // 상세 페이지 중에는 닫기 버튼을 상세 패널 오른쪽 경계로 재정렬
+                adjustLeftPanelButtonsForDetail(true);
+            }
+        });
+
+        // 닫기 버튼 이벤트
+        closePropertyDetailBtnA.addEventListener('click', closeAllPropertyDetails);
+        closePropertyDetailBtnB.addEventListener('click', closeAllPropertyDetails);
+
+        // 매물즐겨찾기 버튼: 하트 토글(회색↔빨강)
+        function toggleFavorite(panelSuffix) {
+            const button = document.getElementById(`favorite-button-${panelSuffix}`);
+            const icon = document.getElementById(`favorite-icon-${panelSuffix}`);
+            if (!button || !icon) return;
+            const isActive = button.getAttribute('aria-pressed') === 'true';
+            if (isActive) {
+                button.setAttribute('aria-pressed', 'false');
+                icon.setAttribute('fill', 'none');
+                icon.classList.remove('text-red-500');
+                icon.classList.add('text-gray-600');
+            } else {
+                button.setAttribute('aria-pressed', 'true');
+                icon.setAttribute('fill', 'currentColor');
+                icon.classList.remove('text-gray-600');
+                icon.classList.add('text-red-500');
+            }
+        }
+
+        const favoriteButtonA = document.getElementById('favorite-button-a');
+        const favoriteButtonB = document.getElementById('favorite-button-b');
+        if (favoriteButtonA) favoriteButtonA.addEventListener('click', () => toggleFavorite('a'));
+        if (favoriteButtonB) favoriteButtonB.addEventListener('click', () => toggleFavorite('b'));
+
+        // 매물 카드 클릭 이벤트
+        document.addEventListener('click', (e) => {
+            const propertyCard = e.target.closest('.property-card');
+            if (propertyCard) {
+                const propertyId = parseInt(propertyCard.getAttribute('data-property-id'));
+                if (isPanelExpanded) {
+                    // 전체화면에서 돌아오는 버튼 동작 후 해당 매물 상세 오픈
+                    if (typeof collapseFullscreenButton !== 'undefined' && collapseFullscreenButton) {
+                        collapseFullscreenButton.click();
+                    } else {
+                        isPanelExpanded = false;
+                        updateUIVisibility();
+                    }
+                    setTimeout(() => openPropertyDetail(propertyId), 320); // 패널 전환 애니메이션 시간 이후 실행
+                } else {
+                    openPropertyDetail(propertyId);
+                }
+            }
+        });
+
+        // 페이지 로드 시 모든 상세 페이지 숨기기
+        closeAllPropertyDetails();
+
+
+   
     </script>
 </body>
 </html>
