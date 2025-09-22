@@ -1,6 +1,5 @@
 package com.realestate.app.domain.chat.api;
 
-import com.realestate.app.domain.chat.ChatMessage;
 import com.realestate.app.domain.chat.ChatRoom;
 import com.realestate.app.domain.chat.api.dto.*;
 import com.realestate.app.domain.chat.app.ChatService;
@@ -10,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -22,10 +22,17 @@ public class ChatRestController {
     @PostMapping("/rooms")
     public RoomResponse createRoom(@RequestBody CreateRoomRequest req) {
         Long me = auth.currentUserId();
-        ChatRoom room = chatService.findOrCreateRoom(req.propertyId(), me, req.opponentUserId());
-        return new RoomResponse(room.getId(), room.getProperty().getId(),
-                room.getUser1().getId(), room.getUser2().getId(),
-                room.getCreatedAt().toString());
+        ChatRoom room = chatService.findOrCreateRoom(
+                req.propertyId(), me, req.opponentUserId(), req.opponentUserId2()
+        );
+        return new RoomResponse(
+                room.getId(),
+                room.getProperty().getId(),
+                room.getUser1().getId(),
+                room.getUser2().getId(),
+                room.getUser3() != null ? room.getUser3().getId() : null,
+                room.getCreatedAt().toString()
+        );
     }
 
     @GetMapping("/rooms")
@@ -34,12 +41,23 @@ public class ChatRestController {
         Long me = auth.currentUserId();
         return chatService.myRooms(me, PageRequest.of(page, size))
                 .map(r -> {
-                    Long opp = r.getUser1().getId().equals(me) ? r.getUser2().getId() : r.getUser1().getId();
+                    List<Long> oppIds = new ArrayList<>();
+                    Long u1 = r.getUser1().getId();
+                    Long u2 = r.getUser2().getId();
+                    Long u3 = r.getUser3() != null ? r.getUser3().getId() : null;
+
+                    if (!u1.equals(me)) oppIds.add(u1);
+                    if (!u2.equals(me)) oppIds.add(u2);
+                    if (u3 != null && !u3.equals(me)) oppIds.add(u3);
+
                     var last = chatService.findLastMessage(r.getId());
                     int unread = chatService.countUnread(r.getId(), me);
+
                     return new RoomSummaryResponse(
-                            r.getId(), r.getProperty().getId(),
-                            opp, null,
+                            r.getId(),
+                            r.getProperty().getId(),
+                            oppIds,
+                            null, // opponentNames: 필요 시 UserRepo 통해 매핑해서 채워도 됨
                             last != null ? last.getContent() : null,
                             last != null ? last.getSentAt().toString() : null,
                             unread
@@ -52,15 +70,38 @@ public class ChatRestController {
                                           @RequestParam(required = false) Long cursorId,
                                           @RequestParam(defaultValue = "backward") String dir,
                                           @RequestParam(defaultValue = "50") int size) {
+        Long me = auth.currentUserId();
+        chatService.assertRoomMember(roomId, me);
         return chatService.pageMessages(roomId, cursorId, dir, size).stream()
                 .map(m -> new MessageResponse(
                         m.getId(), roomId, m.getSender().getId(),
-                        m.getContent(), m.getSentAt().toString(), m.getIsRead()
+                        m.getContent(), m.getSentAt().toString(), Boolean.TRUE.equals(m.getIsRead())
                 )).toList();
+    }
+
+    @PostMapping("/rooms/{roomId}/messages")
+    public MessageResponse sendMessage(@PathVariable Long roomId,
+                                       @RequestBody SendMessageRequest req) {
+        Long me = auth.currentUserId();
+        var saved = chatService.saveMessage(roomId, me, req.content());
+        return new MessageResponse(
+                saved.getId(), roomId, me,
+                saved.getContent(), saved.getSentAt().toString(),
+                Boolean.TRUE.equals(saved.getIsRead())
+        );
     }
 
     @PostMapping("/rooms/{roomId}/read")
     public void markRead(@PathVariable Long roomId, @RequestBody ReadRequest req) {
-        chatService.markRead(roomId, auth.currentUserId(), req.lastReadMessageId());
+        Long me = auth.currentUserId();
+        chatService.assertRoomMember(roomId, me);
+        chatService.markRead(roomId, me, req.lastReadMessageId());
+    }
+
+    @PostMapping("/rooms/{roomId}/read-all")
+    public void markReadAll(@PathVariable Long roomId) {
+        Long me = auth.currentUserId();
+        chatService.assertRoomMember(roomId, me);
+        chatService.markAllOpponentRead(roomId, me);
     }
 }

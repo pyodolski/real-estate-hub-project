@@ -19,3 +19,10 @@ spring:
 app:
   file:
     upload-dir: uploads/ownership
+
+# Actuator 설정 (개발 환경에서만 사용)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings, health, info

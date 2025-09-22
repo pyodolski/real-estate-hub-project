@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.realestate.app: DEBUG
+
+jwt:
+  secret: test-secret-key-for-testing-purposes-only
+  access-token-expiry: 3600
+  refresh-token-expiry: 1209600

@@ -28,8 +28,9 @@
             }
           })
           .then((userData) => {
+            console.log("사용자 정보:", userData); // 디버깅용
             // 역할별 페이지로 리다이렉트
-            switch (userData.roleId) {
+            switch (userData.role) {
               case "regular":
                 window.location.href = "loginO.html";
                 break;

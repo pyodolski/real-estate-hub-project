@@ -1,7 +1,7 @@
 package com.realestate.app.domain.transaction;
 
-import com.realestate.app.domain.property.Property;
-import com.realestate.app.domain.user.User;
+import com.realestate.app.domain.property.table.Property;
+import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 

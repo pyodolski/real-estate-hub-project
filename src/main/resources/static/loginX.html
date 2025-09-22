@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>부동산 서비스 로그인</title>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Inter & Noto Sans KR) -->
@@ -19,6 +20,13 @@
         font-family: "Inter", "Noto Sans KR", sans-serif;
       }
     </style>
+    <script>
+      function setToken(raw){
+        const bearer = raw?.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
+        localStorage.setItem('auth_token', bearer);
+        window.TOKEN = bearer;
+      }
+    </script>
   </head>
   <body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
     <div class="w-full max-w-md">
@@ -131,6 +139,9 @@
     <script>
       // 페이지 로드 시 자동 로그아웃 (토큰 제거)
       window.addEventListener("DOMContentLoaded", function () {
+
+        localStorage.removeItem("auth_token");     // ★ 추가
+        localStorage.removeItem("refresh_token");  // ★ 추가
         // localStorage에서 모든 인증 토큰 제거
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -138,6 +149,8 @@
         // sessionStorage에서도 토큰 제거 (혹시 있을 수 있는 경우)
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("auth_token");
+        sessionStorage.removeItem("refresh_token");
 
         console.log("자동 로그아웃 완료 - 모든 토큰이 제거되었습니다.");
       });
@@ -183,7 +196,7 @@
             }
 
             const tokenData = await loginResponse.json();
-
+            setToken(tokenData.accessToken);
             // 2. 액세스 토큰을 localStorage에 저장
             localStorage.setItem("accessToken", tokenData.accessToken);
             localStorage.setItem("refreshToken", tokenData.refreshToken);
@@ -210,12 +223,14 @@
                 userId: userData.id,
                 email: userData.email,
                 username: userData.username,
-                role: userData.roleId,
+                role: userData.role,
               })
             );
 
+            console.log("로그인 사용자 정보:", userData); // 디버깅용
+
             // 4. 역할별 페이지 리다이렉트
-            switch (userData.roleId) {
+            switch (userData.role) {
               case "regular":
                 window.location.href = "loginO.html";
                 break;

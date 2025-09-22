@@ -1,6 +1,6 @@
 package com.realestate.app.domain.property.service;
 
-import com.realestate.app.domain.property.Property;
+import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.dto.PropertyDetailDto;
 import com.realestate.app.domain.property.dto.PropertyMarkerDto;
 import com.realestate.app.domain.property.repository.PropertyRepository;

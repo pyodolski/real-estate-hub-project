@@ -25,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse res,
                                     FilterChain chain) throws IOException, ServletException {
 
+
         // 1) CORS 프리플라이트는 무조건 통과
         if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
             chain.doFilter(req, res);
@@ -33,10 +34,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2) 로그인/회원가입/리프레시는 토큰 없이 통과
         String uri = req.getRequestURI();
-        if (uri.startsWith("/api/auth/")) {
+        // ✅ 공개 경로/프리플라이트는 스킵
+        if (uri.startsWith("/api/auth/")
+                || uri.startsWith("/ws-stomp")
+                || uri.startsWith("/assets/") || uri.startsWith("/static/")
+                || uri.equals("/") || uri.startsWith("/actuator/health")
+                || "OPTIONS".equalsIgnoreCase(req.getMethod())) {
             chain.doFilter(req, res);
             return;
         }
+
 
         // 3) 그 외 요청만 Bearer 토큰 파싱 시도
         String auth = req.getHeader("Authorization");

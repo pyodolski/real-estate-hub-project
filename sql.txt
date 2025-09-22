@@ -82,6 +82,18 @@
   uploaded_at      timestamp [not null]                // 업로드 시각
 }
 
+// Table audit_logs {
+  id          bigint [pk, increment]                    // 감사 로그 ID
+  user_id     bigint [ref: > users.id]                  // 작업 수행 사용자 (관리자)
+  action      varchar(50) [not null, note: 'APPROVE_CLAIM|REJECT_CLAIM|CREATE_PROPERTY|UPDATE_CLAIM|DELETE_CLAIM'] // 수행 작업
+  entity_type varchar(50) [not null, note: 'OwnershipClaim|Property|User'] // 대상 엔티티 타입
+  entity_id   bigint                                    // 대상 엔티티 ID
+  details     text                                      // 작업 상세 내용
+  ip_address  varchar(45)                               // 사용자 IP 주소
+  user_agent  text                                      // 브라우저 정보
+  created_at  timestamp [not null]                      // 작업 수행 시각
+}
+
 // Table property_images {
   id          bigint [pk, increment]                    // 이미지 고유 ID
   property_id bigint [ref: > properties.id]             // 매물 ID
