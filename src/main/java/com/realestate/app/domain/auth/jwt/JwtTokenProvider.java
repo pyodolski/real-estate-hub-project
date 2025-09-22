@@ -2,10 +2,7 @@ package com.realestate.app.domain.auth.jwt;
 
 import com.realestate.app.domain.auth.security.AuthUser;
 import com.realestate.app.domain.user.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +79,7 @@ public class JwtTokenProvider {
         try {
             return Long.parseLong(sub);
         } catch (NumberFormatException e) {
-            throw new JwtException("Invalid subject (user id) in JWT");
+            throw new  JwtException("Invalid subject (user id) in JWT");
         }
     }
 

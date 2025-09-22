@@ -4,7 +4,7 @@ import com.realestate.app.domain.chat.ChatMessage;
 import com.realestate.app.domain.chat.ChatRoom;
 import com.realestate.app.domain.chat.infra.jpa.ChatMessageJpaRepository;
 import com.realestate.app.domain.chat.infra.jpa.ChatRoomJpaRepository;
-import com.realestate.app.domain.user.User;
+import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -60,7 +60,7 @@ public class ChatService {
                             .property(em.getReference(com.realestate.app.domain.property.Property.class, propertyId))
                             .user1(em.getReference(com.realestate.app.domain.user.entity.User.class, t.u1))
                             .user2(em.getReference(com.realestate.app.domain.user.entity.User.class, t.u2))
-                            .user3(t.u3 == null ? null : em.getReference(com.realestate.app.domain.user.User.class, t.u3))
+                            .user3(t.u3 == null ? null : em.getReference(com.realestate.app.domain.user.entity.User.class, t.u3))
                             .build();
                     return roomRepo.save(room);
                 });
