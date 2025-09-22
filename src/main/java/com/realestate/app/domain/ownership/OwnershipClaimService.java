@@ -5,7 +5,7 @@ import com.realestate.app.domain.audit.AuditLogService;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimCreateRequest;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimResponse;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimRequest;
-import com.realestate.app.domain.property.Property;
+import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.repository.PropertyRepository;
 import com.realestate.app.domain.user.entity.User;
 import com.realestate.app.domain.user.repository.UserRepository;

@@ -57,7 +57,7 @@ public class ChatService {
         return roomRepo.findByPropertyAndUsers(propertyId, t.u1, t.u2, t.u3)
                 .orElseGet(() -> {
                     var room = ChatRoom.builder()
-                            .property(em.getReference(com.realestate.app.domain.property.Property.class, propertyId))
+                            .property(em.getReference(com.realestate.app.domain.property.table.Property.class, propertyId))
                             .user1(em.getReference(com.realestate.app.domain.user.entity.User.class, t.u1))
                             .user2(em.getReference(com.realestate.app.domain.user.entity.User.class, t.u2))
                             .user3(t.u3 == null ? null : em.getReference(com.realestate.app.domain.user.entity.User.class, t.u3))

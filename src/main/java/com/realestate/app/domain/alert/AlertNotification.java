@@ -1,6 +1,6 @@
 package com.realestate.app.domain.alert;
 
-import com.realestate.app.domain.property.Property;
+import com.realestate.app.domain.property.table.Property;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
