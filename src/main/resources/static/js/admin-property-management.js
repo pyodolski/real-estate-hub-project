@@ -31,7 +31,8 @@ class AdminPropertyManagement {
 
       if (response.ok) {
         this.currentUser = await response.json();
-        if (this.currentUser.roleId !== "admin") {
+        console.log("관리자 페이지 사용자 정보:", this.currentUser); // 디버깅용
+        if (this.currentUser.role !== "admin") {
           alert("관리자 권한이 필요합니다.");
           window.location.href = "/";
           return;
@@ -39,7 +40,7 @@ class AdminPropertyManagement {
         // 관리자 이름 표시
         const adminNameElement = document.getElementById("admin-name");
         if (adminNameElement) {
-          adminNameElement.textContent = `${this.currentUser.name} (관리자)`;
+          adminNameElement.textContent = `${this.currentUser.username} (관리자)`;
         }
       } else {
         throw new Error("사용자 정보를 불러올 수 없습니다.");
@@ -138,7 +139,9 @@ class AdminPropertyManagement {
                             
                             <div class="mt-4">
                                 <h3 class="text-base font-medium text-gray-900">${
-                                  claim.title || "새 매물 등록 요청"
+                                  claim.title ||
+                                  claim.buildingName ||
+                                  "새 매물 등록 요청"
                                 }</h3>
                                 <p class="text-sm text-gray-600 mt-1">${
                                   claim.propertyAddress ||

@@ -1,5 +1,7 @@
 package com.realestate.app.domain.ownership;
 
+import com.realestate.app.domain.audit.AuditLog;
+import com.realestate.app.domain.audit.AuditLogService;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimCreateRequest;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimResponse;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimRequest;
@@ -27,6 +29,7 @@ public class OwnershipClaimService {
     private final UserRepository userRepository;
     private final PropertyRepository propertyRepository;
     private final FileStorageService fileStorageService;
+    private final AuditLogService auditLogService;
 
     // 파일과 함께 자산 증명 신청
     public OwnershipClaimResponse createOwnershipClaim(OwnershipClaimCreateRequest request) {
@@ -154,6 +157,61 @@ public class OwnershipClaimService {
         return convertToResponse(claim);
     }
 
+    // 매물 신청 수정
+    public OwnershipClaimResponse updateOwnershipClaim(Long claimId, OwnershipClaimCreateRequest request) {
+        OwnershipClaim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new IllegalArgumentException("신청을 찾을 수 없습니다."));
+        
+        // 권한 체크
+        if (!claim.getApplicant().getId().equals(request.getUserId())) {
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+        
+        // 상태 체크 - 심사중인 경우만 수정 가능
+        if (claim.getStatus() != OwnershipClaim.Status.PENDING) {
+            throw new IllegalStateException("심사중인 신청만 수정할 수 있습니다.");
+        }
+        
+        // 기본 정보 업데이트
+        claim.setApplicantName(request.getApplicantName());
+        claim.setApplicantPhone(request.getApplicantPhone());
+        claim.setRelationshipToProperty(request.getRelationshipToProperty());
+        claim.setAdditionalInfo(request.getAdditionalInfo());
+        
+        // 지도 API 위치 정보 업데이트
+        claim.setPropertyAddress(request.getPropertyAddress());
+        claim.setLocationX(request.getLocationX());
+        claim.setLocationY(request.getLocationY());
+        claim.setBuildingName(request.getBuildingName());
+        claim.setDetailedAddress(request.getDetailedAddress());
+        claim.setPostalCode(request.getPostalCode());
+        
+        // 새로운 파일이 있는 경우 기존 파일 삭제 후 새 파일 업로드
+        if (request.getDocuments() != null && !request.getDocuments().isEmpty()) {
+            // 기존 문서들 삭제
+            claim.getDocuments().clear();
+            
+            // 새 문서들 업로드
+            List<OwnershipDocument> newDocuments = uploadDocuments(claim, request.getDocuments(), request.getDocumentTypes());
+            claim.getDocuments().addAll(newDocuments);
+        }
+        
+        OwnershipClaim updatedClaim = claimRepository.save(claim);
+
+        // 감사 로그 생성
+        auditLogService.createAuditLog(
+            claim.getApplicant(),
+            AuditLog.Actions.UPDATE_CLAIM,
+            AuditLog.EntityTypes.OWNERSHIP_CLAIM,
+            claimId,
+            String.format("매물 소유권 신청 수정 - 신청자: %s, 주소: %s", 
+                claim.getApplicantName(), 
+                claim.getPropertyAddress())
+        );
+
+        return convertToResponse(updatedClaim);
+    }
+
     // 관리자용: 신청 승인
     public OwnershipClaimResponse approveClaim(Long claimId, Long adminId) {
         OwnershipClaim claim = claimRepository.findById(claimId)
@@ -170,6 +228,17 @@ public class OwnershipClaimService {
 
         // 승인 시 Property 자동 생성
         createPropertyFromClaim(savedClaim);
+
+        // 감사 로그 생성
+        auditLogService.createAuditLog(
+            admin,
+            AuditLog.Actions.APPROVE_CLAIM,
+            AuditLog.EntityTypes.OWNERSHIP_CLAIM,
+            claimId,
+            String.format("매물 소유권 신청 승인 - 신청자: %s, 주소: %s", 
+                claim.getApplicantName(), 
+                claim.getPropertyAddress())
+        );
 
         return convertToResponse(savedClaim);
     }
@@ -203,30 +272,39 @@ public class OwnershipClaimService {
         claimRepository.save(claim);
     }
 
-    // 매물 제목 자동 생성
+    // 매물 제목 자동 생성 (중복 방지)
     private String generatePropertyTitle(OwnershipClaim claim) {
-        StringBuilder title = new StringBuilder();
+        StringBuilder baseTitle = new StringBuilder();
         
         if (claim.getBuildingName() != null && !claim.getBuildingName().trim().isEmpty()) {
-            title.append(claim.getBuildingName());
+            baseTitle.append(claim.getBuildingName());
         } else if (claim.getPropertyAddress() != null) {
             // 주소에서 동/구 정보 추출하여 제목 생성
             String[] addressParts = claim.getPropertyAddress().split(" ");
             if (addressParts.length >= 2) {
-                title.append(addressParts[addressParts.length - 2]).append(" ");
-                title.append(addressParts[addressParts.length - 1]);
+                baseTitle.append(addressParts[addressParts.length - 2]).append(" ");
+                baseTitle.append(addressParts[addressParts.length - 1]);
             } else {
-                title.append("매물");
+                baseTitle.append("매물");
             }
         } else {
-            title.append("매물");
+            baseTitle.append("매물");
         }
         
         if (claim.getDetailedAddress() != null && !claim.getDetailedAddress().trim().isEmpty()) {
-            title.append(" ").append(claim.getDetailedAddress());
+            baseTitle.append(" ").append(claim.getDetailedAddress());
         }
         
-        return title.toString();
+        // 중복 방지 로직
+        String finalTitle = baseTitle.toString();
+        int counter = 1;
+        
+        while (propertyRepository.existsByTitle(finalTitle)) {
+            finalTitle = baseTitle.toString() + " (" + counter + ")";
+            counter++;
+        }
+        
+        return finalTitle;
     }
 
     // 관리자용: 신청 거절
@@ -242,7 +320,21 @@ public class OwnershipClaimService {
         claim.setRejectionReason(rejectionReason);
         claim.setReviewedAt(LocalDateTime.now());
 
-        return convertToResponse(claimRepository.save(claim));
+        OwnershipClaim savedClaim = claimRepository.save(claim);
+
+        // 감사 로그 생성
+        auditLogService.createAuditLog(
+            admin,
+            AuditLog.Actions.REJECT_CLAIM,
+            AuditLog.EntityTypes.OWNERSHIP_CLAIM,
+            claimId,
+            String.format("매물 소유권 신청 거절 - 신청자: %s, 주소: %s, 거절사유: %s", 
+                claim.getApplicantName(), 
+                claim.getPropertyAddress(),
+                rejectionReason)
+        );
+
+        return convertToResponse(savedClaim);
     }
 
     private List<OwnershipDocument> uploadDocuments(OwnershipClaim claim, List<MultipartFile> files, List<String> documentTypes) {

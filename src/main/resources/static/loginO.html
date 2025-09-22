@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
+  <head>
     <script>
-        // 초기값 false로 두고 시작
-        var isProfilePanelOpen = false;
-        var isChatPanelOpen = false; // 이거도 같은 에러 났었죠
+      // 초기값 false로 두고 시작
+      var isProfilePanelOpen = false;
+      var isChatPanelOpen = false; // 이거도 같은 에러 났었죠
     </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>부동산 매물 찾기</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,8 +22,8 @@
     <link rel="stylesheet" href="./css/map.css" />
     <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
     <script>
-        // loginO.html 상단(해당 스크립트보다 먼저) 또는 공용 JS에
-        window.isChatPanelOpen = window.isChatPanelOpen ?? false;
+      // loginO.html 상단(해당 스크립트보다 먼저) 또는 공용 JS에
+      window.isChatPanelOpen = window.isChatPanelOpen ?? false;
     </script>
     <style>
       /* Custom Styles */
@@ -1412,6 +1412,7 @@
           </div>
 
           <button
+            id="add-property-btn"
             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <svg
@@ -1581,6 +1582,7 @@
           </button>
         </div>
         <button
+          id="logout-button"
           class="w-full aspect-square bg-[#FF3737] hover:brightness-95 transition-all rounded-2xl p-2 flex items-center justify-center"
         >
           <svg
@@ -3890,6 +3892,29 @@
       updateRightToggleButtonPosition();
       updateChatPanelPosition(false);
       updateProfilePanelPosition(false);
+
+      // 로그아웃 버튼 이벤트 리스너 추가
+      const logoutButton = document.getElementById("logout-button");
+      if (logoutButton) {
+        logoutButton.addEventListener("click", function () {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            // 로컬 스토리지에서 토큰 제거
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+
+            // 로그인 페이지로 리다이렉트
+            window.location.href = "/loginX.html";
+          }
+        });
+      }
+
+      // 내 매물 등록 버튼 이벤트 리스너 추가
+      const addPropertyBtn = document.getElementById("add-property-btn");
+      if (addPropertyBtn) {
+        addPropertyBtn.addEventListener("click", function () {
+          showPropertyRegistrationModal();
+        });
+      }
     </script>
   </body>
 </html>

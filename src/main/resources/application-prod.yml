@@ -10,8 +10,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate   # 운영은 스키마 강제 수정 금지
+      ddl-auto: validate # 운영은 스키마 강제 수정 금지
     open-in-view: false
 
   flyway:
-    enabled: true   # 운영 환경에서 마이그레이션 실행
+    enabled: true # 운영 환경에서 마이그레이션 실행
