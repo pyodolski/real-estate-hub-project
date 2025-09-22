@@ -17,7 +17,7 @@ public interface FavoriteJpaRepository extends JpaRepository<Favorite, Long> {
     void deleteByUserIdAndPropertyId(Long userId, Long propertyId);
 
     long countByPropertyId(Long propertyId);
-
+/*
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
         INSERT INTO favorites(user_id, property_id, created_at)
@@ -30,4 +30,6 @@ public interface FavoriteJpaRepository extends JpaRepository<Favorite, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "DELETE FROM favorites WHERE user_id = :userId AND property_id = :propertyId", nativeQuery = true)
     int deleteByUserIdAndPropertyIdNative(@Param("userId") Long userId, @Param("propertyId") Long propertyId);
+    */
+
 }

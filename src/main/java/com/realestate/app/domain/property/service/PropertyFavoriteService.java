@@ -10,7 +10,6 @@ import com.realestate.app.domain.property.repository.FavoriteJpaRepository;     
 import com.realestate.app.domain.user.repository.UserRepository;                           // 실제 패키지에 맞추세요
 import com.realestate.app.domain.property.repository.PropertyRepository;        // 실제 패키지에 맞추세요
 import com.realestate.app.domain.property.table.Favorite;
-import com.realestate.app.domain.property.repository.FavoriteNativeRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +23,6 @@ public class PropertyFavoriteService {
     private final FavoriteJpaRepository favoriteRepo;              // 존재여부/삭제/추가 (JPA)
     private final UserRepository userRepo;                      // 즐겨찾기 추가 시 참조
     private final PropertyRepository propertyRepo;
-    private final FavoriteNativeRepository favoriteNativeRepo;
 
     public List<PropertyFavoriteDto> myFavorites(Long userId, int limit, int offset) {
         int safeLimit = Math.max(1, Math.min(200, limit));
