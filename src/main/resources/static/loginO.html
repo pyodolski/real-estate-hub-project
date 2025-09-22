@@ -4,57 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부동산 매물 찾기</title>
-
-    <!-- 0) 공용 유틸 + 토큰 복원: 제일 먼저 -->
+    <!-- Tailwind CSS CDN -->
     <script>
-        // === 공용 설정/토큰 (가장 먼저 로드) ===
-        const BASE = 'http://localhost:8080';
+        // 가장 먼저 로드되는 스크립트에서
+        window.BASE = window.BASE || 'http://localhost:8080';
 
-        // 토큰 복원
         window.TOKEN = localStorage.getItem('auth_token') || null;
 
-        // API 호출 헤더
-        function authHeaders(){
+        window.authHeaders = function () {
           return window.TOKEN
             ? { Authorization: window.TOKEN, 'Content-Type': 'application/json' }
             : { 'Content-Type': 'application/json' };
-        }
+        };
 
-        // 로그인 성공 시 호출
-        function setToken(raw){
+        window.setToken = function (raw) {
           const bearer = raw?.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
           window.TOKEN = bearer;
           localStorage.setItem('auth_token', bearer);
-        }
+        };
 
-        // === 화면 표시 유틸(즐겨찾기 카드에서 사용) ===
-        function escapeHtml(s=''){
+        window.escapeHtml = function (s = '') {
           return String(s)
-            .replaceAll('&','&amp;')
-            .replaceAll('<','&lt;')
-            .replaceAll('>','&gt;')
-            .replaceAll('"','&quot;')
-            .replaceAll("'","&#39;");
-        }
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+        };
 
-        function formatPrice(v){
+        window.formatPrice = function (v) {
           if (v == null) return '-';
           try { return Number(v).toLocaleString('ko-KR') + '원'; }
           catch { return String(v); }
-        }
+        };
 
-        function timeKST(iso){
-          return iso ? iso.replace('T',' ').slice(0,16) : '';
-        }
+        window.timeKST = function (iso) {
+          return iso ? iso.replace('T', ' ').slice(0, 16) : '';
+        };
     </script>
-
-    <!-- 1) 전역 UI 상태(하나만 유지) -->
     <script>
-        window.isProfilePanelOpen = window.isProfilePanelOpen ?? false;
-        window.isChatPanelOpen    = window.isChatPanelOpen ?? false;
+        // 쿼리스트링 빌더
+        function buildQuery(params) {
+          if (!params) return '';
+          const q = new URLSearchParams();
+          for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null) q.append(k, v);
+          const s = q.toString();
+          return s ? `?${s}` : '';
+        }
+
+        // 전역 API 래퍼
+        window.api = async function (path, { method='GET', params, json, headers, ...rest } = {}) {
+          const url = `${window.BASE}${path}${buildQuery(params)}`;
+          const baseHeaders = window.TOKEN ? { Authorization: window.TOKEN } : {};
+          if (json !== undefined) baseHeaders['Content-Type'] = 'application/json';
+
+          const res = await fetch(url, {
+            method,
+            headers: { ...baseHeaders, ...(headers || {}) },
+            body: json !== undefined ? JSON.stringify(json) : undefined,
+            ...rest,
+          });
+
+          const ct = res.headers.get('content-type') || '';
+          const data = ct.includes('application/json') ? await res.json() : await res.text();
+          if (!res.ok) {
+            const msg = typeof data === 'string' ? data : (data?.message || res.statusText);
+            throw new Error(`HTTP ${res.status} ${msg}`);
+          }
+          return data;
+        };
+
+        // 편의 메서드
+        window.api.get  = (p, opt={}) => window.api(p, { ...opt, method: 'GET' });
+        window.api.post = (p, opt={}) => window.api(p, { ...opt, method: 'POST' });
+        window.api.del  = (p, opt={}) => window.api(p, { ...opt, method: 'DELETE' });
     </script>
 
-    <!-- 2) 외부 라이브러리/스타일 -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
@@ -72,11 +98,8 @@
         #right-side-panel { z-index: 30; }
         #notification-panel, #favorite-panel, #compare-panel { z-index: 20; }
     </style>
-
-</head>
-
-<body class="bg-gray-100 h-screen overflow-hidden">
-
+  </head>
+  <body class="bg-gray-100 h-screen overflow-hidden">
     <div class="relative w-full h-full">
         <!-- =================================================================== -->
         <!-- 지도 및 필터 패널                                                     -->
@@ -2630,6 +2653,34 @@
             }
         });
 
+      // 초기 UI 상태 설정
+      updateUIVisibility();
+      updateRightToggleButtonPosition();
+      updateChatPanelPosition(false);
+      updateProfilePanelPosition(false);
+
+      // 로그아웃 버튼 이벤트 리스너 추가
+      const logoutButton = document.getElementById("logout-button");
+      if (logoutButton) {
+        logoutButton.addEventListener("click", function () {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            // 로컬 스토리지에서 토큰 제거
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+
+            // 로그인 페이지로 리다이렉트
+            window.location.href = "/loginX.html";
+          }
+        });
+      }
+
+      // 내 매물 등록 버튼 이벤트 리스너 추가
+      const addPropertyBtn = document.getElementById("add-property-btn");
+      if (addPropertyBtn) {
+        addPropertyBtn.addEventListener("click", function () {
+          showPropertyRegistrationModal();
+        });
+      }
         // 초기 UI 상태 설정
         updateUIVisibility();
         updateRightToggleButtonPosition();

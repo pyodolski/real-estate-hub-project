@@ -10,8 +10,28 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate   # 운영은 스키마 강제 수정 금지
+      ddl-auto: validate # 운영은 스키마 강제 수정 금지
     open-in-view: false
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+      enabled: true
+      file-size-threshold: 2KB
+      location: ${java.io.tmpdir}
+
   flyway:
-    enabled: true   # 운영 환경에서 마이그레이션 실행
+    enabled: true # 운영 환경에서 마이그레이션 실행
+
+# 파일 업로드 설정 (운영 환경)
+app:
+  file:
+    upload-dir: ${FILE_UPLOAD_DIR:uploads/ownership}
+
+# Actuator 설정 (운영 환경에서는 제한적으로 노출)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info

@@ -7,9 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.realestate.app.domain.property.repository.FavoriteJpaRepository;       // 엔티티 JPA용
-import com.realestate.app.domain.user.UserRepository;                           // 실제 패키지에 맞추세요
+import com.realestate.app.domain.user.repository.UserRepository;                           // 실제 패키지에 맞추세요
 import com.realestate.app.domain.property.repository.PropertyRepository;        // 실제 패키지에 맞추세요
 import com.realestate.app.domain.property.table.Favorite;
+import com.realestate.app.domain.property.repository.FavoriteNativeRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,7 @@ public class PropertyFavoriteService {
     private final FavoriteJpaRepository favoriteRepo;              // 존재여부/삭제/추가 (JPA)
     private final UserRepository userRepo;                      // 즐겨찾기 추가 시 참조
     private final PropertyRepository propertyRepo;
+    private final FavoriteNativeRepository favoriteNativeRepo;
 
     public List<PropertyFavoriteDto> myFavorites(Long userId, int limit, int offset) {
         int safeLimit = Math.max(1, Math.min(200, limit));
@@ -41,6 +43,7 @@ public class PropertyFavoriteService {
 
     @Transactional
     public boolean toggleFavorite(Long userId, Long propertyId) {
+
         boolean exists = favoriteRepo.existsByUserIdAndPropertyId(userId, propertyId);
         if (exists) {
             favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
@@ -53,6 +56,15 @@ public class PropertyFavoriteService {
         f.setCreatedAt(LocalDateTime.now());
         favoriteRepo.save(f);
         return true; // 추가됨
+
+         /*
+        int inserted = favoriteRepo.insertIgnore(userId, propertyId);
+        if (inserted > 0) return true; // 새로 즐겨찾기 설정됨
+
+        favoriteRepo.deleteByUserIdAndPropertyIdNative(userId, propertyId);
+        return false; // 해제됨
+        */
+
     }
 
     /** 명시적 삭제(원하면 프론트에서 DELETE로 호출) */

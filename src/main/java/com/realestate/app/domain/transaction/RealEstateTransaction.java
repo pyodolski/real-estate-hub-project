@@ -1,11 +1,13 @@
 package com.realestate.app.domain.transaction;
 
 import com.realestate.app.domain.property.table.Property;
+import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "real_estate_transactions")
