@@ -772,7 +772,7 @@
       <!-- =================================================================== -->
       <aside
         id="side-panel"
-        class="absolute top-0 left-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform transition-all duration-300 ease-in-out"
+        class="absolute top-0 left-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-30 transform transition-all duration-300 ease-in-out"
       >
         <!-- 전체화면에서 돌아오는 버튼 -->
         <button
@@ -1935,6 +1935,98 @@
           isRecommended: true,
         },
       ];
+        const properties = [
+            { 
+                id: 101,
+                image: 'https://images.unsplash.com/photo-15701294TT492-45c003edd2be?q=80&w=2070&auto=format&fit=crop', 
+                price: '전세 1억 3,500', 
+                location: '관악구 봉천동', 
+                details: '원룸 ∙ 방 1개 ∙ 2층 ∙ 33.06m²', 
+                tags: ['집주인 인증', '추천', '확인'], 
+                isRecommended: true,
+                buildingYear: 2018,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장'],
+                description: '관악구 봉천동에 위치한 깔끔한 원룸입니다. 교통이 편리하고 주변 상권이 발달되어 있습니다.',
+                brokerName: '김부동',
+                brokerPhone: '010-1234-5678',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 102,
+                image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop', 
+                price: '전세 1억 9,800', 
+                location: '관악구 신림동', 
+                details: '기타 ∙ 방 1개 ∙ 고층 ∙ 13.74m²', 
+                tags: ['직거래', '추천'], 
+                isRecommended: true,
+                buildingYear: 2020,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장', '엘리베이터'],
+                description: '관악구 신림동의 고층 원룸입니다. 넓은 전망과 깔끔한 인테리어를 자랑합니다.',
+                brokerName: '이중개',
+                brokerPhone: '010-9876-5432',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 103,
+                image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop', 
+                price: '월세 3000/80', 
+                location: '동작구 상도동', 
+                details: '투룸 ∙ 방 2개 ∙ 3층 ∙ 45.12m²', 
+                tags: ['추천'], 
+                isRecommended: false,
+                buildingYear: 2019,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장'],
+                description: '동작구 상도동의 넓은 투룸입니다. 가족이 거주하기에 적합한 공간입니다.',
+                brokerName: '박부동산',
+                brokerPhone: '010-5555-7777',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 104,
+                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop', 
+                price: '매매 5억 2,000', 
+                location: '강남구 역삼동', 
+                details: '아파트 ∙ 방 3개 ∙ 15층 ∙ 84.9m²', 
+                tags: ['확인'], 
+                isRecommended: true,
+                buildingYear: 2022,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장', '엘리베이터', '관리사무소', 'CCTV'],
+                description: '강남구 역삼동의 프리미엄 아파트입니다. 최신 시설과 우수한 관리로 주거 환경이 뛰어납니다.',
+                brokerName: '최부동',
+                brokerPhone: '010-1111-2222',
+                status: 'CONTRACTED'
+            },
+            { 
+                id: 105,
+                image: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=2074&auto=format&fit=crop', 
+                price: '전세 2억 5,000', 
+                location: '마포구 서교동', 
+                details: '오피스텔 ∙ 방 1개 ∙ 10층 ∙ 28.5m²', 
+                tags: ['집주인 인증'], 
+                isRecommended: false,
+                buildingYear: 2021,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장', '엘리베이터'],
+                description: '마포구 서교동의 현대적인 오피스텔입니다. 홍대 상권과 가까워 생활이 편리합니다.',
+                brokerName: '정중개',
+                brokerPhone: '010-3333-4444',
+                status: 'AVAILABLE'
+            },
+            { 
+                id: 106,
+                image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop', 
+                price: '전세 3억 1,000', 
+                location: '서대문구 연희동', 
+                details: '빌라 ∙ 방 2개 ∙ 4층 ∙ 55.0m²', 
+                tags: ['직거래'], 
+                isRecommended: true,
+                buildingYear: 2017,
+                options: ['에어컨', '냉장고', '세탁기', '인터넷', '주차장'],
+                description: '서대문구 연희동의 조용한 빌라입니다. 한적한 주거 환경을 원하는 분께 추천합니다.',
+                brokerName: '윤부동산',
+                brokerPhone: '010-6666-7777',
+                status: 'AVAILABLE'
+            }
+        ];
 
       const propertyList = document.getElementById("property-list");
       const recommendedList = document.getElementById("recommended-list");
@@ -2131,7 +2223,7 @@
           .join("");
 
         return `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02] cursor-pointer property-card" data-property-id="${property.id}">
                     <div class="relative">
                         <img src="${property.image}" alt="매물 사진" class="w-full h-40 object-cover">
                         <button class="absolute top-2 right-2 bg-white/70 p-1.5 rounded-full hover:bg-white">
@@ -2408,6 +2500,7 @@
               "opacity-0",
               "pointer-events-none"
             );
+            closeAllPropertyDetails(); // 매물 목록 닫을 때 상세 페이지도 닫기 추가
           }
         }
       }
@@ -3893,8 +3986,8 @@
       updateChatPanelPosition(false);
       updateProfilePanelPosition(false);
 
-      // 로그아웃 버튼 이벤트 리스너 추가
-      const logoutButton = document.getElementById("logout-button");
+       // 로그아웃 버튼 이벤트 리스너 추가
+       const logoutButton = document.getElementById("logout-button");
       if (logoutButton) {
         logoutButton.addEventListener("click", function () {
           if (confirm("로그아웃 하시겠습니까?")) {
@@ -3915,6 +4008,269 @@
           showPropertyRegistrationModal();
         });
       }
+
+        // ===================================================================
+        // 매물 상세 페이지 관련 기능
+        // ===================================================================
+        
+        // 매물 상세 페이지 요소들
+        const propertyDetailOverlayA = document.getElementById('property-detail-overlay-a');
+        const propertyDetailOverlayB = document.getElementById('property-detail-overlay-b');
+        const closePropertyDetailBtnA = document.getElementById('close-property-detail-a');
+        const closePropertyDetailBtnB = document.getElementById('close-property-detail-b');
+        // 좌측 패널 제어 버튼 (상단에서 이미 선언됨)
+        
+        // 현재 활성화된 패널 추적 (A 또는 B)
+        let activePanel = null;
+        let currentOpenPropertyId = null;
+        
+        // 매물 상세 페이지 열기 (A 또는 B 패널 선택)
+        function openPropertyDetail(propertyId) {
+            const newProperty = properties.find(p => p.id === propertyId);
+            if (!newProperty) return;
+
+            // 같은 매물을 다시 클릭한 경우 (토글 동작)
+            if (currentOpenPropertyId === propertyId) {
+                if (activePanel) {
+                    closePropertyDetail(activePanel);
+                    activePanel = null;
+                    currentOpenPropertyId = null;
+                }
+                return;
+            }
+
+            // 다른 매물을 클릭한 경우: 닫고 열기 동시 애니메이션
+            const oldActivePanel = activePanel; // 현재 활성화된 패널 (닫힐 패널)
+            const nextActivePanel = (activePanel === 'a') ? 'b' : 'a'; // 다음에 활성화될 패널 (열릴 패널)
+
+            const overlayToOpen = nextActivePanel === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
+            const overlayToClose = oldActivePanel === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
+
+            // 1. 현재 활성화된 패널이 있다면 닫기 애니메이션 시작
+            if (oldActivePanel) {
+                overlayToClose.classList.add('-translate-x-full');
+            }
+            
+            // 2. 새로운 패널에 데이터 업데이트 및 열기 애니메이션 시작
+            // (z-index를 높여 닫히는 패널 위로 올라오도록 함)
+            overlayToOpen.style.opacity = '1'; // 패널 표시
+            overlayToOpen.style.pointerEvents = 'auto'; // 클릭 이벤트 활성화
+            overlayToOpen.style.zIndex = '21'; // 닫히는 패널(z-20)보다 높게 설정
+            updatePropertyDetail(propertyId, nextActivePanel); // 새 패널에 데이터 채우기
+            overlayToOpen.classList.remove('-translate-x-full'); // 열기 애니메이션 시작
+
+            // 상세 페이지가 열릴 때: 좌측 패널 버튼 UI 조정
+            adjustLeftPanelButtonsForDetail(true);
+
+            // 3. 상태 업데이트
+            activePanel = nextActivePanel;
+            currentOpenPropertyId = propertyId;
+
+            // 4. 닫힌 패널의 z-index 원상 복구 (애니메이션 완료 후)
+            // 즉시 변경 시 깜빡임 발생할 수 있으므로 애니메이션 시간 이후에 변경
+            if (oldActivePanel) {
+                setTimeout(() => {
+                    overlayToClose.style.zIndex = '20';
+                }, 300); // TailwindCSS transition duration과 맞춤
+            }
+        }
+        
+        // 매물 상세 정보 내용 업데이트 (패널 지정)
+        function updatePropertyDetail(propertyId, panel) {
+            const property = properties.find(p => p.id === propertyId);
+            if (!property) return;
+
+            const suffix = panel; // 'a' 또는 'b'
+            
+            // 매물 정보 채우기
+            document.getElementById(`detail-property-image-${suffix}`).src = property.image;
+            document.getElementById(`detail-property-title-${suffix}`).textContent = property.location;
+            const locationElement = document.getElementById(`detail-property-location-${suffix}`);
+            if (locationElement) {
+                locationElement.style.display = 'none';
+            }
+            document.getElementById(`detail-property-price-${suffix}`).textContent = property.price;
+            document.getElementById(`detail-property-details-${suffix}`).textContent = property.details;
+            document.getElementById(`detail-building-year-${suffix}`).textContent = property.buildingYear + '년';
+            document.getElementById(`detail-property-area-${suffix}`).textContent = property.details.split(' ∙ ')[3] || '';
+            document.getElementById(`detail-property-description-${suffix}`).textContent = property.description;
+            document.getElementById(`detail-broker-name-${suffix}`).textContent = property.brokerName;
+            document.getElementById(`detail-broker-phone-${suffix}`).textContent = property.brokerPhone;
+
+            // 평면도(임시) 노출: details의 첫 항목이 '아파트'인 경우만 보이기
+            const isApartment = (property.details || '').split(' ∙ ')[0] === '아파트';
+            const floorplanWrapper = document.getElementById(`detail-floorplan-wrapper-${suffix}`);
+            if (floorplanWrapper) {
+                floorplanWrapper.style.display = isApartment ? 'block' : 'none';
+            }
+
+            // 임시 상세 항목들: 비워둠
+            const emptyFields = [
+                `detail-room-bath-${suffix}`,
+                `detail-direction-${suffix}`,
+                `detail-room-structure-${suffix}`,
+                `detail-duplex-${suffix}`,
+                `detail-parking-${suffix}`,
+                `detail-move-in-date-${suffix}`,
+                `detail-maintenance-fee-${suffix}`,
+                `detail-household-count-${suffix}`
+            ];
+            emptyFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+            
+            // 상태 표시
+            const statusElement = document.getElementById(`detail-property-status-${suffix}`);
+            const statusMap = {
+                'AVAILABLE': { text: '거래가능', class: 'bg-green-100 text-green-800' },
+                'CONTRACTED': { text: '계약중', class: 'bg-yellow-100 text-yellow-800' },
+                'SOLD': { text: '거래완료', class: 'bg-gray-100 text-gray-800' }
+            };
+            const status = statusMap[property.status] || statusMap['AVAILABLE'];
+            statusElement.textContent = status.text;
+            statusElement.className = `px-3 py-1 rounded-full text-sm font-semibold ${status.class}`;
+            
+            // 옵션 표시
+            const optionsContainer = document.getElementById(`detail-property-options-${suffix}`);
+            optionsContainer.innerHTML = '';
+            property.options.forEach(option => {
+                const optionElement = document.createElement('span');
+                optionElement.className = 'bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full';
+                optionElement.textContent = option;
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+        
+        // 매물 상세 페이지 닫기 (패널 지정)
+        function closePropertyDetail(panelToHide) {
+            const overlay = panelToHide === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
+            overlay.classList.add('-translate-x-full');
+            overlay.style.zIndex = '20'; // 닫힐 때는 z-index를 기본값으로
+            // 상세 페이지 토글로 닫히는 경우에도 좌측 버튼 UI 복구
+            adjustLeftPanelButtonsForDetail(false);
+        }
+
+        // 모든 매물 상세 페이지 닫기
+        function closeAllPropertyDetails() {
+            // 두 패널 모두 완전히 숨기기
+            propertyDetailOverlayA.classList.add('-translate-x-full');
+            propertyDetailOverlayB.classList.add('-translate-x-full');
+            
+            // opacity와 pointer-events 초기화
+            propertyDetailOverlayA.style.opacity = '0';
+            propertyDetailOverlayB.style.opacity = '0';
+            propertyDetailOverlayA.style.pointerEvents = 'none';
+            propertyDetailOverlayB.style.pointerEvents = 'none';
+            propertyDetailOverlayA.style.zIndex = '';
+            propertyDetailOverlayB.style.zIndex = '';
+            
+            // 상태 초기화
+            activePanel = null;
+            currentOpenPropertyId = null;
+
+            // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
+            adjustLeftPanelButtonsForDetail(false);
+        }
+
+        // 상세 페이지 표시 상태에 맞춰 좌측 패널 버튼 조정
+        function adjustLeftPanelButtonsForDetail(isDetailOpen) {
+            if (!closePanelButton || !expandPanelButton) return;
+
+            if (isDetailOpen) {
+                // 상세 페이지가 열리면 닫기 버튼을 상세 패널 오른쪽 경계로 이동시켜 함께 보이게 함
+                const overlayRight = 450 + (window.innerWidth * 0.5);
+                closePanelButton.style.left = `${overlayRight}px`;
+                closePanelButton.style.display = '';
+                closePanelButton.style.zIndex = '22';
+
+                // 확장 버튼 반투명 및 호버/포커스 시 복원
+                expandPanelButton.style.opacity = '0.4';
+                expandPanelButton.__enterHandler = () => { expandPanelButton.style.opacity = '1'; };
+                expandPanelButton.__leaveHandler = () => { expandPanelButton.style.opacity = '0.4'; };
+                expandPanelButton.addEventListener('mouseenter', expandPanelButton.__enterHandler);
+                expandPanelButton.addEventListener('mouseleave', expandPanelButton.__leaveHandler);
+                expandPanelButton.addEventListener('focus', expandPanelButton.__enterHandler);
+                expandPanelButton.addEventListener('blur', expandPanelButton.__leaveHandler);
+            } else {
+                // 상세 페이지가 닫히면 좌측 닫기 버튼 위치/층위 원복
+                closePanelButton.style.left = '450px';
+                closePanelButton.style.zIndex = '';
+
+                // 확장 버튼 원복
+                expandPanelButton.style.opacity = '';
+                if (expandPanelButton.__enterHandler) {
+                    expandPanelButton.removeEventListener('mouseenter', expandPanelButton.__enterHandler);
+                    expandPanelButton.removeEventListener('mouseleave', expandPanelButton.__leaveHandler);
+                    expandPanelButton.removeEventListener('focus', expandPanelButton.__enterHandler);
+                    expandPanelButton.removeEventListener('blur', expandPanelButton.__leaveHandler);
+                    delete expandPanelButton.__enterHandler;
+                    delete expandPanelButton.__leaveHandler;
+                }
+            }
+        }
+
+        // 상세 페이지가 열려 있을 때 윈도우 리사이즈 시 닫기 버튼 위치 보정
+        window.addEventListener('resize', () => {
+            if (activePanel) {
+                // 상세 페이지 중에는 닫기 버튼을 상세 패널 오른쪽 경계로 재정렬
+                adjustLeftPanelButtonsForDetail(true);
+            }
+        });
+
+        // 닫기 버튼 이벤트
+        closePropertyDetailBtnA.addEventListener('click', closeAllPropertyDetails);
+        closePropertyDetailBtnB.addEventListener('click', closeAllPropertyDetails);
+
+        // 매물즐겨찾기 버튼: 하트 토글(회색↔빨강)
+        function toggleFavorite(panelSuffix) {
+            const button = document.getElementById(`favorite-button-${panelSuffix}`);
+            const icon = document.getElementById(`favorite-icon-${panelSuffix}`);
+            if (!button || !icon) return;
+            const isActive = button.getAttribute('aria-pressed') === 'true';
+            if (isActive) {
+                button.setAttribute('aria-pressed', 'false');
+                icon.setAttribute('fill', 'none');
+                icon.classList.remove('text-red-500');
+                icon.classList.add('text-gray-600');
+            } else {
+                button.setAttribute('aria-pressed', 'true');
+                icon.setAttribute('fill', 'currentColor');
+                icon.classList.remove('text-gray-600');
+                icon.classList.add('text-red-500');
+            }
+        }
+
+        const favoriteButtonA = document.getElementById('favorite-button-a');
+        const favoriteButtonB = document.getElementById('favorite-button-b');
+        if (favoriteButtonA) favoriteButtonA.addEventListener('click', () => toggleFavorite('a'));
+        if (favoriteButtonB) favoriteButtonB.addEventListener('click', () => toggleFavorite('b'));
+
+        // 매물 카드 클릭 이벤트
+        document.addEventListener('click', (e) => {
+            const propertyCard = e.target.closest('.property-card');
+            if (propertyCard) {
+                const propertyId = parseInt(propertyCard.getAttribute('data-property-id'));
+                if (isPanelExpanded) {
+                    // 전체화면에서 돌아오는 버튼 동작 후 해당 매물 상세 오픈
+                    if (typeof collapseFullscreenButton !== 'undefined' && collapseFullscreenButton) {
+                        collapseFullscreenButton.click();
+                    } else {
+                        isPanelExpanded = false;
+                        updateUIVisibility();
+                    }
+                    setTimeout(() => openPropertyDetail(propertyId), 320); // 패널 전환 애니메이션 시간 이후 실행
+                } else {
+                    openPropertyDetail(propertyId);
+                }
+            }
+        });
+
+        // 페이지 로드 시 모든 상세 페이지 숨기기
+        closeAllPropertyDetails();
+
+
+     
     </script>
   </body>
 </html>
