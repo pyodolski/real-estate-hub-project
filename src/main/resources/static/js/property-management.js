@@ -2597,6 +2597,150 @@ class PropertyManagement {
     }
   }
 
+  // 서류 보기 모달 표시
+  async viewDocuments(claimId) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/claims/${claimId}`, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const claim = await response.json();
+        this.showDocumentsModal(claim);
+      } else {
+        throw new Error("서류 정보를 불러올 수 없습니다.");
+      }
+    } catch (error) {
+      console.error("서류 조회 실패:", error);
+      this.showError("서류 정보를 불러올 수 없습니다: " + error.message);
+    }
+  }
+
+  // 서류 모달 생성
+  showDocumentsModal(claim) {
+    const modal = document.createElement("div");
+    modal.id = "documents-modal";
+    modal.className =
+      "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+
+    const documentsHtml =
+      claim.documents && claim.documents.length > 0
+        ? claim.documents
+            .map(
+              (doc) => `
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+            <div class="flex-1">
+              <div class="font-medium text-gray-800">${
+                doc.originalFilename
+              }</div>
+              <div class="text-sm text-gray-500">
+                ${this.formatFileSize(doc.fileSize)} • ${this.formatDate(
+                doc.uploadedAt
+              )}
+              </div>
+            </div>
+            <button onclick="propertyManagement.downloadDocument(${
+              doc.documentId
+            })" 
+                    class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
+              다운로드
+            </button>
+          </div>
+        `
+            )
+            .join("")
+        : '<div class="text-center py-8 text-gray-500">업로드된 서류가 없습니다.</div>';
+
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-800">업로드된 서류</h2>
+          <button onclick="propertyManagement.closeModal('documents-modal')" 
+                  class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <div class="text-sm text-gray-600 mb-2">
+            <strong>매물:</strong> ${
+              claim.buildingName || claim.propertyAddress || "정보 없음"
+            }
+          </div>
+          <div class="text-sm text-gray-600 mb-4">
+            <strong>신청자:</strong> ${claim.applicantName}
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          ${documentsHtml}
+        </div>
+
+        <div class="flex justify-end mt-6">
+          <button onclick="propertyManagement.closeModal('documents-modal')" 
+                  class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+            닫기
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  }
+
+  // 파일 다운로드
+  async downloadDocument(documentId) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/documents/${documentId}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const contentDisposition = response.headers.get("Content-Disposition");
+        let filename = "document";
+
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(
+            /filename\*=UTF-8''(.+)/
+          );
+          if (filenameMatch) {
+            filename = decodeURIComponent(filenameMatch[1]);
+          }
+        }
+
+        // 파일 다운로드
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        this.showSuccess("파일 다운로드가 완료되었습니다.");
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText || "파일 다운로드에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("파일 다운로드 실패:", error);
+      this.showError("파일 다운로드에 실패했습니다: " + error.message);
+    }
+  }
+
   // 메시지 표시
   showSuccess(message) {
     this.showMessage(message, "success");

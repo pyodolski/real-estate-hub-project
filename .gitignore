@@ -41,3 +41,7 @@ application-local.yml
 # 운영/개발 공통 yml은 git에 남겨둠
 #!application-prod.yml
 #!application.yml
+
+### File Uploads ###
+uploads/
+!uploads/.gitkeep
