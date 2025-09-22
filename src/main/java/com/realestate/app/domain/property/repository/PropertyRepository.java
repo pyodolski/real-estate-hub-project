@@ -26,4 +26,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             BigDecimal minPrice,
             BigDecimal maxPrice
     );
+
+    // 제목 중복 확인
+    boolean existsByTitle(String title);
 }

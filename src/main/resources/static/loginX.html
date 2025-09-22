@@ -210,12 +210,14 @@
                 userId: userData.id,
                 email: userData.email,
                 username: userData.username,
-                role: userData.roleId,
+                role: userData.role,
               })
             );
 
+            console.log("로그인 사용자 정보:", userData); // 디버깅용
+
             // 4. 역할별 페이지 리다이렉트
-            switch (userData.roleId) {
+            switch (userData.role) {
               case "regular":
                 window.location.href = "loginO.html";
                 break;

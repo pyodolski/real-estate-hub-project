@@ -99,6 +99,56 @@ public class OwnershipClaimController {
         return claimService.getClaimDetail(claimId, currentUser.getId());
     }
 
+    // 매물 신청 수정 (사용자용)
+    @PutMapping(value = "/claims/{claimId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public OwnershipClaimResponse updateClaim(
+            @PathVariable Long claimId,
+            @AuthenticationPrincipal AuthUser currentUser,
+            @RequestParam(value = "propertyId", required = false) Long propertyId,
+            @RequestParam("applicantName") String applicantName,
+            @RequestParam("applicantPhone") String applicantPhone,
+            @RequestParam("relationshipToProperty") String relationshipToProperty,
+            @RequestParam(value = "additionalInfo", required = false) String additionalInfo,
+            // === 지도 API 연동 파라미터 ===
+            @RequestParam(value = "propertyAddress", required = false) String propertyAddress,
+            @RequestParam(value = "locationX", required = false) Double locationX,
+            @RequestParam(value = "locationY", required = false) Double locationY,
+            @RequestParam(value = "buildingName", required = false) String buildingName,
+            @RequestParam(value = "detailedAddress", required = false) String detailedAddress,
+            @RequestParam(value = "postalCode", required = false) String postalCode,
+            // === 파일 업로드 파라미터 ===
+            @RequestParam(value = "documents", required = false) List<MultipartFile> documents,
+            @RequestParam(value = "documentTypes", required = false) List<String> documentTypes) {
+        
+        try {
+            OwnershipClaimCreateRequest request = new OwnershipClaimCreateRequest();
+            request.setUserId(currentUser.getId());
+            request.setPropertyId(propertyId);
+            request.setApplicantName(applicantName);
+            request.setApplicantPhone(applicantPhone);
+            request.setRelationshipToProperty(relationshipToProperty);
+            request.setAdditionalInfo(additionalInfo);
+            
+            // 지도 API 위치 정보 설정
+            request.setPropertyAddress(propertyAddress);
+            request.setLocationX(locationX);
+            request.setLocationY(locationY);
+            request.setBuildingName(buildingName);
+            request.setDetailedAddress(detailedAddress);
+            request.setPostalCode(postalCode);
+            
+            // 파일 정보 설정
+            request.setDocuments(documents);
+            request.setDocumentTypes(documentTypes);
+            
+            return claimService.updateOwnershipClaim(claimId, request);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("매물 수정 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
     // 문서 다운로드
     @GetMapping("/documents/{documentId}/download")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long documentId) {

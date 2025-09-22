@@ -15,8 +15,7 @@ public class OwnershipClaimCreateRequest {
     @NotNull(message = "사용자 ID는 필수입니다")
     private Long userId;
     
-    @NotNull(message = "매물 ID는 필수입니다")
-    private Long propertyId;
+    private Long propertyId; // 새 매물 등록 시에는 null일 수 있음
     
     @NotBlank(message = "신청자 실명은 필수입니다")
     private String applicantName;
