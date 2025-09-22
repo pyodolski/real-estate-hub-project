@@ -402,7 +402,7 @@
         <!-- =================================================================== -->
         <!-- 매물 상세 페이지 A (지도 왼쪽 절반 가리기)                             -->
         <!-- =================================================================== -->
-        <div id="property-detail-overlay-a" class="absolute top-0 left-[450px] w-1/2 h-full bg-white shadow-2xl z-20 transform -translate-x-full transition-transform duration-300 ease-in-out" style="opacity: 0; pointer-events: none;">
+        <div id="property-detail-overlay-a" class="absolute top-0 left-[450px] w-1/2 h-full bg-white shadow-2xl z-20 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col" style="opacity: 0; pointer-events: none;">
             <!-- 상세 페이지 헤더 -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
                 <h2 class="text-2xl font-bold text-gray-800">매물 상세 정보</h2>
@@ -426,7 +426,12 @@
                 <!-- 매물 기본 정보 -->
                 <div class="p-6">
                     <div class="mb-6">
-                        <h3 id="detail-property-title-a" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 id="detail-property-title-a" class="text-2xl font-bold text-gray-800"></h3>
+                            <button id="favorite-button-a" class="bg-white/70 p-1.5 rounded-full hover:bg-white" aria-label="관심 매물" aria-pressed="false">
+                                <svg id="favorite-icon-a" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                            </button>
+                        </div>
                         <p id="detail-property-location-a" class="text-gray-600 mb-4"></p>
                         <p id="detail-property-price-a" class="text-3xl font-bold text-blue-600 mb-4"></p>
                         <p id="detail-property-details-a" class="text-gray-700"></p>
@@ -442,6 +447,38 @@
                             <h4 class="font-semibold text-gray-800 mb-2">면적</h4>
                             <p id="detail-property-area-a" class="text-gray-600"></p>
                         </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">방수/욕실수</h4>
+                            <p id="detail-room-bath-a" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">방향</h4>
+                            <p id="detail-direction-a" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">방구조</h4>
+                            <p id="detail-room-structure-a" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">복층</h4>
+                            <p id="detail-duplex-a" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">주차대수</h4>
+                            <p id="detail-parking-a" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">입주가능일</h4>
+                            <p id="detail-move-in-date-a" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">관리비</h4>
+                            <p id="detail-maintenance-fee-a" class="text-gray-600"></p>
+                        </div>
+                        <div id="detail-household-wrapper-a" class="bg-gray-50 p-4 rounded-lg" style="display: none;">
+                            <h4 class="font-semibold text-gray-800 mb-2">세대수</h4>
+                            <p id="detail-household-count-a" class="text-gray-600"></p>
+                        </div>
                     </div>
 
                     <!-- 옵션 정보 -->
@@ -456,6 +493,20 @@
                     <div class="mb-6">
                         <h4 class="font-semibold text-gray-800 mb-3">매물 설명</h4>
                         <p id="detail-property-description-a" class="text-gray-700 leading-relaxed"></p>
+                    </div>
+
+                    <!-- 평면도 영역 (아파트 전용, 임시) -->
+                    <div id="detail-floorplan-wrapper-a" class="mb-6" style="display: none;">
+                        <div id="detail-floorplan-placeholder-a" class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500" role="img" aria-label="평면도 자리(임시)">
+                            평면도 영역 (임시)
+                        </div>
+                    </div>
+
+                    <!-- 임시 지도 공간 (나중에 실제 지도 대체) -->
+                    <div class="mb-6">
+                        <div id="detail-map-placeholder-a" class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500" role="img" aria-label="지도 자리(임시)">
+                            지도 영역 (임시)
+                        </div>
                     </div>
 
                     <!-- 중개인 정보 -->
@@ -488,7 +539,7 @@
         <!-- =================================================================== -->
         <!-- 매물 상세 페이지 B (지도 왼쪽 절반 가리기)                             -->
         <!-- =================================================================== -->
-        <div id="property-detail-overlay-b" class="absolute top-0 left-[450px] w-1/2 h-full bg-white shadow-2xl z-20 transform -translate-x-full transition-transform duration-300 ease-in-out" style="opacity: 0; pointer-events: none;">
+        <div id="property-detail-overlay-b" class="absolute top-0 left-[450px] w-1/2 h-full bg-white shadow-2xl z-20 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col" style="opacity: 0; pointer-events: none;">
             <!-- 상세 페이지 헤더 -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
                 <h2 class="text-2xl font-bold text-gray-800">매물 상세 정보</h2>
@@ -512,7 +563,12 @@
                 <!-- 매물 기본 정보 -->
                 <div class="p-6">
                     <div class="mb-6">
-                        <h3 id="detail-property-title-b" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 id="detail-property-title-b" class="text-2xl font-bold text-gray-800"></h3>
+                            <button id="favorite-button-b" class="bg-white/70 p-1.5 rounded-full hover:bg-white" aria-label="관심 매물" aria-pressed="false">
+                                <svg id="favorite-icon-b" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                            </button>
+                        </div>
                         <p id="detail-property-location-b" class="text-gray-600 mb-4"></p>
                         <p id="detail-property-price-b" class="text-3xl font-bold text-blue-600 mb-4"></p>
                         <p id="detail-property-details-b" class="text-gray-700"></p>
@@ -528,6 +584,38 @@
                             <h4 class="font-semibold text-gray-800 mb-2">면적</h4>
                             <p id="detail-property-area-b" class="text-gray-600"></p>
                         </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">방수/욕실수</h4>
+                            <p id="detail-room-bath-b" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">방향</h4>
+                            <p id="detail-direction-b" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">방구조</h4>
+                            <p id="detail-room-structure-b" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">복층</h4>
+                            <p id="detail-duplex-b" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">주차대수</h4>
+                            <p id="detail-parking-b" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">입주가능일</h4>
+                            <p id="detail-move-in-date-b" class="text-gray-600"></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">관리비</h4>
+                            <p id="detail-maintenance-fee-b" class="text-gray-600"></p>
+                        </div>
+                        <div id="detail-household-wrapper-b" class="bg-gray-50 p-4 rounded-lg" style="display: none;">
+                            <h4 class="font-semibold text-gray-800 mb-2">세대수</h4>
+                            <p id="detail-household-count-b" class="text-gray-600"></p>
+                        </div>
                     </div>
 
                     <!-- 옵션 정보 -->
@@ -542,6 +630,20 @@
                     <div class="mb-6">
                         <h4 class="font-semibold text-gray-800 mb-3">매물 설명</h4>
                         <p id="detail-property-description-b" class="text-gray-700 leading-relaxed"></p>
+                    </div>
+
+                    <!-- 평면도 영역 (아파트 전용, 임시) -->
+                    <div id="detail-floorplan-wrapper-b" class="mb-6" style="display: none;">
+                        <div id="detail-floorplan-placeholder-b" class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500" role="img" aria-label="평면도 자리(임시)">
+                            평면도 영역 (임시)
+                        </div>
+                    </div>
+
+                    <!-- 임시 지도 공간 (나중에 실제 지도 대체) -->
+                    <div class="mb-6">
+                        <div id="detail-map-placeholder-b" class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500" role="img" aria-label="지도 자리(임시)">
+                            지도 영역 (임시)
+                        </div>
                     </div>
 
                     <!-- 중개인 정보 -->
@@ -2945,7 +3047,10 @@
             // 매물 정보 채우기
             document.getElementById(`detail-property-image-${suffix}`).src = property.image;
             document.getElementById(`detail-property-title-${suffix}`).textContent = property.location;
-            document.getElementById(`detail-property-location-${suffix}`).textContent = property.details;
+            const locationElement = document.getElementById(`detail-property-location-${suffix}`);
+            if (locationElement) {
+                locationElement.style.display = 'none';
+            }
             document.getElementById(`detail-property-price-${suffix}`).textContent = property.price;
             document.getElementById(`detail-property-details-${suffix}`).textContent = property.details;
             document.getElementById(`detail-building-year-${suffix}`).textContent = property.buildingYear + '년';
@@ -2953,6 +3058,29 @@
             document.getElementById(`detail-property-description-${suffix}`).textContent = property.description;
             document.getElementById(`detail-broker-name-${suffix}`).textContent = property.brokerName;
             document.getElementById(`detail-broker-phone-${suffix}`).textContent = property.brokerPhone;
+
+            // 평면도(임시) 노출: details의 첫 항목이 '아파트'인 경우만 보이기
+            const isApartment = (property.details || '').split(' ∙ ')[0] === '아파트';
+            const floorplanWrapper = document.getElementById(`detail-floorplan-wrapper-${suffix}`);
+            if (floorplanWrapper) {
+                floorplanWrapper.style.display = isApartment ? 'block' : 'none';
+            }
+
+            // 임시 상세 항목들: 비워둠
+            const emptyFields = [
+                `detail-room-bath-${suffix}`,
+                `detail-direction-${suffix}`,
+                `detail-room-structure-${suffix}`,
+                `detail-duplex-${suffix}`,
+                `detail-parking-${suffix}`,
+                `detail-move-in-date-${suffix}`,
+                `detail-maintenance-fee-${suffix}`,
+                `detail-household-count-${suffix}`
+            ];
+            emptyFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
             
             // 상태 표시
             const statusElement = document.getElementById(`detail-property-status-${suffix}`);
@@ -3005,6 +3133,30 @@
         // 닫기 버튼 이벤트
         closePropertyDetailBtnA.addEventListener('click', closeAllPropertyDetails);
         closePropertyDetailBtnB.addEventListener('click', closeAllPropertyDetails);
+
+        // 매물즐겨찾기 버튼: 하트 토글(회색↔빨강)
+        function toggleFavorite(panelSuffix) {
+            const button = document.getElementById(`favorite-button-${panelSuffix}`);
+            const icon = document.getElementById(`favorite-icon-${panelSuffix}`);
+            if (!button || !icon) return;
+            const isActive = button.getAttribute('aria-pressed') === 'true';
+            if (isActive) {
+                button.setAttribute('aria-pressed', 'false');
+                icon.setAttribute('fill', 'none');
+                icon.classList.remove('text-red-500');
+                icon.classList.add('text-gray-600');
+            } else {
+                button.setAttribute('aria-pressed', 'true');
+                icon.setAttribute('fill', 'currentColor');
+                icon.classList.remove('text-gray-600');
+                icon.classList.add('text-red-500');
+            }
+        }
+
+        const favoriteButtonA = document.getElementById('favorite-button-a');
+        const favoriteButtonB = document.getElementById('favorite-button-b');
+        if (favoriteButtonA) favoriteButtonA.addEventListener('click', () => toggleFavorite('a'));
+        if (favoriteButtonB) favoriteButtonB.addEventListener('click', () => toggleFavorite('b'));
 
         // 매물 카드 클릭 이벤트
         document.addEventListener('click', (e) => {
