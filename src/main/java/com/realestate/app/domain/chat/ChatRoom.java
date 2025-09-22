@@ -1,6 +1,6 @@
 package com.realestate.app.domain.chat;
 
-import com.realestate.app.domain.property.Property;
+import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;

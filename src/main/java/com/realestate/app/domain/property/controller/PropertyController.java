@@ -1,6 +1,6 @@
 package com.realestate.app.domain.property.controller;
 
-import com.realestate.app.domain.property.Property;
+import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.dto.PropertyMarkerDto;
 import com.realestate.app.domain.property.service.propertyservice;
 import lombok.RequiredArgsConstructor;

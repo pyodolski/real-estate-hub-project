@@ -1,6 +1,6 @@
 package com.realestate.app.domain.property.repository;
 
-import com.realestate.app.domain.property.Property;
+import com.realestate.app.domain.property.table.Property;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

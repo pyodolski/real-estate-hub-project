@@ -1,4 +1,4 @@
-package com.realestate.app.domain.property;
+package com.realestate.app.domain.property.table;
 
 import com.realestate.app.domain.user.User;
 import jakarta.persistence.*;
