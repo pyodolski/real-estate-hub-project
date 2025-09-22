@@ -159,17 +159,27 @@ public class OwnershipClaimController {
             Path filePath = Paths.get(document.getFilePath());
             Resource resource = new UrlResource(filePath.toUri());
 
+            System.out.println("다운로드 요청 파일: " + filePath.toAbsolutePath());
+            System.out.println("파일 존재 여부: " + resource.exists());
+            System.out.println("파일 읽기 가능 여부: " + resource.isReadable());
+
             if (resource.exists() && resource.isReadable()) {
+                // 한글 파일명 인코딩 처리
+                String encodedFilename = java.net.URLEncoder.encode(document.getOriginalFilename(), "UTF-8")
+                        .replaceAll("\\+", "%20");
+
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(document.getContentType()))
                         .header(HttpHeaders.CONTENT_DISPOSITION, 
-                                "attachment; filename=\"" + document.getOriginalFilename() + "\"")
+                                "attachment; filename*=UTF-8''" + encodedFilename)
                         .body(resource);
             } else {
-                throw new RuntimeException("파일을 읽을 수 없습니다.");
+                throw new RuntimeException("파일을 읽을 수 없습니다. 파일 경로: " + filePath.toAbsolutePath());
             }
         } catch (MalformedURLException e) {
             throw new RuntimeException("파일 경로가 잘못되었습니다.", e);
+        } catch (Exception e) {
+            throw new RuntimeException("파일 다운로드 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
     }
 
