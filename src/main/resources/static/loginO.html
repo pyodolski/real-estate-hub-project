@@ -2984,6 +2984,7 @@
         const propertyDetailOverlayB = document.getElementById('property-detail-overlay-b');
         const closePropertyDetailBtnA = document.getElementById('close-property-detail-a');
         const closePropertyDetailBtnB = document.getElementById('close-property-detail-b');
+        // 좌측 패널 제어 버튼 (상단에서 이미 선언됨)
         
         // 현재 활성화된 패널 추적 (A 또는 B)
         let activePanel = null;
@@ -3023,6 +3024,9 @@
             overlayToOpen.style.zIndex = '21'; // 닫히는 패널(z-20)보다 높게 설정
             updatePropertyDetail(propertyId, nextActivePanel); // 새 패널에 데이터 채우기
             overlayToOpen.classList.remove('-translate-x-full'); // 열기 애니메이션 시작
+
+            // 상세 페이지가 열릴 때: 좌측 패널 버튼 UI 조정
+            adjustLeftPanelButtonsForDetail(true);
 
             // 3. 상태 업데이트
             activePanel = nextActivePanel;
@@ -3109,6 +3113,8 @@
             const overlay = panelToHide === 'a' ? propertyDetailOverlayA : propertyDetailOverlayB;
             overlay.classList.add('-translate-x-full');
             overlay.style.zIndex = '20'; // 닫힐 때는 z-index를 기본값으로
+            // 상세 페이지 토글로 닫히는 경우에도 좌측 버튼 UI 복구
+            adjustLeftPanelButtonsForDetail(false);
         }
 
         // 모든 매물 상세 페이지 닫기
@@ -3128,7 +3134,55 @@
             // 상태 초기화
             activePanel = null;
             currentOpenPropertyId = null;
+
+            // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
+            adjustLeftPanelButtonsForDetail(false);
         }
+
+        // 상세 페이지 표시 상태에 맞춰 좌측 패널 버튼 조정
+        function adjustLeftPanelButtonsForDetail(isDetailOpen) {
+            if (!closePanelButton || !expandPanelButton) return;
+
+            if (isDetailOpen) {
+                // 상세 페이지가 열리면 닫기 버튼을 상세 패널 오른쪽 경계로 이동시켜 함께 보이게 함
+                const overlayRight = 450 + (window.innerWidth * 0.5);
+                closePanelButton.style.left = `${overlayRight}px`;
+                closePanelButton.style.display = '';
+                closePanelButton.style.zIndex = '22';
+
+                // 확장 버튼 반투명 및 호버/포커스 시 복원
+                expandPanelButton.style.opacity = '0.4';
+                expandPanelButton.__enterHandler = () => { expandPanelButton.style.opacity = '1'; };
+                expandPanelButton.__leaveHandler = () => { expandPanelButton.style.opacity = '0.4'; };
+                expandPanelButton.addEventListener('mouseenter', expandPanelButton.__enterHandler);
+                expandPanelButton.addEventListener('mouseleave', expandPanelButton.__leaveHandler);
+                expandPanelButton.addEventListener('focus', expandPanelButton.__enterHandler);
+                expandPanelButton.addEventListener('blur', expandPanelButton.__leaveHandler);
+            } else {
+                // 상세 페이지가 닫히면 좌측 닫기 버튼 위치/층위 원복
+                closePanelButton.style.left = '450px';
+                closePanelButton.style.zIndex = '';
+
+                // 확장 버튼 원복
+                expandPanelButton.style.opacity = '';
+                if (expandPanelButton.__enterHandler) {
+                    expandPanelButton.removeEventListener('mouseenter', expandPanelButton.__enterHandler);
+                    expandPanelButton.removeEventListener('mouseleave', expandPanelButton.__leaveHandler);
+                    expandPanelButton.removeEventListener('focus', expandPanelButton.__enterHandler);
+                    expandPanelButton.removeEventListener('blur', expandPanelButton.__leaveHandler);
+                    delete expandPanelButton.__enterHandler;
+                    delete expandPanelButton.__leaveHandler;
+                }
+            }
+        }
+
+        // 상세 페이지가 열려 있을 때 윈도우 리사이즈 시 닫기 버튼 위치 보정
+        window.addEventListener('resize', () => {
+            if (activePanel) {
+                // 상세 페이지 중에는 닫기 버튼을 상세 패널 오른쪽 경계로 재정렬
+                adjustLeftPanelButtonsForDetail(true);
+            }
+        });
 
         // 닫기 버튼 이벤트
         closePropertyDetailBtnA.addEventListener('click', closeAllPropertyDetails);
@@ -3163,7 +3217,18 @@
             const propertyCard = e.target.closest('.property-card');
             if (propertyCard) {
                 const propertyId = parseInt(propertyCard.getAttribute('data-property-id'));
-                openPropertyDetail(propertyId);
+                if (isPanelExpanded) {
+                    // 전체화면에서 돌아오는 버튼 동작 후 해당 매물 상세 오픈
+                    if (typeof collapseFullscreenButton !== 'undefined' && collapseFullscreenButton) {
+                        collapseFullscreenButton.click();
+                    } else {
+                        isPanelExpanded = false;
+                        updateUIVisibility();
+                    }
+                    setTimeout(() => openPropertyDetail(propertyId), 320); // 패널 전환 애니메이션 시간 이후 실행
+                } else {
+                    openPropertyDetail(propertyId);
+                }
             }
         });
 
