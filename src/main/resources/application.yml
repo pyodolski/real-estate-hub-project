@@ -15,6 +15,9 @@ spring:
       max-request-size: 50MB
       enabled: true
 
+  flyway:
+    enabled: false # 개발 환경에서는 JPA ddl-auto 사용
+
 # 파일 업로드 설정
 app:
   file:
