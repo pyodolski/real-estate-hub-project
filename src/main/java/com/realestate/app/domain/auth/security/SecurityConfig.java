@@ -20,6 +20,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.realestate.app.domain.auth.jwt.JwtAuthenticationFilter;
 
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -90,5 +93,15 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() { 
         return new BCryptPasswordEncoder(); 
+    }
+
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+                // 공통 정적 리소스 위치 (css/js/images 등)
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/assets/**", "/favicon.ico")
+                // (선택) 스프링이 제공하는 정적 리소스 위치 전부 무시
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 }
