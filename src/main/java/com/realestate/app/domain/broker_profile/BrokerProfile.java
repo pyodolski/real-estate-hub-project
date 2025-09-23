@@ -41,6 +41,14 @@ public class BrokerProfile {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt; // 수정일
 
+    @Column(name = "total_deals", nullable = false)
+    @Builder.Default
+    private Integer totalDeals = 0;
+
+    @Column(name = "pending_deals", nullable = false)
+    @Builder.Default
+    private Integer pendingDeals = 0;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
