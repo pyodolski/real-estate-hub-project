@@ -13,11 +13,15 @@ import com.realestate.app.domain.property.table.Favorite;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PropertyFavoriteService {
+
+    private static final Logger log = LoggerFactory.getLogger(PropertyFavoriteService.class); // ✅ 직접 선언
 
     private final PropertyFavoriteRepository repo;
     private final FavoriteJpaRepository favoriteRepo;              // 존재여부/삭제/추가 (JPA)
@@ -45,6 +49,8 @@ public class PropertyFavoriteService {
         boolean exists = favoriteRepo.existsByUserIdAndPropertyId(userId, propertyId);
         if (exists) {
             favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
+            long n = favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
+            log.debug("favorite delete affectedRows={} (userId={}, propertyId={})", n, userId, propertyId);
             return false; // 해제됨
         }
 
@@ -69,5 +75,7 @@ public class PropertyFavoriteService {
     @Transactional
     public void removeFavorite(Long userId, Long propertyId) {
         favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
+        long n = favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
+        log.debug("favorite delete affectedRows={} (userId={}, propertyId={})", n, userId, propertyId);
     }
 }

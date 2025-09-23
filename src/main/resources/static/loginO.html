@@ -2,10 +2,81 @@
 <html lang="ko">
 <head>
     <script>
+        // 가장 먼저 로드되는 스크립트에서
+        window.BASE = window.BASE || 'http://localhost:8080';
+
+        window.TOKEN = localStorage.getItem('auth_token') || null;
+
+        window.authHeaders = function () {
+          return window.TOKEN
+            ? { Authorization: window.TOKEN, 'Content-Type': 'application/json' }
+            : { 'Content-Type': 'application/json' };
+        };
+
+        window.setToken = function (raw) {
+          const bearer = raw?.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
+          window.TOKEN = bearer;
+          localStorage.setItem('auth_token', bearer);
+        };
+
+        window.escapeHtml = function (s = '') {
+          return String(s)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+        };
+
+        window.formatPrice = function (v) {
+          if (v == null) return '-';
+          try { return Number(v).toLocaleString('ko-KR') + '원'; }
+          catch { return String(v); }
+        };
+
+        window.timeKST = function (iso) {
+          return iso ? iso.replace('T', ' ').slice(0, 16) : '';
+        };
+    </script>
+    <script>
+        // 쿼리스트링 빌더
+        function buildQuery(params) {
+          if (!params) return '';
+          const q = new URLSearchParams();
+          for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null) q.append(k, v);
+          const s = q.toString();
+          return s ? `?${s}` : '';
+        }
+
+        // 전역 API 래퍼
+        window.api = async function (path, { method='GET', params, json, headers, ...rest } = {}) {
+          const url = `${window.BASE}${path}${buildQuery(params)}`;
+          const baseHeaders = window.TOKEN ? { Authorization: window.TOKEN } : {};
+          if (json !== undefined) baseHeaders['Content-Type'] = 'application/json';
+
+
+          const ct = res.headers.get('content-type') || '';
+          const data = ct.includes('application/json') ? await res.json() : await res.text();
+          if (!res.ok) {
+            const msg = typeof data === 'string' ? data : (data?.message || res.statusText);
+            throw new Error(`HTTP ${res.status} ${msg}`);
+          }
+          return data;
+        };
+
+        // 편의 메서드
+        window.api.get  = (p, opt={}) => window.api(p, { ...opt, method: 'GET' });
+        window.api.post = (p, opt={}) => window.api(p, { ...opt, method: 'POST' });
+        window.api.del  = (p, opt={}) => window.api(p, { ...opt, method: 'DELETE' });
+    </script>
+
+    <script>
         // 초기값 false로 두고 시작
         var isProfilePanelOpen = false;
         var isChatPanelOpen = false; // 이거도 같은 에러 났었죠
     </script>
+
+    
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>부동산 매물 찾기</title>
@@ -2889,7 +2960,7 @@
         }
 
         // 패널 별 렌더링
-        if (panelName === "favorite") renderFavoriteProperties();
+        if (panelName === "favorite") loadMyFavorites();
         if (panelName === "compare") renderCompareGroups();
         if (panelName === "notification") renderNotifications();
         if (panelName === "my-property") {
@@ -3730,6 +3801,81 @@
           priceMonthly.classList.remove("hidden");
         }
       }
+        // ✅ DTO -> 카드 HTML (PropertyFavoriteDto 기반)
+    function cardFromFavoriteDto(it){
+return `
+<div class="favorite-card bg-white rounded-lg shadow-md overflow-hidden">
+<div class="relative">
+  ${it.thumbnailUrl
+    ? `<img src="${escapeHtml(it.thumbnailUrl)}" class="w-full h-40 object-cover">`
+    : `<div class="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">NO IMG</div>`}
+  <button class="absolute top-2 right-2 bg-white/70 p-1.5 rounded-full hover:bg-white"
+          title="즐겨찾기 해제" data-remove-fav="${it.propertyId}">
+    ❤️
+  </button>
+</div>
+<div class="p-4">
+  <h3 class="font-bold text-lg">${escapeHtml(it.title ?? '')}</h3>
+  <p class="text-sm text-gray-600">${escapeHtml(it.address ?? '')}</p>
+  <div class="mt-2 text-xs text-gray-500">담김: ${timeKST(it.createdAt)}</div>
+  <button class="mt-2 px-2 py-1 text-xs border rounded" data-open-id="${it.propertyId}">상세보기</button>
+</div>
+</div>`;
+}
+
+    // ✅ 서버에서 즐겨찾기 목록 받아서 그리드에 삽입
+    async function loadMyFavorites(){
+      const box = document.getElementById('favorite-list');
+      if(!box) return;
+      box.innerHTML = `<div class="p-4 text-sm text-gray-500">불러오는 중...</div>`;
+
+      try{
+        const r = await fetch(`${BASE}/api/me/favorites?limit=100`, { headers: authHeaders() });
+        if(r.status === 401){ box.innerHTML = `<div class="p-4 text-sm text-red-500">로그인이 필요합니다.</div>`; return; }
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const list = await r.json();
+
+        if(!list.length){
+          box.innerHTML = `<div class="p-6 text-center text-gray-500 border border-dashed rounded-lg">아직 즐겨찾기한 매물이 없습니다.</div>`;
+          return;
+        }
+
+        box.innerHTML = '';
+        for(const it of list){
+          box.insertAdjacentHTML('beforeend', cardFromFavoriteDto(it));
+        }
+      }catch(e){
+        console.error(e);
+        box.innerHTML = `<div class="p-4 text-sm text-red-500">목록을 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    // ✅ 하트 해제(토글) & 상세보기 (이벤트 위임)
+    document.getElementById('favorite-list')?.addEventListener('click', async (e) => {
+      const removeBtn = e.target.closest('[data-remove-fav]');
+      const openBtn   = e.target.closest('[data-open-id]');
+
+      if (removeBtn) {
+        const pid = Number(removeBtn.dataset.removeFav);
+        const r = await api(`/api/properties/${pid}/favorite`, { method: 'POST' });
+        if (r.status === 401) { alert('로그인이 필요합니다.'); return; }
+        if (!r.ok) { alert('즐겨찾기 해제 실패'); return; }
+        removeBtn.closest('.favorite-card')?.remove();
+        const box = document.getElementById('favorite-list');
+        if (box && !box.children.length) {
+          box.innerHTML = `<div class="p-6 text-center text-gray-500 border border-dashed rounded-lg">아직 즐겨찾기한 매물이 없습니다.</div>`;
+        }
+      }
+
+      if (openBtn) {
+        const pid = Number(openBtn.dataset.openId);
+        if (window.loadPropertyDetail && window.app) {
+          window.loadPropertyDetail(window.app, pid);
+        } else {
+          location.href = `/property/${pid}`;
+        }
+      }
+    });
 
       // 드롭다운 내 주거형태 버튼 이벤트 (실제 상태 직접 변경)
       document.querySelectorAll(".filter-house-type").forEach((btn) => {
@@ -3916,5 +4062,101 @@
         });
       }
     </script>
+<script>
+    const favListEl = document.getElementById('favorite-list');
+
+    // 비어있을 때 표시용 요소를 만들어 재사용 (컨테이너가 <ul>이면 <li>로!)
+    function ensureEmptyPlaceholder() {
+      // 컨테이너가 UL/OL이라면 LI로, TABLE/TBODY면 TR/TD로 맞춰 주세요.
+      const isList = favListEl?.tagName === 'UL' || favListEl?.tagName === 'OL';
+      const placeholderSelector = '[data-empty-placeholder]';
+      let ph = favListEl?.querySelector(placeholderSelector);
+      if (!ph) {
+        ph = document.createElement(isList ? 'li' : 'div');
+        ph.setAttribute('data-empty-placeholder', 'true');
+        ph.className = 'p-6 text-center text-gray-500 border border-dashed rounded-lg w-full';
+        ph.textContent = '아직 즐겨찾기한 매물이 없습니다.';
+        favListEl?.appendChild(ph);
+      }
+    }
+
+    function removeEmptyPlaceholderIfAny() {
+      favListEl?.querySelector('[data-empty-placeholder]')?.remove();
+    }
+    const inflight = new Set();
+    favListEl?.addEventListener('click', async (e) => {
+      const removeBtn = e.target.closest('[data-remove-fav]');
+      const openBtn   = e.target.closest('[data-open-id]');
+
+
+      // 하트(즐겨찾기 해제)
+      if (removeBtn) {
+        const pid  = Number(removeBtn.dataset.removeFav);
+        const card = removeBtn.closest('.favorite-card');
+
+        // ✅ 이미 같은 pid 요청이 진행 중이면 무시
+        if (inflight.has(pid)) {
+          return;
+        }
+        inflight.add(pid);
+
+        // ✅ 오타 수정
+        removeBtn.disabled = true;
+        card?.classList.add('opacity-50');
+
+        try {
+          const r = await fetch(`${BASE}/api/properties/${pid}/favorite`, {
+            method: 'POST',  // 서버가 토글이면 POST, 삭제 전용이면 DELETE
+            headers: authHeaders()
+          });
+
+          if (r.status === 401) {
+            alert('로그인이 필요합니다.');
+            throw new Error('unauthorized');
+          }
+          if (!r.ok) {
+            throw new Error(`toggle failed (status ${r.status})`);
+          }
+
+          // 성공 처리
+          // 안전하게 카드 제거
+          card?.remove();
+
+          // 남은 카드가 있는지 확인 (placeholder는 제외)
+          const remaining = [...favListEl.children].filter(el => !el.matches('[data-empty-placeholder]'));
+          if (remaining.length === 0) {
+            ensureEmptyPlaceholder(); // ✅ 컨테이너 타입에 맞는 태그로 추가
+          }
+
+        } catch (err) {
+          console.error(err);
+          alert('즐겨찾기 해제 실패');
+          // 실패 시 UI 복구 (카드가 이미 remove 됐다면 안전하게 옵셔널 체이닝)
+          removeBtn.disabled = false;    // ✅ Disabled → disabled
+          card?.classList.remove('opacity-50');
+        }finally {
+            inflight.delete(pid);          // ✅ 요청 끝나면 해제
+        }
+        return;
+      }
+
+      // 상세 보기
+      if (openBtn) {
+        const pid = Number(openBtn.dataset.openId);
+        if (window.loadPropertyDetail && window.app) {
+          window.loadPropertyDetail(window.app, pid);
+        } else {
+          location.href = `/property/${pid}`;
+        }
+      }
+    });
+
+    // 초기 로딩 시, 목록이 비어있다면 placeholder를 붙여줌
+    if (favListEl && favListEl.children.length === 0) {
+      ensureEmptyPlaceholder();
+    } else {
+      removeEmptyPlaceholderIfAny();
+    }
+</script>
 </body>
 </html>
