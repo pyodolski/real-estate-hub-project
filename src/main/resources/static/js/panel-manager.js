@@ -75,6 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
             isOpen: false,
             width: 450,
         },
+        "broker-list": {
+            panel: document.getElementById("broker-list-panel"),
+            button: document.getElementById("broker-list-button"),
+            closeButton: document.getElementById("close-broker-list-panel"),
+            isOpen: false,
+            width: 450,
+        },
     };
 
     const RIGHT_SIDE_PANEL_WIDTH = 75;
