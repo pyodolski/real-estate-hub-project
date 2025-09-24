@@ -383,15 +383,12 @@
                 if(container.id === 'compare-list'){
                     // 비교 그룹: 그룹 내에서 매물 찾기
                     const groupContainer = propertyCard.closest('.bg-gray-50.border.rounded-lg');
-                    if(!groupContainer) {
-                        console.log('비교 그룹 컨테이너를 찾을 수 없음');
-                        return;
-                    }
+                    if(!groupContainer) return;
+                    
                     const groupIndex = Array.from(container.children).indexOf(groupContainer);
                     // 비교 그룹 내에서 매물 카드들의 인덱스 찾기 (제목과 버튼 제외)
                     const propertyCards = groupContainer.querySelectorAll('.bg-white.rounded-lg.shadow-md.overflow-hidden.flex-1.min-w-0');
                     const cardIndex = Array.from(propertyCards).indexOf(propertyCard);
-                    console.log('비교 그룹 인덱스:', groupIndex, '카드 인덱스:', cardIndex, '총 카드 수:', propertyCards.length);
                     
                     const groupData = typeof compareGroups !== 'undefined' && Array.isArray(compareGroups) ? compareGroups[groupIndex] : undefined;
                     // compareGroups의 데이터 구조: {groupId: 1, items: Array(2)} - 소문자 items 사용
@@ -401,8 +398,6 @@
                     if(data) {
                         data.id = `compare_${groupData.groupId}_${cardIndex}`;
                     }
-                    
-                    console.log('비교 그룹 데이터:', groupData, '매물 데이터:', data);
                 } else {
                     // 일반 목록
                     const idx = Array.from(container.children).indexOf(propertyCard);
