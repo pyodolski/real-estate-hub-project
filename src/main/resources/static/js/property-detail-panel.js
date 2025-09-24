@@ -209,6 +209,7 @@
 
             const detailRightEdge = 450 + Math.floor(window.innerWidth * 0.5);
             closeBtn.style.left = `${detailRightEdge}px`;
+            closeBtn.style.zIndex = '10'; // 상세페이지와 같은 z-index
             expandBtn.style.left = `${expandBtn.dataset.origLeft}`; // 확장 버튼은 제자리에 두되 반투명화
 
             // 반투명 + 호버 시 복원
@@ -222,6 +223,7 @@
         } else {
             // 원복
             if(closeBtn.dataset.origLeft){ closeBtn.style.left = closeBtn.dataset.origLeft; }
+            closeBtn.style.zIndex = ''; // z-index 원복
             if(expandBtn.dataset.origLeft){ expandBtn.style.left = expandBtn.dataset.origLeft; }
             if(expandBtn.__detailHoverEnter){ expandBtn.removeEventListener('mouseenter', expandBtn.__detailHoverEnter); }
             if(expandBtn.__detailHoverLeave){ expandBtn.removeEventListener('mouseleave', expandBtn.__detailHoverLeave); }
@@ -231,7 +233,9 @@
 
     function openPropertyDetail(id, data){
         // 같은 매물을 다시 클릭한 경우 (토글 동작) - f311d46 로직
-        if (currentId === id && isOpen) {
+        // data가 있으면 data.id로 비교, 없으면 id로 비교
+        const compareId = data?.id ?? id;
+        if (currentId === compareId && isOpen) {
             closePropertyDetail();
             return;
         }
@@ -259,7 +263,7 @@
         nextElems.overlay.__detailOnResize = onResize;
 
         isOpen = true;
-        currentId = id;
+        currentId = compareId; // data.id 또는 id 사용
         currentBuffer = nextBuf;
 
         // 우측 패널/필터 위치 조정 필요 시 호출
@@ -329,6 +333,7 @@
     function getOriginalIndexFromContainer(containerId, childIndex){
         const list = getProperties();
         if(!Array.isArray(list)) return childIndex;
+        
         if(containerId === 'recommended-list'){
             let count = -1;
             for(let i=0;i<list.length;i++){
@@ -352,38 +357,80 @@
     function attachDelegatedClick(container){
         if(!container) return;
         container.addEventListener('click', (e) => {
-            // 컨테이너의 직계 자식 카드 찾기
-            let node = e.target;
-            while(node && node.parentElement !== container){
-                node = node.parentElement;
+            // 매물 카드 찾기 (data-property-id 속성 또는 클래스 기반)
+            let propertyCard;
+            if(container.id === 'compare-list'){
+                // 비교 그룹의 경우 더 구체적인 선택자 사용
+                propertyCard = e.target.closest('.bg-white.rounded-lg.shadow-md.overflow-hidden.flex-1.min-w-0');
+            } else {
+                propertyCard = e.target.closest('[data-property-id], .bg-white.rounded-lg.shadow-md');
             }
-            if(!node || node.parentElement !== container) return;
-            const children = Array.from(container.children);
-            const idx = children.indexOf(node);
-            if(idx < 0) return;
-            const originalIndex = getOriginalIndexFromContainer(container.id, idx);
-            const list = getProperties();
-            const data = Array.isArray(list) ? list[originalIndex] : undefined;
+            if(!propertyCard) return;
             
-            // 패널 확장 상태 확인 - f311d46 로직
+            // 이벤트 버블링 방지
+            e.stopPropagation();
+            
+            let data;
+            let originalIndex = 0;
+            
+            // data-property-id가 있으면 직접 사용
+            if(propertyCard.hasAttribute('data-property-id')){
+                const propertyId = parseInt(propertyCard.getAttribute('data-property-id'));
+                const list = getProperties();
+                data = Array.isArray(list) ? list[propertyId] : undefined;
+            } else {
+                // 클래스 기반으로 찾기 (비교 그룹 등)
+                if(container.id === 'compare-list'){
+                    // 비교 그룹: 그룹 내에서 매물 찾기
+                    const groupContainer = propertyCard.closest('.bg-gray-50.border.rounded-lg');
+                    if(!groupContainer) {
+                        console.log('비교 그룹 컨테이너를 찾을 수 없음');
+                        return;
+                    }
+                    const groupIndex = Array.from(container.children).indexOf(groupContainer);
+                    // 비교 그룹 내에서 매물 카드들의 인덱스 찾기 (제목과 버튼 제외)
+                    const propertyCards = groupContainer.querySelectorAll('.bg-white.rounded-lg.shadow-md.overflow-hidden.flex-1.min-w-0');
+                    const cardIndex = Array.from(propertyCards).indexOf(propertyCard);
+                    console.log('비교 그룹 인덱스:', groupIndex, '카드 인덱스:', cardIndex, '총 카드 수:', propertyCards.length);
+                    
+                    const groupData = typeof compareGroups !== 'undefined' && Array.isArray(compareGroups) ? compareGroups[groupIndex] : undefined;
+                    // compareGroups의 데이터 구조: {groupId: 1, items: Array(2)} - 소문자 items 사용
+                    data = groupData && Array.isArray(groupData.items) ? groupData.items[cardIndex] : undefined;
+                    
+                    // 비교 그룹 매물에 고유 ID 생성 (groupId + cardIndex)
+                    if(data) {
+                        data.id = `compare_${groupData.groupId}_${cardIndex}`;
+                    }
+                    
+                    console.log('비교 그룹 데이터:', groupData, '매물 데이터:', data);
+                } else {
+                    // 일반 목록
+                    const idx = Array.from(container.children).indexOf(propertyCard);
+                    originalIndex = getOriginalIndexFromContainer(container.id, idx);
+                    const list = getProperties();
+                    data = Array.isArray(list) ? list[originalIndex] : undefined;
+                }
+            }
+            
+            if(!data) return;
+            
+            // 패널 확장 상태 확인
             if(typeof window.isPanelExpanded !== 'undefined' && window.isPanelExpanded) {
-                // 전체화면에서 돌아오는 버튼 동작 후 해당 매물 상세 오픈
                 const collapseFullscreenButton = document.getElementById('collapse-fullscreen-button');
                 if (collapseFullscreenButton) {
                     collapseFullscreenButton.click();
                 } else {
-                    // fallback: 직접 패널 상태 변경
                     window.isPanelExpanded = false;
                     if(typeof window.updateUIVisibility === 'function') window.updateUIVisibility();
                 }
                 setTimeout(() => {
                     if(typeof window.openPropertyDetail === 'function'){
-                        window.openPropertyDetail(originalIndex, data);
+                        window.openPropertyDetail(data?.id || 0, data);
                     }
-                }, 320); // 패널 전환 애니메이션 시간 이후 실행
+                }, 320);
             } else {
                 if(typeof window.openPropertyDetail === 'function'){
-                    window.openPropertyDetail(originalIndex, data);
+                    window.openPropertyDetail(data?.id || 0, data);
                 }
             }
         });
@@ -394,6 +441,8 @@
         initPropertyDetailPanel();
         attachDelegatedClick(qs('#recommended-list'));
         attachDelegatedClick(qs('#property-list'));
+        // favorite-list는 백엔드 DB 연동 예정이므로 제외
+        attachDelegatedClick(qs('#compare-list'));
     });
 
     // 공개
