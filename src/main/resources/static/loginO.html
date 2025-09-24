@@ -875,6 +875,143 @@
         </div>
     </aside>
 
+    <!-- =================================================================== -->
+    <!-- 매물 상세 오버레이 패널 (A/B 더블버퍼)                                 -->
+    <!-- =================================================================== -->
+    <div id="property-detail-overlay-a" class="absolute top-0 left-[450px] w-1/2 h-full bg-white shadow-2xl z-10 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col" style="opacity: 0; pointer-events: none;">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+            <h2 class="text-2xl font-bold text-gray-800">매물 상세 정보</h2>
+            <button id="close-property-detail-a" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="닫기">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div class="relative">
+                <img id="detail-property-image-a" src="" alt="매물 이미지" class="w-full h-64 object-cover">
+                <div class="absolute top-4 right-4">
+                    <span id="detail-property-status-a" class="px-3 py-1 rounded-full text-sm font-semibold"></span>
+                </div>
+            </div>
+            <div class="p-6 space-y-6">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 id="detail-property-title-a" class="text-2xl font-bold text-gray-800"></h3>
+                        <button id="favorite-button-a" class="bg-white/70 p-1.5 rounded-full hover:bg-white" aria-label="관심 매물" aria-pressed="false">
+                            <svg id="favorite-icon-a" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                        </button>
+                    </div>
+                    <p id="detail-property-location-a" class="text-gray-600 mb-4"></p>
+                    <p id="detail-property-price-a" class="text-3xl font-bold text-blue-600 mb-4"></p>
+                    <p id="detail-property-details-a" class="text-gray-700"></p>
+                </div>
+                <!-- 추가 정보 그리드 -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">준공년도</h4><p id="detail-building-year-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">면적</h4><p id="detail-property-area-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">방수/욕실수</h4><p id="detail-room-bath-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">방향</h4><p id="detail-direction-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">방구조</h4><p id="detail-room-structure-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">복층</h4><p id="detail-duplex-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">주차대수</h4><p id="detail-parking-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">입주가능일</h4><p id="detail-move-in-date-a" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg col-span-2"><h4 class="font-semibold text-gray-800 mb-2">관리비</h4><p id="detail-maintenance-fee-a" class="text-gray-600"></p></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-3">옵션</h4>
+                    <div id="detail-property-options-a" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-3">매물 설명</h4>
+                    <p id="detail-property-description-a" class="text-gray-700 leading-relaxed"></p>
+                </div>
+                <!-- 평면도/지도/중개사 -->
+                <div id="detail-floorplan-wrapper-a" class="mb-6" style="display: none;">
+                    <div id="detail-floorplan-placeholder-a" class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500">평면도 영역 (임시)</div>
+                </div>
+                <div class="mb-6">
+                    <div id="detail-map-placeholder-a" class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500">지도 영역 (임시)</div>
+                </div>
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                        <p id="detail-broker-name-a" class="font-medium text-gray-800"></p>
+                        <p id="detail-broker-phone-a" class="text-gray-600 text-sm"></p>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">연락하기</button>
+                </div>
+                <div class="flex gap-4 pt-2">
+                    <button class="flex-1 h-11 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700">관심매물 등록</button>
+                    <button class="flex-1 h-11 rounded-md bg-gray-100 text-gray-700 font-medium hover:bg-gray-200">매물 비교</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="property-detail-overlay-b" class="absolute top-0 left-[450px] w-1/2 h-full bg-white shadow-2xl z-10 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col" style="opacity: 0; pointer-events: none;">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+            <h2 class="text-2xl font-bold text-gray-800">매물 상세 정보</h2>
+            <button id="close-property-detail-b" class="p-2 rounded-full hover:bg-gray-200 transition-colors" title="닫기">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div class="relative">
+                <img id="detail-property-image-b" src="" alt="매물 이미지" class="w-full h-64 object-cover">
+                <div class="absolute top-4 right-4">
+                    <span id="detail-property-status-b" class="px-3 py-1 rounded-full text-sm font-semibold"></span>
+                </div>
+            </div>
+            <div class="p-6 space-y-6">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 id="detail-property-title-b" class="text-2xl font-bold text-gray-800"></h3>
+                        <button id="favorite-button-b" class="bg-white/70 p-1.5 rounded-full hover:bg-white" aria-label="관심 매물" aria-pressed="false">
+                            <svg id="favorite-icon-b" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                        </button>
+                    </div>
+                    <p id="detail-property-location-b" class="text-gray-600 mb-4"></p>
+                    <p id="detail-property-price-b" class="text-3xl font-bold text-blue-600 mb-4"></p>
+                    <p id="detail-property-details-b" class="text-gray-700"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">준공년도</h4><p id="detail-building-year-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">면적</h4><p id="detail-property-area-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">방수/욕실수</h4><p id="detail-room-bath-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">방향</h4><p id="detail-direction-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">방구조</h4><p id="detail-room-structure-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">복층</h4><p id="detail-duplex-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">주차대수</h4><p id="detail-parking-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 mb-2">입주가능일</h4><p id="detail-move-in-date-b" class="text-gray-600"></p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg col-span-2"><h4 class="font-semibold text-gray-800 mb-2">관리비</h4><p id="detail-maintenance-fee-b" class="text-gray-600"></p></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-3">옵션</h4>
+                    <div id="detail-property-options-b" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-3">매물 설명</h4>
+                    <p id="detail-property-description-b" class="text-gray-700 leading-relaxed"></p>
+                </div>
+                <div id="detail-floorplan-wrapper-b" class="mb-6" style="display: none;">
+                    <div id="detail-floorplan-placeholder-b" class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500">평면도 영역 (임시)</div>
+                </div>
+                <div class="mb-6">
+                    <div id="detail-map-placeholder-b" class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500">지도 영역 (임시)</div>
+                </div>
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                        <p id="detail-broker-name-b" class="font-medium text-gray-800"></p>
+                        <p id="detail-broker-phone-b" class="text-gray-600 text-sm"></p>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">연락하기</button>
+                </div>
+                <div class="flex gap-4 pt-2">
+                    <button class="flex-1 h-11 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700">관심매물 등록</button>
+                    <button class="flex-1 h-11 rounded-md bg-gray-100 text-gray-700 font-medium hover:bg-gray-200">매물 비교</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 패널 열기 버튼 -->
     <button
             id="open-panel-button"
@@ -1644,6 +1781,7 @@
 <script src="js/panel-manager.js"></script>
 <script src="js/filter.js"></script>
 <script src="js/property-management.js"></script>
+<script src="js/property-detail-panel.js"></script>
 <script src="js/app-init.js"></script>
 <script type="module" src="./js/main.js"></script>
 </body>

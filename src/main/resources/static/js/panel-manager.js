@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 상태 변수 ---
     let isPanelOpen = true;
     let isPanelExpanded = false;
+    // 패널 확장을 상세페이지와 연동 위해 전역 할당.
+    window.isPanelExpanded = false;
     let isRightPanelOpen = true;
 
     // --- DOM 요소 ---
@@ -198,6 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
     closePanelButton.addEventListener("click", () => {
         isPanelOpen = false;
         updateUIVisibility();
+        // 패널 닫을 때 상세페이지도 닫기
+        if (typeof window.closeAllPropertyDetails === 'function') {
+            window.closeAllPropertyDetails();
+        }
         if (typeof adjustAllFilterDropdownPosition === 'function') setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     });
 
@@ -209,12 +215,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     expandPanelButton.addEventListener("click", () => {
         isPanelExpanded = true;
+        window.isPanelExpanded = true; // 전역 변수도 업데이트
         updateUIVisibility();
         if (typeof adjustAllFilterDropdownPosition === 'function') setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     });
 
     collapseFullscreenButton.addEventListener("click", () => {
         isPanelExpanded = false;
+        window.isPanelExpanded = false; // 전역 변수도 업데이트
         updateUIVisibility();
         if (typeof adjustAllFilterDropdownPosition === 'function') setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     });
