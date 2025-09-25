@@ -527,6 +527,7 @@
         nextElems.overlay.__detailOnResize = onResize;
 
         isOpen = true;
+        window.isDetailOpen = true;
         currentId = compareId; // data.id 또는 id 사용
         currentBuffer = nextBuf;
 
@@ -551,6 +552,7 @@
         const onResize = curElems.overlay && curElems.overlay.__detailOnResize;
         if(onResize){ window.removeEventListener('resize', onResize); curElems.overlay.__detailOnResize = null; }
         isOpen = false;
+        window.isDetailOpen = false;
         currentId = null;
         if(typeof window.adjustAllFilterDropdownPosition === 'function'){
             setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
@@ -594,6 +596,7 @@
 
         // 상태 초기화 (currentBuffer='a' 줄 제거. 버퍼는 리셋하지 않음. 교차 애니메이션 유지)
         isOpen = false;
+        window.isDetailOpen = false;
         currentId = null;
 
         // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
@@ -610,6 +613,7 @@
                 el.style.pointerEvents = 'none';
             }
         });
+        window.isDetailOpen = false;
     }
 
     // 기존 렌더 코드를 유지한 채, 이벤트 위임으로 카드 클릭을 감지하여 상세 열기

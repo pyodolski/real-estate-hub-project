@@ -205,12 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 왼쪽 패널 이벤트 리스너 ---
     closePanelButton.addEventListener("click", () => {
+        // 상세가 열려 있으면 상세만 닫기
+        if (window.isDetailOpen && typeof window.closePropertyDetail === 'function') {
+            window.closePropertyDetail();
+            return;
+        }
+        // 상세가 열려있지 않으면 패널 자체를 닫기
         isPanelOpen = false;
         updateUIVisibility();
-        // 패널 닫을 때 상세페이지도 닫기
-        if (typeof window.closeAllPropertyDetails === 'function') {
-            window.closeAllPropertyDetails();
-        }
         if (typeof adjustAllFilterDropdownPosition === 'function') setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     });
 
