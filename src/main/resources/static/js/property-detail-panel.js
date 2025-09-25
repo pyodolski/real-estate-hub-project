@@ -94,6 +94,32 @@
         }
     }
 
+    // 전체화면 상태에 따라 X 버튼을 << 버튼으로 변경하고 기능 수정
+    function updateCloseButtonForFullscreen(buf, isFullscreen){
+        const el = getElems(buf);
+        if(!el.closeBtn) return;
+
+        if(isFullscreen){
+            // X 아이콘을 << 아이콘으로 변경
+            el.closeBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
+                </svg>
+            `;
+            el.closeBtn.title = '전체화면 해제';
+            el.closeBtn.onclick = () => collapsePropertyDetailFromFullscreen();
+        } else {
+            // 원래 X 아이콘으로 복원
+            el.closeBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            `;
+            el.closeBtn.title = '닫기';
+            el.closeBtn.onclick = () => closePropertyDetail();
+        }
+    }
+
     function renderInto(buf, data){
         const el = getElems(buf);
         if(!el.overlay) return;
@@ -179,8 +205,12 @@
                 el.favIcon && (el.favIcon.classList.toggle('text-red-500', !pressed));
             };
         }
-        if(el.closeBtn){
-            el.closeBtn.onclick = () => closePropertyDetail();
+
+        // closeBtn 이벤트는 updateCloseButtonForFullscreen에서 관리하므로 여기서는 설정하지 않음
+        // 초기 렌더링 시에만 기본 X 버튼 설정
+        if(el.closeBtn && !el.closeBtn.__eventSet){
+            updateCloseButtonForFullscreen(buf, false);
+            el.closeBtn.__eventSet = true;
         }
     }
 
@@ -196,10 +226,12 @@
         return null;
     }
 
-    // 좌측 패널 버튼 위치/투명도 제어
+    // 좌측 패널 버튼 위치/투명도 제어 및 검색바 위치 조정
     function updatePanelButtonsForDetail(isDetailOpen){
         const closeBtn = document.getElementById('close-panel-button');
         const expandBtn = document.getElementById('expand-panel-button');
+        const searchBarContainer = document.getElementById('search-bar-container');
+
         if(!closeBtn || !expandBtn) return;
 
         if(isDetailOpen){
@@ -207,28 +239,247 @@
             if(!closeBtn.dataset.origLeft) closeBtn.dataset.origLeft = closeBtn.style.left || '450px';
             if(!expandBtn.dataset.origLeft) expandBtn.dataset.origLeft = expandBtn.style.left || '450px';
 
-            const detailRightEdge = 450 + Math.floor(window.innerWidth * 0.5);
-            closeBtn.style.left = `${detailRightEdge}px`;
-            closeBtn.style.zIndex = '10'; // 상세페이지와 같은 z-index
-            expandBtn.style.left = `${expandBtn.dataset.origLeft}`; // 확장 버튼은 제자리에 두되 반투명화
+            // 토글 버튼을 상세 패널 오른쪽 끝으로 이동 (450px 왼쪽 시작 + 450px 너비)
+            const detailRightEdge = 900;
+            expandBtn.style.left = `${detailRightEdge}px`;
+            expandBtn.style.zIndex = '15'; // 상세페이지보다 높은 z-index
 
-            // 반투명 + 호버 시 복원
-            expandBtn.classList.add('opacity-50');
-            const onEnter = () => expandBtn.classList.remove('opacity-50');
-            const onLeave = () => expandBtn.classList.add('opacity-50');
-            expandBtn.__detailHoverEnter = onEnter;
-            expandBtn.__detailHoverLeave = onLeave;
-            expandBtn.addEventListener('mouseenter', onEnter);
-            expandBtn.addEventListener('mouseleave', onLeave);
+            // 닫기 버튼을 상세 패널 왼쪽 바로 앞으로 이동 (>> 버튼처럼 따라가게)
+            closeBtn.style.left = `${detailRightEdge}px`; // 상세 패널 왼쪽 바로 앞에 위치 (버튼 너비만큼 앞)
+            closeBtn.style.zIndex = '15';
+            closeBtn.title = '상세 정보 닫기';
+
+            // 검색 바를 상세 패널 오른쪽으로 밀어내기
+            if(searchBarContainer) {
+                if(!searchBarContainer.dataset.origLeft) {
+                    searchBarContainer.dataset.origLeft = searchBarContainer.style.left || '474px';
+                }
+                searchBarContainer.style.left = `${detailRightEdge + 24}px`; // 상세 패널 오른쪽 + 여백
+            }
+
+            // 토글 버튼의 기능을 상세 패널 전체화면으로 변경
+            expandBtn.title = '상세 정보 전체화면';
+
+            // 기존 이벤트 리스너 제거하고 새로운 기능 추가
+            if(!expandBtn.__originalClickHandler) {
+                // 기존 클릭 핸들러를 백업
+                const originalHandler = expandBtn.onclick || (() => {});
+                expandBtn.__originalClickHandler = originalHandler;
+            }
+
+            // 기존 이벤트 리스너 제거하고 새로운 이벤트 추가
+            if(!closeBtn.__detailEventAdded) {
+                // 새로운 이벤트 리스너 추가 - X 버튼과 동일한 동작
+                closeBtn.__detailClickHandler = (e) => {
+                    e.stopPropagation();
+                    // 현재 상세 패널이 전체화면인지 확인
+                    const currentOverlay = getElems(currentBuffer).overlay;
+                    if(currentOverlay && currentOverlay.__isFullscreen) {
+                        // 전체화면 상태면 전체화면만 해제 (X 버튼과 동일)
+                        collapsePropertyDetailFromFullscreen();
+                    } else {
+                        // 일반 상태면 상세 패널 완전히 닫기 (X 버튼과 동일)
+                        closePropertyDetail();
+                    }
+                };
+                closeBtn.addEventListener('click', closeBtn.__detailClickHandler);
+                closeBtn.__detailEventAdded = true;
+            }
+
+            expandBtn.onclick = () => {
+                expandPropertyDetailToFullscreen();
+            };
+
         } else {
             // 원복
             if(closeBtn.dataset.origLeft){ closeBtn.style.left = closeBtn.dataset.origLeft; }
             closeBtn.style.zIndex = ''; // z-index 원복
+            closeBtn.title = '패널 닫기';
             if(expandBtn.dataset.origLeft){ expandBtn.style.left = expandBtn.dataset.origLeft; }
-            if(expandBtn.__detailHoverEnter){ expandBtn.removeEventListener('mouseenter', expandBtn.__detailHoverEnter); }
-            if(expandBtn.__detailHoverLeave){ expandBtn.removeEventListener('mouseleave', expandBtn.__detailHoverLeave); }
-            expandBtn.classList.remove('opacity-50');
+            expandBtn.style.zIndex = '';
+            expandBtn.title = '패널 확장';
+
+            // 검색 바 위치 원복
+            if(searchBarContainer && searchBarContainer.dataset.origLeft) {
+                searchBarContainer.style.left = searchBarContainer.dataset.origLeft;
+            }
+
+            // 원래 클릭 핸들러 복원
+            if(expandBtn.__originalClickHandler) {
+                expandBtn.onclick = expandBtn.__originalClickHandler;
+            }
+
+            // 상세 패널용 이벤트 리스너 제거
+            if(closeBtn.__detailEventAdded && closeBtn.__detailClickHandler) {
+                closeBtn.removeEventListener('click', closeBtn.__detailClickHandler);
+                closeBtn.__detailEventAdded = false;
+                closeBtn.__detailClickHandler = null;
+            }
         }
+
+        // 필터 드롭다운 위치도 조정
+        if(typeof window.adjustAllFilterDropdownPosition === 'function'){
+            setTimeout(() => window.adjustAllFilterDropdownPosition(), 100);
+        }
+    }
+
+    // 상세 패널을 전체화면으로 확장
+    function expandPropertyDetailToFullscreen(){
+        if(!isOpen) return;
+
+        const currentOverlay = getElems(currentBuffer).overlay;
+        if(!currentOverlay) return;
+
+        // 애니메이션을 위한 transition 클래스 추가
+        currentOverlay.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        // 기본 패널들을 부드럽게 페이드아웃
+        const sidePanel = document.getElementById("side-panel");
+        const rightSidePanel = document.getElementById("right-side-panel");
+        const rightToggleButton = document.getElementById("right-panel-toggle-button");
+        const mainContent = document.querySelector("main");
+        const collapseFullscreenButton = document.getElementById("collapse-fullscreen-button");
+
+        // 페이드아웃 애니메이션
+        const elementsToHide = [sidePanel, rightSidePanel, rightToggleButton, mainContent];
+        elementsToHide.forEach(el => {
+            if(el) {
+                el.style.transition = 'opacity 0.2s ease-out';
+                el.style.opacity = '0';
+            }
+        });
+
+        // 짧은 지연 후 요소들 숨기고 상세 패널 확장
+        setTimeout(() => {
+            elementsToHide.forEach(el => {
+                if(el) {
+                    el.classList.add("hidden");
+                    el.style.transition = '';
+                    el.style.opacity = '';
+                }
+            });
+
+            // 상세 패널을 전체화면으로 확장
+            currentOverlay.classList.remove("w-[450px]", "left-[450px]");
+            currentOverlay.classList.add("w-full", "left-0", "z-50");
+            currentOverlay.style.transform = "translateX(0)";
+
+            // 전체화면 축소 버튼 표시
+            if(collapseFullscreenButton) {
+                collapseFullscreenButton.classList.remove("hidden");
+                collapseFullscreenButton.onclick = () => {
+                    collapsePropertyDetailFromFullscreen();
+                };
+            }
+
+            // 전체화면에서 닫기 버튼 위치 조정 (상세 패널을 완전히 닫는 기능 유지)
+            const closeBtn = document.getElementById('close-panel-button');
+            if(closeBtn) {
+                closeBtn.style.left = '16px'; // 전체화면에서는 화면 왼쪽에 위치
+                closeBtn.style.zIndex = '55'; // 전체화면 패널보다 높은 z-index
+                closeBtn.title = '상세 정보 닫기';
+                // 기능은 이미 상세 패널 닫기로 설정되어 있음
+            }
+
+            // X 버튼을 << 버튼으로 변경
+            updateCloseButtonForFullscreen(currentBuffer, true);
+
+            // 애니메이션 완료 후 transition 제거
+            setTimeout(() => {
+                currentOverlay.style.transition = '';
+            }, 300);
+        }, 200);
+
+        // 상세 패널용 전체화면 상태 플래그
+        currentOverlay.__isFullscreen = true;
+    }
+
+    // 상세 패널 전체화면에서 원래 크기로 축소
+    function collapsePropertyDetailFromFullscreen(){
+        if(!isOpen) return;
+
+        const currentOverlay = getElems(currentBuffer).overlay;
+        if(!currentOverlay || !currentOverlay.__isFullscreen) return;
+
+        // 애니메이션을 위한 transition 클래스 추가
+        currentOverlay.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        // 전체화면 축소 버튼 숨기기
+        const collapseFullscreenButton = document.getElementById("collapse-fullscreen-button");
+        if(collapseFullscreenButton) {
+            collapseFullscreenButton.classList.add("hidden");
+            collapseFullscreenButton.onclick = null;
+        }
+
+        // << 버튼을 X 버튼으로 복원
+        updateCloseButtonForFullscreen(currentBuffer, false);
+
+        // 상세 패널을 원래 크기로 복원
+        currentOverlay.classList.add("w-[450px]", "left-[450px]");
+        currentOverlay.classList.remove("w-full", "left-0", "z-50");
+        currentOverlay.style.transform = "translateX(0)";
+
+        // 부드러운 축소 애니메이션과 다른 요소들 복원
+        setTimeout(() => {
+            const sidePanel = document.getElementById("side-panel");
+            const rightSidePanel = document.getElementById("right-side-panel");
+            const rightToggleButton = document.getElementById("right-panel-toggle-button");
+            const mainContent = document.querySelector("main");
+
+            const elementsToShow = [sidePanel, rightSidePanel, rightToggleButton, mainContent];
+
+            // 먼저 요소들을 표시하되 투명하게 시작
+            elementsToShow.forEach(el => {
+                if(el) {
+                    el.classList.remove("hidden");
+                    el.style.display = '';
+                    el.style.visibility = 'visible';
+                    el.style.opacity = '0';
+                    el.style.transition = 'opacity 0.3s ease-in';
+                }
+            });
+
+            // 닫기 버튼을 상세 패널 위치로 부드럽게 이동
+            const closeBtn = document.getElementById('close-panel-button');
+            if(closeBtn) {
+                const detailRightEdge = 900;
+                closeBtn.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                closeBtn.style.left = `${detailRightEdge}px`;
+                closeBtn.style.zIndex = '15';
+            }
+
+            // 다음 프레임에서 페이드인 시작
+            requestAnimationFrame(() => {
+                elementsToShow.forEach(el => {
+                    if(el) {
+                        el.style.opacity = '1';
+                        el.offsetHeight; // 강제 리플로우로 렌더링 보장
+                    }
+                });
+            });
+
+            // 애니메이션 완료 후 정리
+            setTimeout(() => {
+                elementsToShow.forEach(el => {
+                    if(el) {
+                        el.style.transition = '';
+                        el.style.opacity = '';
+                    }
+                });
+                if(closeBtn) {
+                    closeBtn.style.transition = '';
+                }
+                currentOverlay.style.transition = '';
+                document.body.offsetHeight; // 최종 레이아웃 확인
+            }, 300);
+
+        }, 150); // 상세 패널 축소 후 약간의 지연
+
+        // 전체화면 상태 플래그 제거
+        currentOverlay.__isFullscreen = false;
+
+        // 버튼 위치 다시 업데이트
+        updatePanelButtonsForDetail(true);
     }
 
     function openPropertyDetail(id, data){
@@ -275,6 +526,10 @@
     function closePropertyDetail(){
         const curElems = getElems(currentBuffer);
         if(curElems.overlay){
+            // 전체화면 상태인 경우 먼저 축소
+            if(curElems.overlay.__isFullscreen) {
+                collapsePropertyDetailFromFullscreen();
+            }
             curElems.overlay.classList.add('-translate-x-full');
             setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
         }
@@ -291,23 +546,39 @@
 
     // 모든 매물 상세 페이지 닫기 - f311d46 로직
     function closeAllPropertyDetails(){
-        // 두 패널 모두 완전히 숨기기
+        // 전체화면 상태 해제
         const overlayA = qs('#property-detail-overlay-a');
         const overlayB = qs('#property-detail-overlay-b');
-        
+
+        if(overlayA && overlayA.__isFullscreen) {
+            collapsePropertyDetailFromFullscreen();
+        }
+        if(overlayB && overlayB.__isFullscreen) {
+            collapsePropertyDetailFromFullscreen();
+        }
+
+        // 두 패널 모두 완전히 숨기기
         if(overlayA){
-            overlayA.classList.add('-translate-x-full');
+            overlayA.classList.add('-translate-x-full', 'w-[450px]', 'left-[450px]');
+            overlayA.classList.remove('w-full', 'left-0', 'z-50');
             overlayA.style.opacity = '0';
             overlayA.style.pointerEvents = 'none';
             overlayA.style.zIndex = '';
+            overlayA.__isFullscreen = false;
+            // X 버튼 상태 복원
+            updateCloseButtonForFullscreen('a', false);
         }
         if(overlayB){
-            overlayB.classList.add('-translate-x-full');
+            overlayB.classList.add('-translate-x-full', 'w-[450px]', 'left-[450px]');
+            overlayB.classList.remove('w-full', 'left-0', 'z-50');
             overlayB.style.opacity = '0';
             overlayB.style.pointerEvents = 'none';
             overlayB.style.zIndex = '';
+            overlayB.__isFullscreen = false;
+            // X 버튼 상태 복원
+            updateCloseButtonForFullscreen('b', false);
         }
-        
+
         // 상태 초기화
         isOpen = false;
         currentId = null;

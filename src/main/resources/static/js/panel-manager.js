@@ -221,6 +221,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     expandPanelButton.addEventListener("click", () => {
+        // 상세 패널이 열린 상태인지 확인
+        const isDetailOpen = typeof window.openPropertyDetail !== 'undefined' &&
+                              document.querySelector('#property-detail-overlay-a[style*="opacity: 1"], #property-detail-overlay-b[style*="opacity: 1"]');
+
+        if(isDetailOpen) {
+            // 상세 패널이 열린 상태에서는 상세 패널 전체화면 기능이 작동하도록 함
+            // property-detail-panel.js에서 이미 처리되므로 여기서는 아무것도 하지 않음
+            return;
+        }
+
+        // 기본 패널 전체화면 확장 기능
         isPanelExpanded = true;
         window.isPanelExpanded = true; // 전역 변수도 업데이트
         updateUIVisibility();
