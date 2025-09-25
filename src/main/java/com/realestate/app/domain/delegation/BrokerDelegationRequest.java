@@ -1,4 +1,4 @@
-package com.realestate.app.domain.delegation.dto;
+package com.realestate.app.domain.delegation;
 
 import com.realestate.app.domain.broker_profile.BrokerProfile;
 import com.realestate.app.domain.property.table.Property;

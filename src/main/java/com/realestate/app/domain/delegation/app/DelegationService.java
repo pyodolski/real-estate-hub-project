@@ -2,8 +2,8 @@ package com.realestate.app.domain.delegation.app;
 
 import com.realestate.app.domain.broker_profile.BrokerProfile;
 import com.realestate.app.domain.broker_profile.BrokerProfileRepository;
-import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest;
-import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest.Status;
+import com.realestate.app.domain.delegation.BrokerDelegationRequest;
+import com.realestate.app.domain.delegation.BrokerDelegationRequest.Status;
 import com.realestate.app.domain.delegation.dto.CreateDelegationRequest;
 import com.realestate.app.domain.delegation.dto.DelegationResponse;
 import com.realestate.app.domain.delegation.repository.BrokerDelegationRequestRepository;

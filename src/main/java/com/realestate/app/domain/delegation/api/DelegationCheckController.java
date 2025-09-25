@@ -1,6 +1,7 @@
 package com.realestate.app.domain.delegation.api;
 
-import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest.Status;
+import com.realestate.app.domain.delegation.BrokerDelegationRequest;
+import com.realestate.app.domain.delegation.BrokerDelegationRequest.Status;
 import com.realestate.app.domain.delegation.repository.BrokerDelegationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
