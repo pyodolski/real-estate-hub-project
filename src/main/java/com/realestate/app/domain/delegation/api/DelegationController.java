@@ -7,10 +7,8 @@ import com.realestate.app.domain.delegation.dto.DecisionRequest;
 import com.realestate.app.domain.delegation.dto.DelegationResponse;
 import com.realestate.app.global.security.CurrentUserIdResolver;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
@@ -22,13 +20,13 @@ public class DelegationController {
     private final DelegationService service;
     private final CurrentUserIdResolver currentUserIdResolver;
 
-    /** 소유자: 위임요청 생성 */
+    /** 🔧 소유자: 위임요청 생성(+옵션: offer 동시저장) */
     @PostMapping("/properties/{propertyId}/delegations")
     public DelegationResponse create(Authentication auth,
                                      @PathVariable Long propertyId,
                                      @RequestBody CreateDelegationRequest body) {
         Long ownerUserId = currentUserIdResolver.requireUserId(auth);
-        return service.create(ownerUserId, propertyId, body.brokerUserId());
+        return service.create(ownerUserId, propertyId, body);
     }
 
     /** 브로커: 받은 요청 목록 */
@@ -69,9 +67,8 @@ public class DelegationController {
         return service.cancel(ownerUserId, id);
     }
 
-    /** 소유자: 목록에서 요청 제거 */
+    /** 소유자: 삭제(승인건 제외) */
     @DeleteMapping("/delegations/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(Authentication auth, @PathVariable Long id) {
         Long ownerUserId = currentUserIdResolver.requireUserId(auth);
         service.deleteOwn(ownerUserId, id);

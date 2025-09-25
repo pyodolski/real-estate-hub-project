@@ -1,3 +1,8 @@
 package com.realestate.app.domain.delegation.dto;
 
-public record CreateDelegationRequest(Long brokerUserId) {}
+import com.realestate.app.domain.property.dto.PropertyOfferCreateRequest;
+
+public record CreateDelegationRequest(
+        Long brokerUserId,
+        PropertyOfferCreateRequest offer
+) {}
