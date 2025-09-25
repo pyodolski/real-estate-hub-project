@@ -469,7 +469,10 @@
                 if(closeBtn) {
                     closeBtn.style.transition = '';
                 }
+                // 확장 과정에서 부여한 inline transition/transform을 원복하여
+                // 이후 교차 전환 시 CSS 클래스 기반 애니메이션이 정상 동작하도록 함
                 currentOverlay.style.transition = '';
+                currentOverlay.style.transform = '';
                 document.body.offsetHeight; // 최종 레이아웃 확인
             }, 300);
 
@@ -498,6 +501,16 @@
         const nextElems = getElems(nextBuf);
 
         renderInto(nextBuf, incoming);
+
+        // 다음에 열릴 패널의 초기 상태를 강제 세팅하여
+        // 확장/복귀 시 남아있을 수 있는 inline 스타일 영향을 제거
+        if (nextElems.overlay) {
+            nextElems.overlay.classList.add('-translate-x-full');
+            nextElems.overlay.style.transform = '';
+            nextElems.overlay.style.transition = '';
+            nextElems.overlay.style.opacity = '0';
+            nextElems.overlay.style.pointerEvents = 'none';
+        }
 
         // 겹치기: 현재 닫히는 애니메이션 + 다음 열림 애니메이션 동시
         setOverlayVisible(nextElems.overlay, true);
@@ -579,10 +592,9 @@
             updateCloseButtonForFullscreen('b', false);
         }
 
-        // 상태 초기화
+        // 상태 초기화 (currentBuffer='a' 줄 제거. 버퍼는 리셋하지 않음. 교차 애니메이션 유지)
         isOpen = false;
         currentId = null;
-        currentBuffer = 'a';
 
         // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
         updatePanelButtonsForDetail(false);
