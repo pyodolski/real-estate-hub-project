@@ -1,7 +1,7 @@
 package com.realestate.app.domain.delegation.repository;
 
-import com.realestate.app.domain.delegation.BrokerDelegationRequest;
-import com.realestate.app.domain.delegation.BrokerDelegationRequest.Status;
+import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest;
+import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

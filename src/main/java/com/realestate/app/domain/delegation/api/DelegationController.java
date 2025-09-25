@@ -1,6 +1,6 @@
 package com.realestate.app.domain.delegation.api;
 
-import com.realestate.app.domain.delegation.BrokerDelegationRequest.Status;
+import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest.Status;
 import com.realestate.app.domain.delegation.app.DelegationService;
 import com.realestate.app.domain.delegation.dto.CreateDelegationRequest;
 import com.realestate.app.domain.delegation.dto.DecisionRequest;

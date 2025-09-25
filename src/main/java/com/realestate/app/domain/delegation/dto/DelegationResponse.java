@@ -1,6 +1,6 @@
 package com.realestate.app.domain.delegation.dto;
 
-import com.realestate.app.domain.delegation.BrokerDelegationRequest.Status;
+import com.realestate.app.domain.delegation.dto.BrokerDelegationRequest.Status;
 
 public record DelegationResponse(
         Long id,
