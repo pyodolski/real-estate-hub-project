@@ -340,6 +340,25 @@
         const mainContent = document.querySelector("main");
         const collapseFullscreenButton = document.getElementById("collapse-fullscreen-button");
 
+        // 우측 영역은 확장 직전에 즉시 숨김 처리(bleed 방지)
+        const rightInstantHide = [rightSidePanel, rightToggleButton];
+        const rightCardPanelIds = [
+            'chat-panel','profile-panel','notification-panel','favorite-panel','compare-panel','my-property-panel','broker-list-panel'
+        ];
+        rightInstantHide.forEach(el => {
+            if (el) {
+                el.__prevVisibility = el.style.visibility || '';
+                el.style.visibility = 'hidden';
+            }
+        });
+        rightCardPanelIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.__prevVisibility = el.style.visibility || '';
+                el.style.visibility = 'hidden';
+            }
+        });
+
         // 페이드아웃 애니메이션
         const elementsToHide = [sidePanel, rightSidePanel, rightToggleButton, mainContent];
         elementsToHide.forEach(el => {
@@ -474,6 +493,21 @@
                 currentOverlay.style.transition = '';
                 currentOverlay.style.transform = '';
                 document.body.offsetHeight; // 최종 레이아웃 확인
+
+                // 우측 즉시 숨김 요소들 가시성 복원
+                rightInstantHide.forEach(el => {
+                    if (el) {
+                        el.style.visibility = el.__prevVisibility || '';
+                        delete el.__prevVisibility;
+                    }
+                });
+                rightCardPanelIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && Object.prototype.hasOwnProperty.call(el, '__prevVisibility')) {
+                        el.style.visibility = el.__prevVisibility || '';
+                        delete el.__prevVisibility;
+                    }
+                });
             }, 300);
 
         }, 150); // 상세 패널 축소 후 약간의 지연
