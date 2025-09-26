@@ -6,6 +6,10 @@
     let isOpen = false;
     let currentId = null;
 
+    // 상수 정의
+    const LIST_RIGHT = 450;  // 매물 리스트 패널 오른쪽 끝 위치
+    const DETAIL_RIGHT = 900; // 상세 패널 오른쪽 끝 위치 (450px + 450px)
+
     const qs = (sel) => document.querySelector(sel);
 
     // 전역 properties 접근: data.js의 const properties 직접 사용
@@ -236,25 +240,28 @@
 
         if(isDetailOpen){
             // 원래 값 보존
-            if(!closeBtn.dataset.origLeft) closeBtn.dataset.origLeft = closeBtn.style.left || '450px';
-            if(!expandBtn.dataset.origLeft) expandBtn.dataset.origLeft = expandBtn.style.left || '450px';
+            if(!closeBtn.dataset.origLeft) closeBtn.dataset.origLeft = closeBtn.style.left || `${LIST_RIGHT}px`;
+            if(!expandBtn.dataset.origLeft) expandBtn.dataset.origLeft = expandBtn.style.left || `${LIST_RIGHT}px`;
 
             // 토글 버튼을 상세 패널 오른쪽 끝으로 이동 (450px 왼쪽 시작 + 450px 너비)
-            const detailRightEdge = 900;
-            expandBtn.style.left = `${detailRightEdge}px`;
+            expandBtn.style.left = `${DETAIL_RIGHT}px`;
             expandBtn.style.zIndex = '15'; // 상세페이지보다 높은 z-index
+            expandBtn.style.opacity = '1'; // AB 전환 후 버튼 표시
+            expandBtn.style.pointerEvents = 'auto'; // AB 전환 후 버튼 활성화
 
             // 닫기 버튼을 상세 패널 왼쪽 바로 앞으로 이동 (>> 버튼처럼 따라가게)
-            closeBtn.style.left = `${detailRightEdge}px`; // 상세 패널 왼쪽 바로 앞에 위치 (버튼 너비만큼 앞)
+            closeBtn.style.left = `${DETAIL_RIGHT}px`; // 상세 패널 왼쪽 바로 앞에 위치 (버튼 너비만큼 앞)
             closeBtn.style.zIndex = '15';
             closeBtn.title = '상세 정보 닫기';
+            closeBtn.style.opacity = '1'; // AB 전환 후 버튼 표시
+            closeBtn.style.pointerEvents = 'auto'; // AB 전환 후 버튼 활성화
 
             // 검색 바를 상세 패널 오른쪽으로 밀어내기
             if(searchBarContainer) {
                 if(!searchBarContainer.dataset.origLeft) {
                     searchBarContainer.dataset.origLeft = searchBarContainer.style.left || '474px';
                 }
-                searchBarContainer.style.left = `${detailRightEdge + 24}px`; // 상세 패널 오른쪽 + 여백
+                searchBarContainer.style.left = `${DETAIL_RIGHT + 24}px`; // 상세 패널 오른쪽 + 여백
             }
 
             // 토글 버튼의 기능을 상세 패널 전체화면으로 변경
@@ -379,7 +386,7 @@
             });
 
             // 상세 패널을 전체화면으로 확장
-            currentOverlay.classList.remove("w-[450px]", "left-[450px]");
+            currentOverlay.classList.remove(`w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
             currentOverlay.classList.add("w-full", "left-0", "z-50");
             currentOverlay.style.transform = "translateX(0)";
 
@@ -434,7 +441,7 @@
         updateCloseButtonForFullscreen(currentBuffer, false);
 
         // 상세 패널을 원래 크기로 복원
-        currentOverlay.classList.add("w-[450px]", "left-[450px]");
+        currentOverlay.classList.add(`w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
         currentOverlay.classList.remove("w-full", "left-0", "z-50");
         currentOverlay.style.transform = "translateX(0)";
 
@@ -461,7 +468,7 @@
             // 닫기 버튼을 상세 패널 위치로 부드럽게 이동
             const closeBtn = document.getElementById('close-panel-button');
             if(closeBtn) {
-                const detailRightEdge = 900;
+                const detailRightEdge = DETAIL_RIGHT;
                 closeBtn.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 closeBtn.style.left = `${detailRightEdge}px`;
                 closeBtn.style.zIndex = '15';
@@ -554,7 +561,27 @@
             setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
         }
 
-        updatePanelButtonsForDetail(true);
+        // AB 전환 시: 패널 애니메이션 완료 후 버튼 표시
+        if(isOpen){
+            const closeBtn = document.getElementById('close-panel-button');
+            const expandBtn = document.getElementById('expand-panel-button');
+            
+            // 버튼을 먼저 숨김 (전환 중 깜빡임 방지)
+            if(closeBtn && expandBtn){
+                closeBtn.style.opacity = '0';
+                expandBtn.style.opacity = '0';
+                closeBtn.style.pointerEvents = 'none';
+                expandBtn.style.pointerEvents = 'none';
+            }
+            
+            // 패널 애니메이션 완료 후(300ms) 버튼을 상세 옆에 표시
+            setTimeout(() => {
+                updatePanelButtonsForDetail(true);
+            }, 300);
+        } else {
+            // 첫 번째 열기: 즉시 버튼 표시
+            updatePanelButtonsForDetail(true);
+        }
         // 리사이즈 시 위치 재계산
         const onResize = () => { if(isOpen) updatePanelButtonsForDetail(true); };
         window.addEventListener('resize', onResize);
@@ -582,6 +609,7 @@
             setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
         }
         updatePanelButtonsForDetail(false);
+        
         // 리사이즈 핸들러 해제
         const onResize = curElems.overlay && curElems.overlay.__detailOnResize;
         if(onResize){ window.removeEventListener('resize', onResize); curElems.overlay.__detailOnResize = null; }
@@ -608,7 +636,7 @@
 
         // 두 패널 모두 완전히 숨기기
         if(overlayA){
-            overlayA.classList.add('-translate-x-full', 'w-[450px]', 'left-[450px]');
+            overlayA.classList.add('-translate-x-full', `w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
             overlayA.classList.remove('w-full', 'left-0', 'z-50');
             overlayA.style.opacity = '0';
             overlayA.style.pointerEvents = 'none';
@@ -618,7 +646,7 @@
             updateCloseButtonForFullscreen('a', false);
         }
         if(overlayB){
-            overlayB.classList.add('-translate-x-full', 'w-[450px]', 'left-[450px]');
+            overlayB.classList.add('-translate-x-full', `w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
             overlayB.classList.remove('w-full', 'left-0', 'z-50');
             overlayB.style.opacity = '0';
             overlayB.style.pointerEvents = 'none';
@@ -761,11 +789,12 @@
         attachDelegatedClick(qs('#compare-list'));
     });
 
-    // 공개
+    // 공개 API
     window.initPropertyDetailPanel = initPropertyDetailPanel;
     window.openPropertyDetail = openPropertyDetail;
     window.closePropertyDetail = closePropertyDetail;
     window.closeAllPropertyDetails = closeAllPropertyDetails;
+    window.updatePanelButtonsForDetail = updatePanelButtonsForDetail;
 })();
 
 

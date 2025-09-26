@@ -128,16 +128,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchBarContainer.style.left = "474px";
                 closePanelButton.style.left = "450px";
                 expandPanelButton.style.left = "450px";
-                closePanelButton.classList.remove("opacity-0", "pointer-events-none");
-                expandPanelButton.classList.remove("opacity-0", "pointer-events-none");
+                closePanelButton.style.opacity = "1";
+                closePanelButton.style.pointerEvents = "auto";
+                expandPanelButton.style.opacity = "1";
+                expandPanelButton.style.pointerEvents = "auto";
                 openPanelButton.classList.add("opacity-0", "pointer-events-none");
             } else {
                 sidePanel.classList.add("-translate-x-full");
                 searchBarContainer.style.left = "24px";
                 closePanelButton.style.left = "0px";
                 expandPanelButton.style.left = "0px";
-                closePanelButton.classList.add("opacity-0", "pointer-events-none");
-                expandPanelButton.classList.add("opacity-0", "pointer-events-none");
+                closePanelButton.style.opacity = "0";
+                closePanelButton.style.pointerEvents = "none";
+                expandPanelButton.style.opacity = "0";
+                expandPanelButton.style.pointerEvents = "none";
                 openPanelButton.classList.remove("opacity-0", "pointer-events-none");
             }
         }
@@ -212,6 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // 상세가 열려있지 않으면 패널 자체를 닫기
         isPanelOpen = false;
+        // 상세페이지용 버튼 상태를 원래 상태로 복원
+        if (typeof window.updatePanelButtonsForDetail === 'function') {
+            window.updatePanelButtonsForDetail(false);
+        }
         updateUIVisibility();
         if (typeof adjustAllFilterDropdownPosition === 'function') setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     });
