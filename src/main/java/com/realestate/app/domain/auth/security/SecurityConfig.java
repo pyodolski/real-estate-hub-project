@@ -56,6 +56,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
+                        // 브로커 목록은 공개 (누구나 조회 가능)
+                        .requestMatchers(HttpMethod.GET, "/api/brokers/**").permitAll()
+
                         // 자산 승인 시스템 API (인증 필요)
                         .requestMatchers("/api/ownership/**").authenticated()
 
