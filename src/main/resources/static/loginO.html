@@ -62,6 +62,17 @@
   </head>
   <body class="bg-gray-100 h-screen overflow-hidden">
     <div class="relative w-full h-full">
+      <!-- (테스트용 임시) 마커 팝업 테스트 버튼: 실제 마커 없이 동작 확인용 -->
+      <div class="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
+        <div class="relative pointer-events-auto">
+          <button id="btn-test-marker-popup" class="relative bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+            팝업 테스트
+          </button>
+          <!-- 팝업을 버튼 바로 위에 붙여 표시 -->
+          <!-- 상세페이지(z-10)보다 뒤에 오도록 z-0으로 설정 -->
+          <div id="detail" class="absolute left-1/2 -translate-x-1/2 -top-2 -translate-y-full w-80 max-h-[70vh] overflow-y-auto overflow-x-hidden z-0"></div>
+        </div>
+      </div>
       <!-- =================================================================== -->
       <!-- 지도 및 필터 패널                                                     -->
       <!-- =================================================================== -->

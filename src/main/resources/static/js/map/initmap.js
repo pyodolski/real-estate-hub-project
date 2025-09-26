@@ -3,6 +3,8 @@ import { debounce } from '../utils/debounce.js';
 import { renderMarkers, highlightMarker } from './markers.js';
 import { fetchPropertiesInBounds, fetchPropertyDetail } from '../api/propertiesApi.js';
 import { clearDetail } from '../ui/sidebar.js';
+//import { clearDetail, renderDetail } from '../ui/sidebar.js'; // (원래 코드)
+import { renderMarkerPopup } from './marker-popup.js';
 
 export async function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
@@ -56,8 +58,10 @@ export async function initMap(app) {
   async function onMarkerClick(id) {
     app.currentId = id;
     const d = await fetchPropertyDetail(id);
-    renderDetail(d);
-    // markers.js가 각 마커의 상태를 기억하도록 되어 있다면, 상태 전달 불필요
+    // 작은 팝업(추천 카드 재사용)
+    renderMarkerPopup(d);
+    // 필요 시 상세로 확장하는 버튼은 popup 내부에서 처리
+    //renderDetail(d); // (원본 코드)
     highlightMarker(app, id);
   }
 }
