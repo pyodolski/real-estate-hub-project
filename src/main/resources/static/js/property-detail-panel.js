@@ -465,6 +465,22 @@
                 }
             });
 
+            // 오른쪽 카드 패널들은 애니메이션 완료 후 복원 (부자연스러운 현상 방지)
+            setTimeout(() => {
+                const rightCardPanelIds = [
+                    'chat-panel','profile-panel','notification-panel','favorite-panel','compare-panel','my-property-panel','broker-list-panel'
+                ];
+                rightCardPanelIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.__prevVisibility !== undefined) {
+                        el.style.visibility = el.__prevVisibility;
+                        delete el.__prevVisibility;
+                    } else if (el) {
+                        el.style.visibility = 'visible';
+                    }
+                });
+            }, 300); // 애니메이션 시간과 동일하게 설정
+
             // 닫기 버튼을 상세 패널 위치로 부드럽게 이동
             const closeBtn = document.getElementById('close-panel-button');
             if(closeBtn) {
