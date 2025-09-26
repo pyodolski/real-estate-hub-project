@@ -6,6 +6,10 @@
     let isOpen = false;
     let currentId = null;
 
+    // 상수 정의
+    const LIST_RIGHT = 450;  // 매물 리스트 패널 오른쪽 끝 위치
+    const DETAIL_RIGHT = 900; // 상세 패널 오른쪽 끝 위치 (450px + 450px)
+
     const qs = (sel) => document.querySelector(sel);
 
     // 전역 properties 접근: data.js의 const properties 직접 사용
@@ -236,25 +240,28 @@
 
         if(isDetailOpen){
             // 원래 값 보존
-            if(!closeBtn.dataset.origLeft) closeBtn.dataset.origLeft = closeBtn.style.left || '450px';
-            if(!expandBtn.dataset.origLeft) expandBtn.dataset.origLeft = expandBtn.style.left || '450px';
+            if(!closeBtn.dataset.origLeft) closeBtn.dataset.origLeft = closeBtn.style.left || `${LIST_RIGHT}px`;
+            if(!expandBtn.dataset.origLeft) expandBtn.dataset.origLeft = expandBtn.style.left || `${LIST_RIGHT}px`;
 
             // 토글 버튼을 상세 패널 오른쪽 끝으로 이동 (450px 왼쪽 시작 + 450px 너비)
-            const detailRightEdge = 900;
-            expandBtn.style.left = `${detailRightEdge}px`;
+            expandBtn.style.left = `${DETAIL_RIGHT}px`;
             expandBtn.style.zIndex = '15'; // 상세페이지보다 높은 z-index
+            expandBtn.style.opacity = '1'; // AB 전환 후 버튼 표시
+            expandBtn.style.pointerEvents = 'auto'; // AB 전환 후 버튼 활성화
 
             // 닫기 버튼을 상세 패널 왼쪽 바로 앞으로 이동 (>> 버튼처럼 따라가게)
-            closeBtn.style.left = `${detailRightEdge}px`; // 상세 패널 왼쪽 바로 앞에 위치 (버튼 너비만큼 앞)
+            closeBtn.style.left = `${DETAIL_RIGHT}px`; // 상세 패널 왼쪽 바로 앞에 위치 (버튼 너비만큼 앞)
             closeBtn.style.zIndex = '15';
             closeBtn.title = '상세 정보 닫기';
+            closeBtn.style.opacity = '1'; // AB 전환 후 버튼 표시
+            closeBtn.style.pointerEvents = 'auto'; // AB 전환 후 버튼 활성화
 
             // 검색 바를 상세 패널 오른쪽으로 밀어내기
             if(searchBarContainer) {
                 if(!searchBarContainer.dataset.origLeft) {
                     searchBarContainer.dataset.origLeft = searchBarContainer.style.left || '474px';
                 }
-                searchBarContainer.style.left = `${detailRightEdge + 24}px`; // 상세 패널 오른쪽 + 여백
+                searchBarContainer.style.left = `${DETAIL_RIGHT + 24}px`; // 상세 패널 오른쪽 + 여백
             }
 
             // 토글 버튼의 기능을 상세 패널 전체화면으로 변경
@@ -340,6 +347,25 @@
         const mainContent = document.querySelector("main");
         const collapseFullscreenButton = document.getElementById("collapse-fullscreen-button");
 
+        // 우측 영역은 확장 직전에 즉시 숨김 처리(bleed 방지)
+        const rightInstantHide = [rightSidePanel, rightToggleButton];
+        const rightCardPanelIds = [
+            'chat-panel','profile-panel','notification-panel','favorite-panel','compare-panel','my-property-panel','broker-list-panel'
+        ];
+        rightInstantHide.forEach(el => {
+            if (el) {
+                el.__prevVisibility = el.style.visibility || '';
+                el.style.visibility = 'hidden';
+            }
+        });
+        rightCardPanelIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.__prevVisibility = el.style.visibility || '';
+                el.style.visibility = 'hidden';
+            }
+        });
+
         // 페이드아웃 애니메이션
         const elementsToHide = [sidePanel, rightSidePanel, rightToggleButton, mainContent];
         elementsToHide.forEach(el => {
@@ -360,7 +386,7 @@
             });
 
             // 상세 패널을 전체화면으로 확장
-            currentOverlay.classList.remove("w-[450px]", "left-[450px]");
+            currentOverlay.classList.remove(`w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
             currentOverlay.classList.add("w-full", "left-0", "z-50");
             currentOverlay.style.transform = "translateX(0)";
 
@@ -415,7 +441,7 @@
         updateCloseButtonForFullscreen(currentBuffer, false);
 
         // 상세 패널을 원래 크기로 복원
-        currentOverlay.classList.add("w-[450px]", "left-[450px]");
+        currentOverlay.classList.add(`w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
         currentOverlay.classList.remove("w-full", "left-0", "z-50");
         currentOverlay.style.transform = "translateX(0)";
 
@@ -442,7 +468,7 @@
             // 닫기 버튼을 상세 패널 위치로 부드럽게 이동
             const closeBtn = document.getElementById('close-panel-button');
             if(closeBtn) {
-                const detailRightEdge = 900;
+                const detailRightEdge = DETAIL_RIGHT;
                 closeBtn.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 closeBtn.style.left = `${detailRightEdge}px`;
                 closeBtn.style.zIndex = '15';
@@ -469,8 +495,26 @@
                 if(closeBtn) {
                     closeBtn.style.transition = '';
                 }
+                // 확장 과정에서 부여한 inline transition/transform을 원복하여
+                // 이후 교차 전환 시 CSS 클래스 기반 애니메이션이 정상 동작하도록 함
                 currentOverlay.style.transition = '';
+                currentOverlay.style.transform = '';
                 document.body.offsetHeight; // 최종 레이아웃 확인
+
+                // 우측 즉시 숨김 요소들 가시성 복원
+                rightInstantHide.forEach(el => {
+                    if (el) {
+                        el.style.visibility = el.__prevVisibility || '';
+                        delete el.__prevVisibility;
+                    }
+                });
+                rightCardPanelIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && Object.prototype.hasOwnProperty.call(el, '__prevVisibility')) {
+                        el.style.visibility = el.__prevVisibility || '';
+                        delete el.__prevVisibility;
+                    }
+                });
             }, 300);
 
         }, 150); // 상세 패널 축소 후 약간의 지연
@@ -499,6 +543,16 @@
 
         renderInto(nextBuf, incoming);
 
+        // 다음에 열릴 패널의 초기 상태를 강제 세팅하여
+        // 확장/복귀 시 남아있을 수 있는 inline 스타일 영향을 제거
+        if (nextElems.overlay) {
+            nextElems.overlay.classList.add('-translate-x-full');
+            nextElems.overlay.style.transform = '';
+            nextElems.overlay.style.transition = '';
+            nextElems.overlay.style.opacity = '0';
+            nextElems.overlay.style.pointerEvents = 'none';
+        }
+
         // 겹치기: 현재 닫히는 애니메이션 + 다음 열림 애니메이션 동시
         setOverlayVisible(nextElems.overlay, true);
         if(isOpen && curElems.overlay){
@@ -507,13 +561,34 @@
             setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
         }
 
-        updatePanelButtonsForDetail(true);
+        // AB 전환 시: 패널 애니메이션 완료 후 버튼 표시
+        if(isOpen){
+            const closeBtn = document.getElementById('close-panel-button');
+            const expandBtn = document.getElementById('expand-panel-button');
+            
+            // 버튼을 먼저 숨김 (전환 중 깜빡임 방지)
+            if(closeBtn && expandBtn){
+                closeBtn.style.opacity = '0';
+                expandBtn.style.opacity = '0';
+                closeBtn.style.pointerEvents = 'none';
+                expandBtn.style.pointerEvents = 'none';
+            }
+            
+            // 패널 애니메이션 완료 후(300ms) 버튼을 상세 옆에 표시
+            setTimeout(() => {
+                updatePanelButtonsForDetail(true);
+            }, 300);
+        } else {
+            // 첫 번째 열기: 즉시 버튼 표시
+            updatePanelButtonsForDetail(true);
+        }
         // 리사이즈 시 위치 재계산
         const onResize = () => { if(isOpen) updatePanelButtonsForDetail(true); };
         window.addEventListener('resize', onResize);
         nextElems.overlay.__detailOnResize = onResize;
 
         isOpen = true;
+        window.isDetailOpen = true;
         currentId = compareId; // data.id 또는 id 사용
         currentBuffer = nextBuf;
 
@@ -534,10 +609,12 @@
             setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
         }
         updatePanelButtonsForDetail(false);
+        
         // 리사이즈 핸들러 해제
         const onResize = curElems.overlay && curElems.overlay.__detailOnResize;
         if(onResize){ window.removeEventListener('resize', onResize); curElems.overlay.__detailOnResize = null; }
         isOpen = false;
+        window.isDetailOpen = false;
         currentId = null;
         if(typeof window.adjustAllFilterDropdownPosition === 'function'){
             setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
@@ -559,7 +636,7 @@
 
         // 두 패널 모두 완전히 숨기기
         if(overlayA){
-            overlayA.classList.add('-translate-x-full', 'w-[450px]', 'left-[450px]');
+            overlayA.classList.add('-translate-x-full', `w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
             overlayA.classList.remove('w-full', 'left-0', 'z-50');
             overlayA.style.opacity = '0';
             overlayA.style.pointerEvents = 'none';
@@ -569,7 +646,7 @@
             updateCloseButtonForFullscreen('a', false);
         }
         if(overlayB){
-            overlayB.classList.add('-translate-x-full', 'w-[450px]', 'left-[450px]');
+            overlayB.classList.add('-translate-x-full', `w-[${LIST_RIGHT}px]`, `left-[${LIST_RIGHT}px]`);
             overlayB.classList.remove('w-full', 'left-0', 'z-50');
             overlayB.style.opacity = '0';
             overlayB.style.pointerEvents = 'none';
@@ -579,10 +656,10 @@
             updateCloseButtonForFullscreen('b', false);
         }
 
-        // 상태 초기화
+        // 상태 초기화 (currentBuffer='a' 줄 제거. 버퍼는 리셋하지 않음. 교차 애니메이션 유지)
         isOpen = false;
+        window.isDetailOpen = false;
         currentId = null;
-        currentBuffer = 'a';
 
         // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
         updatePanelButtonsForDetail(false);
@@ -598,6 +675,7 @@
                 el.style.pointerEvents = 'none';
             }
         });
+        window.isDetailOpen = false;
     }
 
     // 기존 렌더 코드를 유지한 채, 이벤트 위임으로 카드 클릭을 감지하여 상세 열기
@@ -711,11 +789,12 @@
         attachDelegatedClick(qs('#compare-list'));
     });
 
-    // 공개
+    // 공개 API
     window.initPropertyDetailPanel = initPropertyDetailPanel;
     window.openPropertyDetail = openPropertyDetail;
     window.closePropertyDetail = closePropertyDetail;
     window.closeAllPropertyDetails = closeAllPropertyDetails;
+    window.updatePanelButtonsForDetail = updatePanelButtonsForDetail;
 })();
 
 

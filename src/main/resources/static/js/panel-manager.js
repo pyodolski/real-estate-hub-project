@@ -143,25 +143,29 @@ document.addEventListener("DOMContentLoaded", () => {
       rightToggleButton.classList.remove("hidden");
       collapseFullscreenButton.classList.add("hidden");
 
-      if (isPanelOpen) {
-        sidePanel.classList.remove("-translate-x-full");
-        searchBarContainer.style.left = "474px";
-        closePanelButton.style.left = "450px";
-        expandPanelButton.style.left = "450px";
-        closePanelButton.classList.remove("opacity-0", "pointer-events-none");
-        expandPanelButton.classList.remove("opacity-0", "pointer-events-none");
-        openPanelButton.classList.add("opacity-0", "pointer-events-none");
-      } else {
-        sidePanel.classList.add("-translate-x-full");
-        searchBarContainer.style.left = "24px";
-        closePanelButton.style.left = "0px";
-        expandPanelButton.style.left = "0px";
-        closePanelButton.classList.add("opacity-0", "pointer-events-none");
-        expandPanelButton.classList.add("opacity-0", "pointer-events-none");
-        openPanelButton.classList.remove("opacity-0", "pointer-events-none");
-      }
+            if (isPanelOpen) {
+                sidePanel.classList.remove("-translate-x-full");
+                searchBarContainer.style.left = "474px";
+                closePanelButton.style.left = "450px";
+                expandPanelButton.style.left = "450px";
+                closePanelButton.style.opacity = "1";
+                closePanelButton.style.pointerEvents = "auto";
+                expandPanelButton.style.opacity = "1";
+                expandPanelButton.style.pointerEvents = "auto";
+                openPanelButton.classList.add("opacity-0", "pointer-events-none");
+            } else {
+                sidePanel.classList.add("-translate-x-full");
+                searchBarContainer.style.left = "24px";
+                closePanelButton.style.left = "0px";
+                expandPanelButton.style.left = "0px";
+                closePanelButton.style.opacity = "0";
+                closePanelButton.style.pointerEvents = "none";
+                expandPanelButton.style.opacity = "0";
+                expandPanelButton.style.pointerEvents = "none";
+                openPanelButton.classList.remove("opacity-0", "pointer-events-none");
+            }
+        }
     }
-  }
 
   // --- 오른쪽 패널 관리 함수 ---
   function closeAllRightPanels() {
@@ -239,17 +243,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- 왼쪽 패널 이벤트 리스너 ---
-  closePanelButton.addEventListener("click", () => {
-    isPanelOpen = false;
-    updateUIVisibility();
-    // 패널 닫을 때 상세페이지도 닫기
-    if (typeof window.closeAllPropertyDetails === "function") {
-      window.closeAllPropertyDetails();
-    }
-    if (typeof adjustAllFilterDropdownPosition === "function")
-      setTimeout(() => adjustAllFilterDropdownPosition(), 300);
-  });
+    // --- 왼쪽 패널 이벤트 리스너 ---
+    closePanelButton.addEventListener("click", () => {
+        // 상세가 열려 있으면 상세만 닫기
+        if (window.isDetailOpen && typeof window.closePropertyDetail === 'function') {
+            window.closePropertyDetail();
+            return;
+        }
+        // 상세가 열려있지 않으면 패널 자체를 닫기
+        isPanelOpen = false;
+        // 상세페이지용 버튼 상태를 원래 상태로 복원
+        if (typeof window.updatePanelButtonsForDetail === 'function') {
+            window.updatePanelButtonsForDetail(false);
+        }
+        updateUIVisibility();
+        if (typeof adjustAllFilterDropdownPosition === 'function') setTimeout(() => adjustAllFilterDropdownPosition(), 300);
+    });
 
   openPanelButton.addEventListener("click", () => {
     isPanelOpen = true;
