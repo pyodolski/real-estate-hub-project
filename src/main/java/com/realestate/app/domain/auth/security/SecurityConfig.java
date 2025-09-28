@@ -20,6 +20,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.realestate.app.domain.auth.jwt.JwtAuthenticationFilter;
 
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -52,6 +55,9 @@ public class SecurityConfig {
                         // 인증 없이 접근해야 하는 공개 API
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
+
+                        // 브로커 목록은 공개 (누구나 조회 가능)
+                        .requestMatchers(HttpMethod.GET, "/api/brokers/**").permitAll()
 
                         // 자산 승인 시스템 API (인증 필요)
                         .requestMatchers("/api/ownership/**").authenticated()
@@ -90,5 +96,15 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() { 
         return new BCryptPasswordEncoder(); 
+    }
+
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+                // 공통 정적 리소스 위치 (css/js/images 등)
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/assets/**", "/favicon.ico")
+                // (선택) 스프링이 제공하는 정적 리소스 위치 전부 무시
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 }

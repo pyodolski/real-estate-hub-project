@@ -1,0 +1,181 @@
+package com.realestate.app.domain.delegation.app;
+
+import com.realestate.app.domain.broker_profile.BrokerProfile;
+import com.realestate.app.domain.broker_profile.BrokerProfileRepository;
+import com.realestate.app.domain.delegation.BrokerDelegationRequest;
+import com.realestate.app.domain.delegation.BrokerDelegationRequest.Status;
+import com.realestate.app.domain.delegation.dto.CreateDelegationRequest;
+import com.realestate.app.domain.delegation.dto.DelegationResponse;
+import com.realestate.app.domain.delegation.repository.BrokerDelegationRequestRepository;
+import com.realestate.app.domain.property.repository.PropertyOfferRepository;
+import com.realestate.app.domain.property.repository.PropertyRepository;
+import com.realestate.app.domain.property.table.Property;
+import com.realestate.app.domain.property.table.Property.ListingType;
+import com.realestate.app.domain.property.table.PropertyOffer;
+import com.realestate.app.domain.property.dto.PropertyOfferCreateRequest;
+import com.realestate.app.domain.user.entity.User;
+import com.realestate.app.domain.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class DelegationService {
+
+    private final BrokerDelegationRequestRepository reqRepo;
+    private final PropertyRepository propertyRepo;
+    private final UserRepository userRepo;
+    private final BrokerProfileRepository brokerProfileRepo;
+    private final PropertyOfferRepository propertyOfferRepo;
+
+    /** 위임요청 생성 (+ 옵션: PropertyOffer 저장). 응답은 기존 6필드(offerId 미포함) */
+    @Transactional
+    public DelegationResponse create(Long ownerUserId, Long propertyId, CreateDelegationRequest body) {
+        Property property = propertyRepo.findById(propertyId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "property not found"));
+        User owner = userRepo.findById(ownerUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "owner not found"));
+
+        if (property.getOwner() == null || !property.getOwner().getId().equals(owner.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "you are not the owner of this property");
+        }
+
+        if (reqRepo.existsByProperty_IdAndStatus(propertyId, Status.PENDING)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "already has a pending delegation");
+        }
+
+        Long brokerUserId = body.brokerUserId();
+        BrokerProfile broker = brokerProfileRepo.findByUserId(brokerUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "broker profile not found"));
+
+        // 1) 위임요청 생성
+        BrokerDelegationRequest req = BrokerDelegationRequest.builder()
+                .owner(owner)
+                .property(property)
+                .broker(broker)
+                .status(Status.PENDING)
+                .build();
+        reqRepo.save(req);
+
+        // 2) (옵션) 오퍼 저장 — 응답엔 포함하지 않음(기존 DTO 6필드 유지)
+        PropertyOfferCreateRequest offer = body.offer();
+        if (offer != null) {
+            validateOffer(offer);
+            PropertyOffer po = PropertyOffer.builder()
+                    .property(property)
+                    .housetype(offer.housetype())
+                    .type(offer.type())
+                    .floor(offer.floor())
+                    .oftion(offer.oftion())
+                    .totalPrice(offer.totalPrice())
+                    .deposit(offer.deposit())
+                    .monthlyRent(offer.monthlyRent())
+                    .maintenanceFee(offer.maintenanceFee())
+                    .negotiable(offer.negotiable())
+                    .availableFrom(offer.availableFrom())
+                    .isActive(offer.isActive() == null ? true : offer.isActive())
+                    .build();
+            propertyOfferRepo.save(po);
+        }
+
+        return toDto(req);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DelegationResponse> incomingForBroker(Long brokerUserId, Status status) {
+        return reqRepo.findAllByBroker_UserIdAndStatus(brokerUserId, status).stream()
+                .map(this::toDto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DelegationResponse> mineForOwner(Long ownerUserId) {
+        return reqRepo.findAllByOwner_Id(ownerUserId).stream()
+                .map(this::toDto).toList();
+    }
+
+    @Transactional
+    public DelegationResponse approve(Long brokerUserId, Long requestId) {
+        BrokerDelegationRequest req = reqRepo.findByIdAndBroker_UserId(requestId, brokerUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "request not found"));
+        if (req.getStatus() != Status.PENDING) throw new ResponseStatusException(HttpStatus.CONFLICT, "not pending");
+
+        Property p = req.getProperty();
+        p.setBroker(req.getBroker());
+        p.setListingType(ListingType.BROKER);
+
+        req.setStatus(Status.APPROVED);
+        return toDto(req);
+    }
+
+    @Transactional
+    public DelegationResponse reject(Long brokerUserId, Long requestId, String reason) {
+        BrokerDelegationRequest req = reqRepo.findByIdAndBroker_UserId(requestId, brokerUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "request not found"));
+        if (req.getStatus() != Status.PENDING) throw new ResponseStatusException(HttpStatus.CONFLICT, "not pending");
+
+        req.setStatus(Status.REJECTED);
+        req.setRejectReason(reason);
+        return toDto(req);
+    }
+
+    @Transactional
+    public DelegationResponse cancel(Long ownerUserId, Long requestId) {
+        BrokerDelegationRequest req = reqRepo.findByIdAndOwner_Id(requestId, ownerUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "request not found"));
+        if (req.getStatus() != Status.PENDING) throw new ResponseStatusException(HttpStatus.CONFLICT, "not pending");
+
+        req.setStatus(Status.CANCELED);
+        return toDto(req);
+    }
+
+    @Transactional
+    public void deleteOwn(Long ownerUserId, Long requestId) {
+        var req = reqRepo.findByIdAndOwner_Id(requestId, ownerUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "request not found"));
+
+        if (req.getStatus() == BrokerDelegationRequest.Status.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "approved request cannot be deleted");
+        }
+        reqRepo.delete(req);
+    }
+
+    private DelegationResponse toDto(BrokerDelegationRequest r) {
+        return new DelegationResponse(
+                r.getId(),
+                r.getProperty().getId(),
+                r.getOwner().getId(),
+                r.getBroker().getUserId(),
+                r.getStatus(),
+                r.getRejectReason()
+        );
+    }
+
+    private void validateOffer(PropertyOfferCreateRequest o) {
+        if (o.type() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "offer.type is required");
+
+        switch (o.type()) {
+            case SALE -> {
+                if (o.totalPrice() == null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalPrice is required for SALE");
+            }
+            case JEONSE -> {
+                if (o.deposit() == null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "deposit is required for JEONSE");
+                if (o.monthlyRent() != null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "monthlyRent must be null for JEONSE");
+            }
+            case WOLSE -> {
+                if (o.deposit() == null || o.monthlyRent() == null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "deposit and monthlyRent are required for WOLSE");
+                if (o.totalPrice() != null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalPrice must be null for WOLSE");
+            }
+        }
+    }
+}
