@@ -2,6 +2,7 @@
 import { initMap } from './map/initMap.js';
 import { initFavorites, loadFavorites } from './favorites.js';
 
+
 const appState = {
   map: null,
   markers: new Map(),   // id -> Marker
