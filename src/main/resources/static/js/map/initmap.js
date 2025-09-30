@@ -6,30 +6,45 @@ import { clearDetail } from '../ui/sidebar.js';
 //import { clearDetail, renderDetail } from '../ui/sidebar.js'; // (원래 코드)
 import { renderMarkerPopup } from './marker-popup.js';
 
-export async function initMap(app) {
+export function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
   app.map = new naver.maps.Map('map', { center, zoom: 13, zoomControl: false });
 
+  // (선택) 상단 상태 필터가 따로 있다면 사용
   const statusFilterEl = document.getElementById('statusFilter');
 
+  // 현재 활성 필터 합성: filter.js가 세팅한 window.currentFilters + status 필터
+  function getActiveFilters() {
+    const base = (window.currentFilters && typeof window.currentFilters === 'object')
+      ? { ...window.currentFilters }
+      : {};
+
+    const v = statusFilterEl?.value || '';
+    if (v) base.status = v; // 백엔드가 status를 받도록 구현되어 있다면
+    return base;
+  }
+
+  // 지도 영역 + 필터로 목록 재요청하고 마커만 갱신
   const onIdle = debounce(async () => {
     const b = app.map.getBounds();
     if (!b) return;
-    const sw = b.getSW(), ne = b.getNE();
 
-    const v = statusFilterEl?.value || '';
-    const filters = v ? { status: v } : {};
+    const sw = b.getSW();
+    const ne = b.getNE();
+
+    const filters = getActiveFilters();
 
     try {
       const list = await fetchPropertiesInBounds({
-        swLat: sw.y, swLng: sw.x, neLat: ne.y, neLng: ne.x, filters
+        swLat: sw.y,
+        swLng: sw.x,
+        neLat: ne.y,
+        neLng: ne.x,
+        filters,         // ← 필터 전체 전달 (propertiesApi.js에서 적절히 직렬화)
       });
-      console.log('properties list:', list, 'length=', Array.isArray(list) ? list.length : 'N/A');
-      new naver.maps.Marker({
-        position: new naver.maps.LatLng(37.5665, 126.9780),
-        map: app.map,
-      });
-      renderMarkers(app, list, onMarkerClick);
+
+      // 마커만 갱신
+      renderMarkers(app, Array.isArray(list) ? list : [], onMarkerClick);
       clearDetail();
     } catch (e) {
       console.error('목록 조회 실패:', e);
@@ -43,7 +58,7 @@ export async function initMap(app) {
   // 지도 이동/줌 후 재조회
   naver.maps.Event.addListener(app.map, 'idle', onIdle);
 
-  // ✅ 필터 변경 시에만 선택 해제 + 재조회
+  // 상태 필터 변경 시 재조회 (선택)
   if (statusFilterEl) {
     statusFilterEl.addEventListener('change', () => {
       app.currentId = null;
@@ -52,16 +67,21 @@ export async function initMap(app) {
     });
   }
 
+  // 🔑 filter.js에서 보내는 커스텀 이벤트 수신 → 마커만 리프레시
+  window.addEventListener('filters:changed', () => {
+    app.currentId = null;
+    clearDetail();
+    onIdle();
+  });
+
   // 초기 1회 조회
   onIdle();
 
+  // 마커 클릭 시 상세
   async function onMarkerClick(id) {
     app.currentId = id;
     const d = await fetchPropertyDetail(id);
-    // 작은 팝업(추천 카드 재사용)
-    renderMarkerPopup(d);
-    // 필요 시 상세로 확장하는 버튼은 popup 내부에서 처리
-    //renderDetail(d); // (원본 코드)
+    renderDetail(d);
     highlightMarker(app, id);
   }
 }

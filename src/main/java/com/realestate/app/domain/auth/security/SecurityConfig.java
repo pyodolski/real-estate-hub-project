@@ -44,7 +44,7 @@ public class SecurityConfig {
                         // 루트 & 정적 리소스 & 헬스체크 열기
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico",
-                                "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**"
+                                "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**", "/api/properties/search", "/api/search/**"
                         ).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/ws-stomp/**").permitAll()
