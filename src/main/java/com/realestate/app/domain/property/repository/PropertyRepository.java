@@ -11,8 +11,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     @Query("""
         select p from Property p
-        where p.locationX between :swLat and :neLat
-          and p.locationY between :swLng and :neLng
+        where p.locationY between :swLat and :neLat
+          and p.locationX between :swLng and :neLng
           and (:status   is null or p.status = :status)
           and (:minPrice is null or p.price >= :minPrice)
           and (:maxPrice is null or p.price <= :maxPrice)
@@ -27,6 +27,5 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             BigDecimal maxPrice
     );
 
-    // 제목 중복 확인
     boolean existsByTitle(String title);
 }

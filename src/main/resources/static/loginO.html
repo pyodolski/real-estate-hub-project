@@ -21,7 +21,7 @@
     />
 
     <link rel="stylesheet" href="./css/map.css" />
-    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g&submodules=coord"></script>
     <script>
       // loginO.html 상단(해당 스크립트보다 먼저) 또는 공용 JS에
       window.isChatPanelOpen = window.isChatPanelOpen ?? false;
@@ -100,10 +100,14 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input
+              id="global-search-input"
               type="text"
               placeholder="동, 지하철역, 대학교, 매물번호"
               class="w-56 focus:outline-none bg-transparent text-sm"
             />
+            <div id="global-search-suggest"
+                 class="absolute top-full left-0 mt-2 w-[360px] max-h-[60vh] overflow-auto bg-white rounded-xl shadow-lg p-2 hidden z-50">
+            </div>
           </div>
 
           <!-- Filter Buttons -->
@@ -2116,5 +2120,6 @@
     <script src="js/broker-management.js"></script>
     <script src="js/property-detail-panel.js"></script>
     <script src="js/app-init.js"></script>
+    <script src="js/search.js"></script>
   </body>
 </html>
