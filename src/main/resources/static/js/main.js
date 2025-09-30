@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ?.addEventListener('click', () => loadFavorites());
 
   // 지도 초기화 (DOM 준비된 뒤)
-  appState.map = initMap(appState);
+  initMap(appState);
 });
 
 // 다른 곳에서 쓰게 하려면(선택):

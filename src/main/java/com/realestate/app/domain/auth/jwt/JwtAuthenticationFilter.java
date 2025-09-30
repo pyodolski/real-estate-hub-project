@@ -38,7 +38,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (uri.startsWith("/api/auth/")
                 || uri.startsWith("/ws-stomp")
                 || uri.startsWith("/assets/") || uri.startsWith("/static/")
+                || uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/images/")
                 || uri.equals("/") || uri.startsWith("/actuator/health")
+                || uri.endsWith(".html") || uri.equals("/favicon.ico")
+                || (uri.startsWith("/api/brokers/") && "GET".equalsIgnoreCase(req.getMethod()))
                 || "OPTIONS".equalsIgnoreCase(req.getMethod())) {
             chain.doFilter(req, res);
             return;

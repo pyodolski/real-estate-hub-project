@@ -44,7 +44,7 @@ public class SecurityConfig {
                         // 루트 & 정적 리소스 & 헬스체크 열기
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico",
-                                "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**"
+                                "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**", "/api/properties/search", "/api/search/**"
                         ).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/ws-stomp/**").permitAll()
@@ -55,6 +55,9 @@ public class SecurityConfig {
                         // 인증 없이 접근해야 하는 공개 API
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
+
+                        // 브로커 목록은 공개 (누구나 조회 가능)
+                        .requestMatchers(HttpMethod.GET, "/api/brokers/**").permitAll()
 
                         // 자산 승인 시스템 API (인증 필요)
                         .requestMatchers("/api/ownership/**").authenticated()
