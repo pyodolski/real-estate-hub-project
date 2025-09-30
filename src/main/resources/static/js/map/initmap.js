@@ -4,7 +4,7 @@ import { renderMarkers, highlightMarker } from './markers.js';
 import { fetchPropertiesInBounds, fetchPropertyDetail } from '../api/propertiesApi.js';
 import { clearDetail } from '../ui/sidebar.js';
 //import { clearDetail, renderDetail } from '../ui/sidebar.js'; // (원래 코드)
-import { renderMarkerPopup } from './marker-popup.js';
+import { renderMarkerPopup, closeMarkerPopup } from './marker-popup.js';
 
 export function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
@@ -77,11 +77,20 @@ export function initMap(app) {
   // 초기 1회 조회
   onIdle();
 
-  // 마커 클릭 시 상세
+  // 마커 클릭 시 작은 팝업 표시 (토글)
   async function onMarkerClick(id) {
+    // 같은 마커를 다시 클릭하면 팝업 닫기
+    if (app.currentId === id) {
+      closeMarkerPopup(); // InfoWindow 닫기
+      app.currentId = null;
+      highlightMarker(app, null); // 하이라이트 해제
+      return;
+    }
+
     app.currentId = id;
     const d = await fetchPropertyDetail(id);
-    renderDetail(d);
+    const marker = app.markers.get(id); // 클릭된 마커 객체 가져오기
+    renderMarkerPopup(d, app.map, marker); // InfoWindow로 마커 위에 표시
     highlightMarker(app, id);
   }
 }
