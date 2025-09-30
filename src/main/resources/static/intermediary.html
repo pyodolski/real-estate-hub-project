@@ -6,6 +6,8 @@
     <title>중개인 관리 페이지</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JavaScript 파일 -->
+    <script src="/js/broker-delegation-management.js" defer></script>
     <!-- Google Fonts (Inter & Noto Sans KR) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -363,6 +365,27 @@
               />
             </svg>
           </button>
+          <!-- 위임 요청함 버튼 -->
+          <button
+            id="delegation-request-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+            title="위임 요청 관리"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+          </button>
         </div>
         <button
           class="w-full aspect-square bg-[#FF3737] hover:brightness-95 transition-all rounded-2xl p-2 flex items-center justify-center"
@@ -421,6 +444,101 @@
         </svg>
       </button>
     </div>
+
+    <!-- =================================================================== -->
+    <!-- 위임 요청 관리 패널                                                   -->
+    <!-- =================================================================== -->
+    <aside
+      id="delegation-request-panel"
+      class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+      style="right: 75px; display: none;"
+    >
+      <!-- 위임 요청 관리 패널 헤더 -->
+      <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+        <h2 class="text-xl font-bold text-gray-800">위임 요청 관리</h2>
+        <button
+          id="close-delegation-panel"
+          class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+          title="위임 요청 패널 닫기"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 text-gray-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 필터 탭 -->
+      <div class="mb-4 flex-shrink-0">
+        <div class="flex border-b border-gray-200">
+          <button
+            id="pending-tab"
+            class="flex-1 px-4 py-2 text-center border-b-2 border-blue-500 text-blue-600 font-medium"
+            onclick="brokerDelegation.filterByStatus('PENDING')"
+          >
+            대기 중
+          </button>
+          <button
+            id="approved-tab"
+            class="flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+            onclick="brokerDelegation.filterByStatus('APPROVED')"
+          >
+            승인됨
+          </button>
+          <button
+            id="rejected-tab"
+            class="flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+            onclick="brokerDelegation.filterByStatus('REJECTED')"
+          >
+            거절됨
+          </button>
+          <button
+            id="all-tab"
+            class="flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+            onclick="brokerDelegation.filterByStatus('ALL')"
+          >
+            전체
+          </button>
+        </div>
+      </div>
+
+      <!-- 요청 통계 -->
+      <div class="mb-4 flex-shrink-0">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div id="pending-count" class="text-lg font-bold text-orange-600">0</div>
+              <div class="text-xs text-gray-600">대기 중</div>
+            </div>
+            <div>
+              <div id="approved-count" class="text-lg font-bold text-green-600">0</div>
+              <div class="text-xs text-gray-600">승인됨</div>
+            </div>
+            <div>
+              <div id="rejected-count" class="text-lg font-bold text-red-600">0</div>
+              <div class="text-xs text-gray-600">거절됨</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 스크롤 가능한 요청 목록 영역 -->
+      <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+        <div id="delegation-request-list" class="space-y-4">
+          <!-- JavaScript로 위임 요청 목록이 여기에 추가됩니다 -->
+        </div>
+      </div>
+    </aside>
 
     <script>
       // --- 샘플 데이터 ---

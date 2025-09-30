@@ -1,11 +1,21 @@
 // 내 매물 관리 JavaScript 모듈
 
+(function() {
+  // 중복 선언 방지
+  if (typeof window.PropertyManagement !== 'undefined') {
+    console.warn('PropertyManagement class already exists. Skipping redefinition.');
+    return;
+  }
+
 class PropertyManagement {
   constructor() {
     this.apiBaseUrl = "/api/ownership";
     this.mapApiBaseUrl = "/api/ownership/map";
     this.accessToken = localStorage.getItem("accessToken");
     this.myProperties = [];
+    this.filteredProperties = [];
+    this.currentStatusFilter = "ALL";
+    this.currentTypeFilter = "ALL";
     this.currentUser = null;
 
     this.init();
@@ -50,7 +60,7 @@ class PropertyManagement {
 
       if (response.ok) {
         this.myProperties = await response.json();
-        this.renderMyProperties();
+        this.applyCurrentFilters();
         this.updatePropertySummary();
       } else {
         throw new Error("매물 목록을 불러올 수 없습니다.");
@@ -61,6 +71,66 @@ class PropertyManagement {
     }
   }
 
+  // 필터 적용
+  filterProperties(statusFilter, typeFilter) {
+    this.currentStatusFilter = statusFilter;
+    this.currentTypeFilter = typeFilter;
+    this.applyCurrentFilters();
+    this.updateFilterTabs();
+  }
+
+  // 현재 필터 적용
+  applyCurrentFilters() {
+    let filtered = [...this.myProperties];
+
+    // 상태 필터 적용
+    if (this.currentStatusFilter !== "ALL") {
+      filtered = filtered.filter(property => property.status === this.currentStatusFilter);
+    }
+
+    // 유형 필터 적용
+    if (this.currentTypeFilter === "SIMPLE") {
+      // 단순 등록: delegation이 없는 매물
+      filtered = filtered.filter(property => !property.hasDelegation);
+    } else if (this.currentTypeFilter === "SALE") {
+      // 판매 등록: delegation이 있는 매물
+      filtered = filtered.filter(property => property.hasDelegation);
+    }
+
+    this.filteredProperties = filtered;
+    this.renderMyProperties();
+  }
+
+  // 필터 탭 스타일 업데이트
+  updateFilterTabs() {
+    // 상태 필터 탭 업데이트
+    document.querySelectorAll('[id^="property-"][id$="-tab"]').forEach(tab => {
+      tab.className = "flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center";
+    });
+
+    const statusTabId = this.currentStatusFilter === "ALL" ? "property-all-tab" :
+                       this.currentStatusFilter === "PENDING" ? "property-pending-tab" :
+                       this.currentStatusFilter === "APPROVED" ? "property-approved-tab" : "property-rejected-tab";
+
+    const statusTab = document.getElementById(statusTabId);
+    if (statusTab) {
+      statusTab.className = "flex-1 px-3 py-2 text-xs border-b-2 border-blue-500 text-blue-600 font-medium text-center";
+    }
+
+    // 유형 필터 탭 업데이트
+    document.querySelectorAll('[id^="type-"][id$="-tab"]').forEach(tab => {
+      tab.className = "flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center";
+    });
+
+    const typeTabId = this.currentTypeFilter === "ALL" ? "type-all-tab" :
+                     this.currentTypeFilter === "SIMPLE" ? "type-simple-tab" : "type-sale-tab";
+
+    const typeTab = document.getElementById(typeTabId);
+    if (typeTab) {
+      typeTab.className = "flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 text-center";
+    }
+  }
+
   // 매물 목록 렌더링
   renderMyProperties() {
     const myPropertyList = document.getElementById("my-property-list");
@@ -68,20 +138,30 @@ class PropertyManagement {
 
     myPropertyList.innerHTML = "";
 
-    if (this.myProperties.length === 0) {
+    const propertiesToShow = this.filteredProperties.length > 0 ? this.filteredProperties : this.myProperties;
+
+    if (propertiesToShow.length === 0) {
       myPropertyList.innerHTML = `
         <div class="text-center py-8 text-gray-500">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
           </svg>
-          <p class="text-sm">등록된 매물이 없습니다.</p>
-          <p class="text-xs mt-1">내 매물을 등록해보세요!</p>
+          <p class="text-sm">
+            ${this.currentStatusFilter === "ALL" && this.currentTypeFilter === "ALL"
+              ? "등록된 매물이 없습니다."
+              : "필터 조건에 맞는 매물이 없습니다."}
+          </p>
+          <p class="text-xs mt-1">
+            ${this.currentStatusFilter === "ALL" && this.currentTypeFilter === "ALL"
+              ? "내 매물을 등록해보세요!"
+              : "다른 필터를 선택해보세요."}
+          </p>
         </div>
       `;
       return;
     }
 
-    this.myProperties.forEach((property) => {
+    propertiesToShow.forEach((property) => {
       const propertyCard = this.createPropertyCard(property);
       myPropertyList.appendChild(propertyCard);
     });
@@ -287,17 +367,17 @@ class PropertyManagement {
                 }
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-2 mb-2">
                 <button onclick="propertyManagement.viewPropertyDetail(${
                   property.claimId
-                })" 
+                })"
                         class="flex-1 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
                     상세보기
                 </button>
                 ${
                   property.status === "PENDING"
                     ? `
-                    <button onclick="propertyManagement.editProperty(${property.claimId})" 
+                    <button onclick="propertyManagement.editProperty(${property.claimId})"
                             class="flex-1 px-3 py-2 text-xs bg-gray-50 text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
                         수정하기
                     </button>
@@ -307,13 +387,29 @@ class PropertyManagement {
                 ${
                   property.documents && property.documents.length > 0
                     ? `
-                    <button onclick="propertyManagement.viewDocuments(${property.claimId})" 
+                    <button onclick="propertyManagement.viewDocuments(${property.claimId})"
                             class="px-3 py-2 text-xs bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors">
                         서류보기
                     </button>
                 `
                     : ""
                 }
+            </div>
+            <div class="flex gap-2">
+                ${
+                  property.status === "APPROVED"
+                    ? `
+                    <button onclick="propertyManagement.registerForSale(${property.claimId})"
+                            class="flex-1 px-3 py-2 text-xs bg-purple-50 text-purple-600 rounded-md hover:bg-purple-100 transition-colors">
+                        판매 매물 등록
+                    </button>
+                `
+                    : ""
+                }
+                <button onclick="propertyManagement.deleteProperty(${property.claimId})"
+                        class="px-3 py-2 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors">
+                    삭제하기
+                </button>
             </div>
         `;
 
@@ -2741,6 +2837,449 @@ class PropertyManagement {
     }
   }
 
+  // 판매 매물 등록
+  registerForSale(claimId) {
+    this.selectedPropertyId = claimId;
+    this.showSaleRegistrationPanel();
+  }
+
+  // 매물 삭제
+  async deleteProperty(claimId) {
+    if (!confirm("정말로 이 매물을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/ownership/claims/${claimId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${this.getToken()}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        this.showSuccess("매물이 성공적으로 삭제되었습니다.");
+        await this.loadMyProperties();
+      } else {
+        throw new Error("매물 삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("매물 삭제 오류:", error);
+      this.showError("매물 삭제 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 판매 등록 패널 표시
+  showSaleRegistrationPanel() {
+    console.log("showSaleRegistrationPanel 호출됨");
+    const panel = document.getElementById("sale-registration-panel");
+    console.log("패널 요소:", panel);
+
+    if (panel) {
+      console.log("패널을 표시합니다");
+      // 먼저 display를 block으로 설정
+      panel.style.display = "block";
+      // 테스트를 위해 패널을 확실히 보이는 위치에 배치
+      panel.style.right = "10px";
+      panel.style.top = "10px";
+      panel.style.zIndex = "9999";
+      // translate 클래스 제거 (애니메이션을 위해 약간의 지연 추가)
+      setTimeout(() => {
+        panel.classList.remove("translate-x-full");
+      }, 10);
+
+      this.currentTransactionType = "SALE";
+      this.setupSaleForm();
+      this.loadBrokerList();
+
+      // 저장된 스크롤 위치 복원
+      setTimeout(() => {
+        const scrollArea = panel.querySelector(".custom-scrollbar");
+        if (scrollArea && this.savedScrollPosition !== undefined) {
+          scrollArea.scrollTop = this.savedScrollPosition;
+        }
+      }, 50);
+    } else {
+      console.error("sale-registration-panel 요소를 찾을 수 없습니다");
+    }
+  }
+
+  // 판매 등록 패널 숨기기
+  hideSaleRegistrationPanel() {
+    const panel = document.getElementById("sale-registration-panel");
+    if (panel) {
+      // 스크롤 위치 저장
+      const scrollArea = panel.querySelector(".custom-scrollbar");
+      if (scrollArea) {
+        this.savedScrollPosition = scrollArea.scrollTop;
+      }
+
+      // 애니메이션을 위해 먼저 translate 클래스 추가
+      panel.classList.add("translate-x-full");
+      // 애니메이션 완료 후 display none
+      setTimeout(() => {
+        panel.style.display = "none";
+      }, 300);
+      this.resetSaleForm();
+    }
+  }
+
+  // 거래 방식 전환
+  switchTransactionType(type) {
+    this.currentTransactionType = type;
+
+    // 탭 스타일 업데이트
+    document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+      tab.className = "flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700";
+    });
+
+    const activeTab = document.getElementById(`${type.toLowerCase()}-tab`);
+    if (activeTab) {
+      activeTab.className = "flex-1 px-4 py-2 text-center border-b-2 border-blue-500 text-blue-600 font-medium";
+    }
+
+    // 가격 입력 필드 표시/숨김
+    this.updatePriceFields(type);
+  }
+
+  // 가격 필드 업데이트
+  updatePriceFields(type) {
+    const salePrice = document.getElementById("sale-price");
+    const jeonseWolsePrice = document.getElementById("jeonse-wolse-price");
+    const monthlyRentSection = document.getElementById("monthly-rent-section");
+
+    // 모든 필드 숨김
+    salePrice.style.display = "none";
+    jeonseWolsePrice.style.display = "none";
+    monthlyRentSection.style.display = "none";
+
+    // 필수 속성 제거
+    document.getElementById("totalPrice").removeAttribute("required");
+    document.getElementById("deposit").removeAttribute("required");
+    document.getElementById("monthlyRent").removeAttribute("required");
+
+    // 거래 방식에 따라 필드 표시 및 필수 설정
+    if (type === "SALE") {
+      salePrice.style.display = "block";
+      document.getElementById("totalPrice").setAttribute("required", "true");
+    } else if (type === "JEONSE") {
+      jeonseWolsePrice.style.display = "block";
+      document.getElementById("deposit").setAttribute("required", "true");
+    } else if (type === "WOLSE") {
+      jeonseWolsePrice.style.display = "block";
+      monthlyRentSection.style.display = "block";
+      document.getElementById("deposit").setAttribute("required", "true");
+      document.getElementById("monthlyRent").setAttribute("required", "true");
+    }
+  }
+
+  // 판매 폼 초기 설정
+  setupSaleForm() {
+    // 오늘 날짜를 최소값으로 설정
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("availableFrom").setAttribute("min", today);
+    document.getElementById("availableFrom").value = today;
+
+    // 초기 거래 방식 설정
+    this.switchTransactionType("SALE");
+
+    // 중개인 선택 이벤트 리스너
+    const brokerSelect = document.getElementById("brokerSelect");
+    if (brokerSelect) {
+      brokerSelect.addEventListener("change", () => {
+        this.showBrokerPreview();
+      });
+    }
+
+    // 스크롤 영역 최적화
+    this.optimizeScrollArea();
+  }
+
+  // 스크롤 영역 최적화
+  optimizeScrollArea() {
+    const scrollArea = document.querySelector("#sale-registration-panel .custom-scrollbar");
+    if (scrollArea) {
+      // 스크롤 영역에 포커스가 있을 때 키보드 스크롤 활성화
+      scrollArea.setAttribute("tabindex", "0");
+
+      // 휠 스크롤 개선 (부드러운 스크롤링)
+      scrollArea.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        scrollArea.scrollBy({
+          top: e.deltaY,
+          behavior: "smooth"
+        });
+      });
+
+      // 폼 요소에 포커스가 갈 때 자동으로 해당 영역으로 스크롤
+      const formElements = scrollArea.querySelectorAll("input, select, textarea");
+      formElements.forEach(element => {
+        element.addEventListener("focus", () => {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        });
+      });
+    }
+  }
+
+  // 판매 폼 리셋
+  resetSaleForm() {
+    const form = document.getElementById("sale-registration-form");
+    if (form) {
+      form.reset();
+    }
+
+    // 체크박스 초기화
+    document.querySelectorAll(".option-checkbox").forEach(checkbox => {
+      checkbox.checked = false;
+    });
+
+    document.getElementById("isActive").checked = true;
+
+    // 중개인 미리보기 숨김
+    document.getElementById("broker-preview").classList.add("hidden");
+  }
+
+  // 중개인 목록 로드
+  async loadBrokerList() {
+    try {
+      // 먼저 /api/brokers/list 시도
+      let response = await fetch("/api/brokers/list", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${this.getToken()}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        // 첫 번째 시도 실패시 다른 엔드포인트 시도
+        console.log("Trying alternative endpoint: /api/users");
+        response = await fetch("/api/users", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${this.getToken()}`,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API 응답 데이터:", data);
+
+        // 응답이 배열인지 객체인지 확인
+        let users = Array.isArray(data) ? data : (data.content || data.data || []);
+
+        // 중개인 식별: agencyName이나 licenseNumber가 있는 사용자들을 중개인으로 간주
+        const brokers = users.filter(user =>
+          user.agencyName || // agencyName이 있으면 중개인
+          user.licenseNumber || // licenseNumber가 있으면 중개인
+          user.role === 'BROKER' ||
+          user.roleId === 'broker' ||
+          user.role_id === 'broker' ||
+          user.userRole === 'BROKER' ||
+          (user.username && user.username.includes('브로커')) // 사용자명에 '브로커'가 포함된 경우
+        );
+
+        console.log(`전체 사용자: ${users.length}, 중개인: ${brokers.length}`);
+        console.log('필터링된 중개인 목록:', brokers);
+        this.populateBrokerSelect(brokers);
+      } else {
+        const errorText = await response.text();
+        console.error("API 응답 오류:", response.status, errorText);
+        throw new Error(`중개인 목록을 불러올 수 없습니다. (${response.status})`);
+      }
+    } catch (error) {
+      console.error("중개인 목록 로드 오류:", error);
+      this.showError("중개인 목록을 불러오는 중 오류가 발생했습니다: " + error.message);
+    }
+  }
+
+  // 중개인 셀렉트 박스 채우기
+  populateBrokerSelect(brokers) {
+    const select = document.getElementById("brokerSelect");
+    if (!select) return;
+
+    // 기존 옵션 제거 (첫 번째 옵션 제외)
+    while (select.children.length > 1) {
+      select.removeChild(select.lastChild);
+    }
+
+    if (!brokers || brokers.length === 0) {
+      console.warn("중개인 목록이 비어있습니다.");
+      return;
+    }
+
+    // 중개인 옵션 추가
+    brokers.forEach(broker => {
+      const option = document.createElement("option");
+      // users 테이블 데이터 구조에 맞게 수정
+      option.value = broker.userId || broker.id;
+      option.textContent = `${broker.username || broker.name} - ${broker.licenseNumber || broker.phone || '연락처 미등록'}`;
+
+      // 중개인 정보를 데이터로 저장
+      const brokerData = {
+        userId: broker.userId || broker.id,
+        name: broker.username || broker.name,
+        company: broker.agencyName || broker.company || '개인 중개사',
+        licenseNumber: broker.licenseNumber || broker.phone || '미등록',
+        pendingDeals: broker.pendingDeals || 0,
+        totalDeals: broker.totalDeals || 0,
+        phone: broker.phone || '',
+        email: broker.email || ''
+      };
+
+      option.dataset.broker = JSON.stringify(brokerData);
+      select.appendChild(option);
+    });
+
+    console.log(`${brokers.length}개의 중개인 옵션이 추가되었습니다.`);
+  }
+
+  // 중개인 미리보기 표시
+  showBrokerPreview() {
+    const select = document.getElementById("brokerSelect");
+    const preview = document.getElementById("broker-preview");
+    const brokerInfo = document.getElementById("broker-info");
+
+    if (select.value && select.selectedIndex > 0) {
+      try {
+        const selectedOption = select.options[select.selectedIndex];
+        const broker = JSON.parse(selectedOption.dataset.broker);
+
+        brokerInfo.innerHTML = `
+          <div class="space-y-1">
+            <div><span class="font-medium">이름:</span> ${broker.name}</div>
+            <div><span class="font-medium">소속:</span> ${broker.company}</div>
+            <div><span class="font-medium">연락처:</span> ${broker.licenseNumber}</div>
+            ${broker.email ? `<div><span class="font-medium">이메일:</span> ${broker.email}</div>` : ''}
+            <div class="flex gap-4 mt-2">
+              <div>
+                <span class="text-gray-500">거래 중:</span>
+                <span class="font-semibold text-orange-600">${broker.pendingDeals}건</span>
+              </div>
+              <div>
+                <span class="text-gray-500">거래 완료:</span>
+                <span class="font-semibold text-green-600">${broker.totalDeals}건</span>
+              </div>
+            </div>
+          </div>
+        `;
+        preview.classList.remove("hidden");
+      } catch (error) {
+        console.error("중개인 정보 파싱 오류:", error);
+        preview.classList.add("hidden");
+      }
+    } else {
+      preview.classList.add("hidden");
+    }
+  }
+
+  // 옵션 비트 문자열 생성
+  getOptionsBitString() {
+    let bitString = "";
+    for (let i = 0; i < 10; i++) {
+      const checkbox = document.querySelector(`.option-checkbox[data-index="${i}"]`);
+      bitString += checkbox && checkbox.checked ? "1" : "0";
+    }
+    return bitString;
+  }
+
+  // 판매 요청 제출
+  async submitSaleRequest() {
+    const form = document.getElementById("sale-registration-form");
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const brokerSelect = document.getElementById("brokerSelect");
+    if (!brokerSelect.value) {
+      this.showError("중개인을 선택해주세요.");
+      return;
+    }
+
+    const formData = this.getSaleFormData();
+
+    try {
+      const response = await fetch(`/api/properties/${this.selectedPropertyId}/delegations`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${this.getToken()}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        this.showSuccess("판매 매물 등록 요청이 성공적으로 전송되었습니다.");
+        this.hideSaleRegistrationPanel();
+        await this.loadMyProperties();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "요청 전송에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("판매 요청 제출 오류:", error);
+      this.showError("요청 전송 중 오류가 발생했습니다: " + error.message);
+    }
+  }
+
+  // 폼 데이터 수집
+  getSaleFormData() {
+    const brokerUserId = parseInt(document.getElementById("brokerSelect").value);
+    const housetype = document.getElementById("housetype").value;
+    const floor = parseFloat(document.getElementById("floor").value);
+    const maintenanceFee = parseFloat(document.getElementById("maintenanceFee").value) || 0;
+    const negotiable = document.getElementById("negotiable").checked;
+    const availableFrom = document.getElementById("availableFrom").value;
+    const isActive = document.getElementById("isActive").checked;
+    const option = this.getOptionsBitString();
+
+    const offerData = {
+      housetype,
+      type: this.currentTransactionType,
+      floor,
+      option,
+      maintenanceFee,
+      negotiable,
+      availableFrom,
+      isActive
+    };
+
+    // 거래 방식별 가격 데이터 추가
+    if (this.currentTransactionType === "SALE") {
+      offerData.totalPrice = parseFloat(document.getElementById("totalPrice").value);
+      offerData.deposit = null;
+      offerData.monthlyRent = null;
+    } else if (this.currentTransactionType === "JEONSE") {
+      offerData.totalPrice = null;
+      offerData.deposit = parseFloat(document.getElementById("deposit").value);
+      offerData.monthlyRent = null;
+    } else if (this.currentTransactionType === "WOLSE") {
+      offerData.totalPrice = null;
+      offerData.deposit = parseFloat(document.getElementById("deposit").value);
+      offerData.monthlyRent = parseFloat(document.getElementById("monthlyRent").value);
+    }
+
+    return {
+      brokerUserId,
+      offer: offerData
+    };
+  }
+
+  // 토큰 가져오기
+  getToken() {
+    return localStorage.getItem("access_token") ||
+           sessionStorage.getItem("access_token") ||
+           localStorage.getItem("accessToken") ||
+           sessionStorage.getItem("accessToken");
+  }
+
   // 메시지 표시
   showSuccess(message) {
     this.showMessage(message, "success");
@@ -2767,10 +3306,18 @@ class PropertyManagement {
   }
 }
 
-// 전역 인스턴스 생성
-let propertyManagement;
+// 클래스를 전역에 노출
+window.PropertyManagement = PropertyManagement;
 
-// DOM 로드 완료 후 초기화
-document.addEventListener("DOMContentLoaded", () => {
-  propertyManagement = new PropertyManagement();
-});
+// 전역 인스턴스 생성
+if (!window.propertyManagement) {
+  // DOM 로드 완료 후 초기화
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!window.propertyManagement) {
+      const instance = new PropertyManagement();
+      window.propertyManagement = instance;
+    }
+  });
+}
+
+})(); // IIFE 닫기
