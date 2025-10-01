@@ -6,55 +6,6 @@
     <title>부동산 서비스</title>
   </head>
   <body>
-    <script>
-      // 로그인 상태 확인 후 적절한 페이지로 리다이렉트
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (accessToken) {
-        // 토큰이 있으면 사용자 정보를 확인하여 역할별 페이지로 이동
-        fetch("/api/users/me", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              // 토큰이 유효하지 않으면 로그인 페이지로
-              throw new Error("Invalid token");
-            }
-          })
-          .then((userData) => {
-            console.log("사용자 정보:", userData); // 디버깅용
-            // 역할별 페이지로 리다이렉트
-            switch (userData.role) {
-              case "regular":
-                window.location.href = "loginO.html";
-                break;
-              case "broker":
-                window.location.href = "intermediary.html";
-                break;
-              case "admin":
-                window.location.href = "admin.html";
-                break;
-              default:
-                window.location.href = "loginO.html";
-                break;
-            }
-          })
-          .catch((error) => {
-            // 토큰이 유효하지 않으면 제거하고 로그인 페이지로
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = "loginX.html";
-          });
-      } else {
-        // 토큰이 없으면 로그인 페이지로
-        window.location.href = "loginX.html";
-      }
-    </script>
+    <script src="/js/shared/auth/index.js"></script>
   </body>
 </html>
