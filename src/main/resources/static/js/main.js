@@ -1,6 +1,6 @@
 // /js/main.js
-import { initMap } from './map/initMap.js';
-import { initFavorites, loadFavorites } from './favorites.js';
+import { initMap } from './shared/map/initmap.js';
+import { initFavorites, loadFavorites } from './regular/main/favorites.js';
 
 const appState = {
   map: null,

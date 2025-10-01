@@ -1,5 +1,5 @@
-// /js/favorites.js
-import { api } from './core/api.js';
+// /js/regular/main/favorites.js
+import { api } from '../../shared/utils/api.js';
 
 const BOX_ID = 'favorite-list';
 let bound = false;

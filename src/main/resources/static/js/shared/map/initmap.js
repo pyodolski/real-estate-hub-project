@@ -1,8 +1,8 @@
-// src/main/resources/static/js/map/initMap.js
+// src/main/resources/static/js/shared/map/initmap.js
 import { debounce } from '../utils/debounce.js';
 import { renderMarkers, highlightMarker } from './markers.js';
-import { fetchPropertiesInBounds, fetchPropertyDetail } from '../api/propertiesApi.js';
-import { clearDetail } from '../ui/sidebar.js';
+import { fetchPropertiesInBounds, fetchPropertyDetail } from '../components/propertiesApi.js';
+import { renderMarkerPopup, closeMarkerPopup } from './marker-popup.js';
 
 export function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
@@ -43,7 +43,6 @@ export function initMap(app) {
 
       // 마커만 갱신
       renderMarkers(app, Array.isArray(list) ? list : [], onMarkerClick);
-      clearDetail();
     } catch (e) {
       console.error('목록 조회 실패:', e);
       if (String(e?.message).includes('Unauthorized')) {
@@ -60,7 +59,6 @@ export function initMap(app) {
   if (statusFilterEl) {
     statusFilterEl.addEventListener('change', () => {
       app.currentId = null;
-      clearDetail();
       onIdle();
     });
   }
@@ -68,18 +66,26 @@ export function initMap(app) {
   // 🔑 filter.js에서 보내는 커스텀 이벤트 수신 → 마커만 리프레시
   window.addEventListener('filters:changed', () => {
     app.currentId = null;
-    clearDetail();
     onIdle();
   });
 
   // 초기 1회 조회
   onIdle();
 
-  // 마커 클릭 시 상세
+  // 마커 클릭 시 작은 팝업 표시 (토글)
   async function onMarkerClick(id) {
+    // 같은 마커를 다시 클릭하면 팝업 닫기
+    if (app.currentId === id) {
+      closeMarkerPopup(); // InfoWindow 닫기
+      app.currentId = null;
+      highlightMarker(app, null); // 하이라이트 해제
+      return;
+    }
+
     app.currentId = id;
     const d = await fetchPropertyDetail(id);
-    renderDetail(d);
+    const marker = app.markers.get(id); // 클릭된 마커 객체 가져오기
+    renderMarkerPopup(d, app.map, marker); // InfoWindow로 마커 위에 표시
     highlightMarker(app, id);
   }
 }
