@@ -272,10 +272,20 @@
       </div>
     </div>
 
-    <!-- 관리자 권한 체크 -->
-    <script src="/js/admin/main/admin.js"></script>
+    <!-- JavaScript (ES6 Module) -->
+    <script type="module">
+      import { AdminPropertyManagement } from '/js/admin/property/admin-property-management.js';
 
-    <!-- JavaScript -->
-    <script src="/js/admin/property/admin-property-management.js"></script>
+      // 전역 인스턴스 생성
+      let adminPropertyManagement;
+
+      // DOM 로드 완료 후 초기화
+      document.addEventListener('DOMContentLoaded', () => {
+        adminPropertyManagement = new AdminPropertyManagement();
+
+        // 전역에서 접근 가능하도록 설정 (onclick 이벤트용)
+        window.adminPropertyManagement = adminPropertyManagement;
+      });
+    </script>
   </body>
 </html>

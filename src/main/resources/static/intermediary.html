@@ -6,7 +6,8 @@
     <title>중개인 관리 페이지</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- JavaScript 파일 -->
+    <!-- JavaScript 파일 (ES6 Module) -->
+    <script type="module" src="/js/broker/main/intermediary-main.js"></script>
     <script src="/js/broker/delegation/broker-delegation-management.js" defer></script>
     <!-- Google Fonts (Inter & Noto Sans KR) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -307,7 +308,7 @@
       <!-- =================================================================== -->
       <aside
         id="right-side-panel"
-        class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-20 transform transition-transform duration-300 ease-in-out"
+        class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-40 transition-transform duration-300 ease-in-out"
       >
         <div class="flex flex-col items-center space-y-2">
           <!-- 상단 아이콘 버튼들 -->
@@ -388,6 +389,7 @@
           </button>
         </div>
         <button
+          id="logout-button"
           class="w-full aspect-square bg-[#FF3737] hover:brightness-95 transition-all rounded-2xl p-2 flex items-center justify-center"
         >
           <svg
@@ -539,7 +541,5 @@
         </div>
       </div>
     </aside>
-
-    <script src="/js/broker/main/intermediary.js"></script>
   </body>
 </html>
