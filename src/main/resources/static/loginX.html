@@ -20,13 +20,6 @@
         font-family: "Inter", "Noto Sans KR", sans-serif;
       }
     </style>
-    <script>
-      function setToken(raw){
-        const bearer = raw?.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
-        localStorage.setItem('auth_token', bearer);
-        window.TOKEN = bearer;
-      }
-    </script>
   </head>
   <body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
     <div class="w-full max-w-md">
@@ -136,12 +129,17 @@
       </div>
     </div>
 
-    <script>
+    <script type="module">
+      function setToken(raw) {
+        const bearer = raw?.startsWith("Bearer ") ? raw : `Bearer ${raw}`;
+        localStorage.setItem("auth_token", bearer);
+        window.TOKEN = bearer;
+      }
+
       // 페이지 로드 시 자동 로그아웃 (토큰 제거)
       window.addEventListener("DOMContentLoaded", function () {
-
-        localStorage.removeItem("auth_token");     // ★ 추가
-        localStorage.removeItem("refresh_token");  // ★ 추가
+        localStorage.removeItem("auth_token"); // ★ 추가
+        localStorage.removeItem("refresh_token"); // ★ 추가
         // localStorage에서 모든 인증 토큰 제거
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");

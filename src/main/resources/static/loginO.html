@@ -2,11 +2,6 @@
 <html lang="ko">
   <head>
     <script type="module" src="./js/main.js"></script>
-    <script>
-      // 초기값 false로 두고 시작
-      var isProfilePanelOpen = false;
-      var isChatPanelOpen = false; // 이거도 같은 에러 났었죠
-    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>부동산 매물 찾기</title>
@@ -21,11 +16,7 @@
     />
 
     <link rel="stylesheet" href="./css/map.css" />
-    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g"></script>
-    <script>
-      // loginO.html 상단(해당 스크립트보다 먼저) 또는 공용 JS에
-      window.isChatPanelOpen = window.isChatPanelOpen ?? false;
-    </script>
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g&submodules=coord"></script>
     <style>
       /* Custom Styles */
       body {
@@ -45,6 +36,15 @@
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: #9ca3af;
+      }
+      /* 부드러운 스크롤 */
+      .custom-scrollbar {
+        scroll-behavior: smooth;
+      }
+      /* 판매 등록 패널 전용 스크롤 개선 */
+      #sale-registration-panel .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db #f1f1f1;
       }
       #right-side-panel {
         z-index: 30;
@@ -100,10 +100,14 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input
+              id="global-search-input"
               type="text"
               placeholder="동, 지하철역, 대학교, 매물번호"
               class="w-56 focus:outline-none bg-transparent text-sm"
             />
+            <div id="global-search-suggest"
+                 class="absolute top-full left-0 mt-2 w-[360px] max-h-[60vh] overflow-auto bg-white rounded-xl shadow-lg p-2 hidden z-50">
+            </div>
           </div>
 
           <!-- Filter Buttons -->
@@ -1813,11 +1817,325 @@
           </button>
         </div>
 
+        <!-- 필터 탭 -->
+        <div class="mb-4 flex-shrink-0">
+          <div class="flex border-b border-gray-200">
+            <button
+              id="property-all-tab"
+              class="flex-1 px-3 py-2 text-xs border-b-2 border-blue-500 text-blue-600 font-medium text-center"
+              onclick="propertyManagement.filterProperties('ALL', 'ALL')"
+            >
+              전체
+            </button>
+            <button
+              id="property-pending-tab"
+              class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
+              onclick="propertyManagement.filterProperties('PENDING', 'ALL')"
+            >
+              심사 중
+            </button>
+            <button
+              id="property-approved-tab"
+              class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
+              onclick="propertyManagement.filterProperties('APPROVED', 'ALL')"
+            >
+              승인됨
+            </button>
+            <button
+              id="property-rejected-tab"
+              class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
+              onclick="propertyManagement.filterProperties('REJECTED', 'ALL')"
+            >
+              거절됨
+            </button>
+          </div>
+          <div class="flex border-b border-gray-100 mt-1">
+            <button
+              id="type-all-tab"
+              class="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 text-center"
+              onclick="propertyManagement.filterProperties(propertyManagement.currentStatusFilter, 'ALL')"
+            >
+              전체 유형
+            </button>
+            <button
+              id="type-simple-tab"
+              class="flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center"
+              onclick="propertyManagement.filterProperties(propertyManagement.currentStatusFilter, 'SIMPLE')"
+            >
+              단순 등록
+            </button>
+            <button
+              id="type-sale-tab"
+              class="flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center"
+              onclick="propertyManagement.filterProperties(propertyManagement.currentStatusFilter, 'SALE')"
+            >
+              판매 등록
+            </button>
+          </div>
+        </div>
+
         <!-- 스크롤 가능한 내 매물 목록 영역 -->
         <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
           <div id="my-property-list" class="space-y-4">
             <!-- JavaScript로 내 매물 목록이 여기에 추가됩니다. -->
           </div>
+        </div>
+      </aside>
+
+      <!-- =================================================================== -->
+      <!-- 판매 매물 등록 패널                                                   -->
+      <!-- =================================================================== -->
+      <aside
+        id="sale-registration-panel"
+        class="fixed top-0 w-[500px] bg-white p-6 flex flex-col h-screen shadow-lg z-30 transform translate-x-full transition-transform duration-300 ease-in-out overflow-hidden"
+        style="right: 75px; display: none;"
+      >
+        <!-- 판매 매물 등록 패널 헤더 -->
+        <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+          <h2 class="text-xl font-bold text-gray-800">판매 매물 등록</h2>
+          <button
+            onclick="propertyManagement.hideSaleRegistrationPanel()"
+            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            title="판매 매물 등록 패널 닫기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 거래 방식 선택 탭 -->
+        <div class="mb-6 flex-shrink-0">
+          <div class="flex border-b border-gray-200">
+            <button
+              id="sale-tab"
+              class="flex-1 px-4 py-2 text-center border-b-2 border-blue-500 text-blue-600 font-medium"
+              onclick="propertyManagement.switchTransactionType('SALE')"
+            >
+              매매
+            </button>
+            <button
+              id="jeonse-tab"
+              class="flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+              onclick="propertyManagement.switchTransactionType('JEONSE')"
+            >
+              전세
+            </button>
+            <button
+              id="wolse-tab"
+              class="flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+              onclick="propertyManagement.switchTransactionType('WOLSE')"
+            >
+              월세
+            </button>
+          </div>
+        </div>
+
+        <!-- 스크롤 가능한 폼 영역 -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2 max-h-[calc(100vh-200px)]">
+          <form id="sale-registration-form" class="space-y-4 pb-4">
+            <!-- 주거형태 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">주거형태</label>
+              <select
+                id="housetype"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="APART">아파트</option>
+                <option value="BILLA">빌라</option>
+                <option value="ONE">원룸</option>
+              </select>
+            </div>
+
+            <!-- 층수 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">층수</label>
+              <input
+                type="number"
+                id="floor"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                min="1"
+                step="1"
+                required
+              />
+            </div>
+
+            <!-- 가격 입력 (거래 방식별 동적) -->
+            <div id="price-section">
+              <!-- 매매 -->
+              <div id="sale-price" class="price-input">
+                <label class="block text-sm font-medium text-gray-700 mb-2">총 가격 (만원)</label>
+                <input
+                  type="number"
+                  id="totalPrice"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="1"
+                  step="1"
+                />
+              </div>
+
+              <!-- 전세/월세 -->
+              <div id="jeonse-wolse-price" class="price-input" style="display: none;">
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">보증금 (만원)</label>
+                  <input
+                    type="number"
+                    id="deposit"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+
+                <div id="monthly-rent-section" style="display: none;">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">월세 (만원)</label>
+                  <input
+                    type="number"
+                    id="monthlyRent"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 관리비 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">관리비 (만원)</label>
+              <input
+                type="number"
+                id="maintenanceFee"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                min="0"
+                step="0.1"
+                value="0"
+              />
+            </div>
+
+            <!-- 옵션 선택 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">옵션</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="0" />
+                  <span class="text-sm">에어컨</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="1" />
+                  <span class="text-sm">냉장고</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="2" />
+                  <span class="text-sm">세탁기</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="3" />
+                  <span class="text-sm">TV</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="4" />
+                  <span class="text-sm">인터넷</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="5" />
+                  <span class="text-sm">침대</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="6" />
+                  <span class="text-sm">책상</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="7" />
+                  <span class="text-sm">옷장</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="8" />
+                  <span class="text-sm">신발장</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" class="option-checkbox mr-2" data-index="9" />
+                  <span class="text-sm">전자레인지</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 입주 가능일 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">입주 가능일</label>
+              <input
+                type="date"
+                id="availableFrom"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <!-- 체크박스 옵션들 -->
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" id="negotiable" class="mr-2" />
+                <span class="text-sm">협상 가능</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="isActive" class="mr-2" checked />
+                <span class="text-sm">즉시 활성화</span>
+              </label>
+            </div>
+
+            <!-- 중개인 선택 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">중개인 선택</label>
+              <select
+                id="brokerSelect"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">중개인을 선택하세요</option>
+                <!-- JavaScript로 중개인 목록이 여기에 추가됩니다 -->
+              </select>
+            </div>
+
+            <!-- 선택된 중개인 정보 미리보기 -->
+            <div id="broker-preview" class="hidden">
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <h4 class="font-medium text-gray-800 mb-2">선택된 중개인</h4>
+                <div id="broker-info" class="text-sm text-gray-600">
+                  <!-- JavaScript로 중개인 정보가 여기에 표시됩니다 -->
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- 하단 버튼 영역 -->
+        <div class="flex gap-3 pt-4 border-t flex-shrink-0">
+          <button
+            type="button"
+            onclick="propertyManagement.hideSaleRegistrationPanel()"
+            class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            onclick="propertyManagement.submitSaleRequest()"
+            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            등록 요청
+          </button>
         </div>
       </aside>
 
@@ -2108,13 +2426,15 @@
         </svg>
       </button>
     </div>
-    <script src="js/data.js"></script>
-    <script src="js/ui-components.js"></script>
-    <script src="js/panel-manager.js"></script>
-    <script src="js/filter.js"></script>
-    <script src="js/property-management.js"></script>
-    <script src="js/broker-management.js"></script>
-    <script src="js/property-detail-panel.js"></script>
-    <script src="js/app-init.js"></script>
+    <!-- 통합 스크립트 (기존 방식 유지) -->
+    <script src="js/regular/main/data.js"></script>
+    <script src="js/regular/main/ui-components.js"></script>
+    <script src="js/regular/main/panel-manager.js"></script>
+    <script src="js/regular/main/filter.js"></script>
+    <script src="js/regular/main/property-management.js"></script>
+    <script src="js/broker/management/broker-management.js"></script>
+    <script src="js/regular/main/property-detail-panel.js"></script>
+    <script src="js/regular/main/app-init.js"></script>
+    <script src="js/regular/main/search.js"></script>
   </body>
 </html>

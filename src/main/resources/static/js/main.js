@@ -1,6 +1,6 @@
 // /js/main.js
-import { initMap } from './map/initMap.js';
-import { initFavorites, loadFavorites } from './favorites.js';
+import { initMap } from './shared/map/initmap.js';
+import { initFavorites, loadFavorites } from './regular/main/favorites.js';
 
 
 const appState = {
@@ -19,7 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ?.addEventListener('click', () => loadFavorites());
 
   // 지도 초기화 (DOM 준비된 뒤)
-  appState.map = initMap(appState);
+  initMap(appState);
 });
 
 // 다른 곳에서 쓰게 하려면(선택):

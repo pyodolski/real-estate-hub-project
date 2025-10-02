@@ -11,14 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatListContainer = document.getElementById("chat-list");
     const profilePanel = document.getElementById("profile-panel");
 
-    // --- 내 매물 관리 스크립트 동적 로드 ---
-    // 'propertyManagement'와 같은 클래스나 객체를 포함할 수 있는 스크립트
-    const propertyScript = document.createElement("script");
-    propertyScript.src = "./js/property-management.js"; // 이 파일이 존재한다고 가정
-    propertyScript.onload = function () {
-        console.log("PropertyManagement script loaded");
-    };
-    document.head.appendChild(propertyScript);
+    // --- 내 매물 관리 스크립트는 이미 loginO.html에서 로드됨 ---
+    // property-management.js는 loginO.html의 <script src="js/regular/main/property-management.js"></script>에서 이미 로드됨
 
     // --- 데이터 렌더링 함수 ---
 

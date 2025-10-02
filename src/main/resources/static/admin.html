@@ -272,46 +272,20 @@
       </div>
     </div>
 
-    <!-- 관리자 권한 체크 -->
-    <script>
-      // 관리자 권한 체크
-      const accessToken = localStorage.getItem("accessToken");
+    <!-- JavaScript (ES6 Module) -->
+    <script type="module">
+      import { AdminPropertyManagement } from '/js/admin/property/admin-property-management.js';
 
-      if (!accessToken) {
-        alert("로그인이 필요합니다.");
-        window.location.href = "/loginX.html";
-      } else {
-        // 사용자 정보 확인
-        fetch("/api/users/me", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("사용자 정보를 불러올 수 없습니다.");
-            }
-            return response.json();
-          })
-          .then((userData) => {
-            if (userData.role !== "admin") {
-              alert("관리자 권한이 필요합니다.");
-              window.location.href = "/";
-            }
-          })
-          .catch((error) => {
-            console.error("권한 체크 실패:", error);
-            alert("로그인이 필요합니다.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = "/loginX.html";
-          });
-      }
+      // 전역 인스턴스 생성
+      let adminPropertyManagement;
+
+      // DOM 로드 완료 후 초기화
+      document.addEventListener('DOMContentLoaded', () => {
+        adminPropertyManagement = new AdminPropertyManagement();
+
+        // 전역에서 접근 가능하도록 설정 (onclick 이벤트용)
+        window.adminPropertyManagement = adminPropertyManagement;
+      });
     </script>
-
-    <!-- JavaScript -->
-    <script src="/js/admin-property-management.js"></script>
   </body>
 </html>
