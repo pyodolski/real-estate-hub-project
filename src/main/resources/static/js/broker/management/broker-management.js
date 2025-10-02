@@ -102,9 +102,15 @@ class BrokerManagement {
               : ""
           }
           
-          <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
-            <span>성사된 거래: ${broker.totalDeals}건</span>
-            <span>진행중: ${broker.pendingDeals}건</span>
+          <div class="flex gap-4 text-xs mt-2 mb-3">
+            <div>
+              <span class="text-gray-500">거래 중:</span>
+              <span class="font-semibold text-orange-600">${broker.pendingDeals || 0}건</span>
+            </div>
+            <div>
+              <span class="text-gray-500">거래 완료:</span>
+              <span class="font-semibold text-green-600">${broker.totalDeals || 0}건</span>
+            </div>
           </div>
           
 

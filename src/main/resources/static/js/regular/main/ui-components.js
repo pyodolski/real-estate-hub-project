@@ -120,7 +120,7 @@ function createCompareCard(item) {
 
 // --- 메인 매물 카드 생성 함수 ---
 function createPropertyCard(property) {
-    const tagsHTML = property.tags
+    const tagsHTML = (property.tags || [])
         .map((tag) => {
             let colorClass = "bg-blue-100 text-blue-800";
             if (tag === "직거래") colorClass = "bg-green-100 text-green-800";

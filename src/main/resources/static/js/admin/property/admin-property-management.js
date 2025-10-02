@@ -1,6 +1,8 @@
-// 관리자용 매물 등록 요청 관리 JavaScript 모듈
+/**
+ * AdminPropertyManagement - 관리자용 매물 등록 요청 관리 모듈 (ES6 Module)
+ */
 
-class AdminPropertyManagement {
+export class AdminPropertyManagement {
   constructor() {
     this.apiBaseUrl = "/api/ownership";
     this.accessToken = localStorage.getItem("accessToken");
@@ -721,11 +723,3 @@ class AdminPropertyManagement {
     this.renderClaimsList();
   }
 }
-
-// 전역 인스턴스 생성
-let adminPropertyManagement;
-
-// DOM 로드 완료 후 초기화
-document.addEventListener("DOMContentLoaded", () => {
-  adminPropertyManagement = new AdminPropertyManagement();
-});
