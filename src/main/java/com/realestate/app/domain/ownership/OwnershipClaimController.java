@@ -229,6 +229,15 @@ public class OwnershipClaimController {
         return claimService.rejectClaim(claimId, admin.getId(), rejectionReason);
     }
 
+    // 매물 신청 삭제 (취소)
+    @DeleteMapping("/claims/{claimId}")
+    public ResponseEntity<Void> deleteClaim(
+            @PathVariable Long claimId,
+            @AuthenticationPrincipal AuthUser currentUser) {
+        claimService.deleteClaim(claimId, currentUser.getId());
+        return ResponseEntity.ok().build();
+    }
+
     // 문서 타입 목록 조회
     @GetMapping("/document-types")
     public List<Map<String, String>> getDocumentTypes() {

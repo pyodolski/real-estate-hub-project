@@ -465,7 +465,7 @@ const RightSidePanels = {
       <!-- =================================================================== -->
       <aside
         id="my-property-panel"
-        class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+        class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out overflow-hidden"
         style="right: 75px"
       >
         <!-- 내 매물 관리 패널 헤더 -->

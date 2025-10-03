@@ -11,10 +11,10 @@ const SaleRegistrationPanel = {
       <!-- =================================================================== -->
       <!-- 판매 매물 등록 패널                                                   -->
       <!-- =================================================================== -->
-      <aside
+      <div
         id="sale-registration-panel"
-        class="fixed top-0 w-[500px] bg-white p-6 flex flex-col h-screen shadow-lg z-30 transform translate-x-full transition-transform duration-300 ease-in-out overflow-hidden"
-        style="right: 75px; display: none;"
+        class="absolute inset-0 bg-white flex flex-col h-full z-10 transform translate-x-full transition-transform duration-300 ease-in-out overflow-hidden p-6"
+        style="display: none;"
       >
         <!-- 판매 매물 등록 패널 헤더 -->
         <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
@@ -69,7 +69,7 @@ const SaleRegistrationPanel = {
         </div>
 
         <!-- 스크롤 가능한 폼 영역 -->
-        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2 max-h-[calc(100vh-200px)]">
+        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2" style="max-height: calc(100% - 200px);">
           <form id="sale-registration-form" class="space-y-4 pb-4">
             <!-- 주거형태 -->
             <div>
@@ -247,7 +247,7 @@ const SaleRegistrationPanel = {
         </div>
 
         <!-- 하단 버튼 영역 -->
-        <div class="flex gap-3 pt-4 border-t flex-shrink-0">
+        <div class="flex gap-3 pt-4 mt-4 border-t flex-shrink-0">
           <button
             type="button"
             onclick="propertyManagement.hideSaleRegistrationPanel()"
@@ -263,7 +263,7 @@ const SaleRegistrationPanel = {
             등록 요청
           </button>
         </div>
-      </aside>
+      </div>
     `;
 
     return panelHTML;
@@ -276,21 +276,147 @@ const SaleRegistrationPanel = {
     const panelHTML = this.render();
 
     // 기존 패널이 있으면 제거
-    const existingPanel = document.getElementById('sale-registration-panel');
+    const existingPanel = document.getElementById("sale-registration-panel");
     if (existingPanel) {
       existingPanel.remove();
     }
 
-    // body에 패널 추가
-    document.body.insertAdjacentHTML('beforeend', panelHTML);
-  }
+    // 내 매물 관리 패널 내부에 추가
+    const myPropertyPanel = document.getElementById("my-property-panel");
+    if (myPropertyPanel) {
+      myPropertyPanel.insertAdjacentHTML("beforeend", panelHTML);
+      console.log("[SaleRegistrationPanel] Panel initialized successfully");
+      return true;
+    } else {
+      console.warn(
+        "[SaleRegistrationPanel] my-property-panel을 찾을 수 없습니다."
+      );
+      return false;
+    }
+  },
+
+  /**
+   * DOM 요소 존재 확인 및 대기
+   * @param {string} elementId - 확인할 요소의 ID
+   * @param {number} timeout - 최대 대기 시간 (밀리초)
+   * @param {number} interval - 확인 간격 (밀리초)
+   * @returns {Promise<HTMLElement|null>} 요소를 찾으면 반환, 타임아웃 시 null
+   */
+  waitForElement(elementId, timeout = 5000, interval = 100) {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+
+      const checkElement = () => {
+        const element = document.getElementById(elementId);
+
+        if (element) {
+          console.log(`[SaleRegistrationPanel] Element found: ${elementId}`);
+          resolve(element);
+          return;
+        }
+
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime >= timeout) {
+          console.warn(
+            `[SaleRegistrationPanel] Timeout waiting for element: ${elementId}`
+          );
+          resolve(null);
+          return;
+        }
+
+        setTimeout(checkElement, interval);
+      };
+
+      checkElement();
+    });
+  },
+
+  /**
+   * 재시도 메커니즘을 포함한 초기화
+   * @param {number} maxRetries - 최대 재시도 횟수
+   * @param {number} retryDelay - 재시도 간격 (밀리초)
+   * @returns {Promise<boolean>} 초기화 성공 여부
+   */
+  async initWithRetry(maxRetries = 3, retryDelay = 1000) {
+    console.log(
+      "[SaleRegistrationPanel] Starting initialization with retry mechanism"
+    );
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(
+        `[SaleRegistrationPanel] Initialization attempt ${attempt}/${maxRetries}`
+      );
+
+      // my-property-panel 요소가 생성될 때까지 대기
+      const myPropertyPanel = await this.waitForElement(
+        "my-property-panel",
+        2000
+      );
+
+      if (myPropertyPanel) {
+        // 요소를 찾았으면 초기화 시도
+        const success = this.init();
+        if (success) {
+          console.log("[SaleRegistrationPanel] Initialization successful");
+          return true;
+        }
+      }
+
+      // 마지막 시도가 아니면 대기 후 재시도
+      if (attempt < maxRetries) {
+        console.log(`[SaleRegistrationPanel] Retrying in ${retryDelay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+    }
+
+    console.error(
+      "[SaleRegistrationPanel] Initialization failed after all retries"
+    );
+    return false;
+  },
+
+  /**
+   * 강제 초기화 (디버깅 및 수동 호출용)
+   * my-property-panel이 없어도 경고만 표시하고 계속 진행
+   */
+  forceInit() {
+    console.log("[SaleRegistrationPanel] Force initialization");
+
+    const panelHTML = this.render();
+
+    // 기존 패널이 있으면 제거
+    const existingPanel = document.getElementById("sale-registration-panel");
+    if (existingPanel) {
+      existingPanel.remove();
+    }
+
+    // 내 매물 관리 패널 내부에 추가 시도
+    const myPropertyPanel = document.getElementById("my-property-panel");
+    if (myPropertyPanel) {
+      myPropertyPanel.insertAdjacentHTML("beforeend", panelHTML);
+      console.log("[SaleRegistrationPanel] Force init successful");
+      return true;
+    } else {
+      console.error(
+        "[SaleRegistrationPanel] Cannot force init - my-property-panel not found"
+      );
+      console.error(
+        "[SaleRegistrationPanel] Please ensure the my-property-panel element exists in the DOM"
+      );
+      return false;
+    }
+  },
 };
 
-// DOM 로드 완료 후 패널 초기화
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    SaleRegistrationPanel.init();
+// DOM 로드 완료 후 패널 초기화 (재시도 메커니즘 포함)
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    SaleRegistrationPanel.initWithRetry();
   });
 } else {
-  SaleRegistrationPanel.init();
+  // 이미 DOM이 로드된 경우
+  SaleRegistrationPanel.initWithRetry();
 }
+
+// 전역 접근을 위해 window 객체에 등록
+window.SaleRegistrationPanel = SaleRegistrationPanel;

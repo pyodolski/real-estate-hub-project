@@ -37,17 +37,33 @@ body {
 
 /* Z-index 설정 */
 #right-side-panel {
-  z-index: 30;
+  z-index: 50;
 }
 
 #notification-panel {
-  z-index: 20;
+  z-index: 40;
 }
 
 #favorite-panel {
-  z-index: 20;
+  z-index: 40;
 }
 
 #compare-panel {
-  z-index: 20;
+  z-index: 40;
+}
+
+#my-property-panel {
+  z-index: 40;
+}
+
+#chat-panel {
+  z-index: 40;
+}
+
+#profile-panel {
+  z-index: 40;
+}
+
+#broker-list-panel {
+  z-index: 40;
 }
