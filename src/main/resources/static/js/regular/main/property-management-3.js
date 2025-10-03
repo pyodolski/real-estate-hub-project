@@ -17,6 +17,8 @@
       currentTransactionType: "SALE",
       isVisible: false,
       brokerList: [],
+      isEditMode: false,
+      editingOfferId: null,
     };
   }
 
@@ -218,9 +220,25 @@
         // 상태 초기화
         PropertyManagement.saleRegistrationState.currentClaimId = null;
         PropertyManagement.saleRegistrationState.isVisible = false;
+        PropertyManagement.saleRegistrationState.isEditMode = false;
+        PropertyManagement.saleRegistrationState.editingOfferId = null;
 
         // 폼 초기화
         this.resetSaleForm();
+
+        // 중개인 선택 다시 활성화
+        const brokerSelect = document.getElementById("brokerSelect");
+        if (brokerSelect) {
+          brokerSelect.disabled = false;
+        }
+
+        // 제출 버튼 텍스트 복원
+        const submitButton = document.querySelector(
+          "#sale-registration-form button[type='submit']"
+        );
+        if (submitButton) {
+          submitButton.textContent = "등록 요청";
+        }
       }, 300); // CSS transition-duration과 일치
 
       console.log(
@@ -271,14 +289,27 @@
   };
 
   // 판매 요청 제출 메서드
-  PropertyManagement.prototype.submitSaleRequest = function () {
+  PropertyManagement.prototype.submitSaleRequest = async function () {
     console.log("[PropertyManagement] Submitting sale request");
 
     try {
-      const claimId = PropertyManagement.saleRegistrationState.currentClaimId;
-      if (!claimId) {
-        this.showError("매물 정보가 없습니다.");
+      // 수정 모드인지 확인
+      const isEditMode =
+        PropertyManagement.saleRegistrationState.isEditMode || false;
+      const editingOfferId =
+        PropertyManagement.saleRegistrationState.editingOfferId;
+
+      if (isEditMode && !editingOfferId) {
+        this.showError("수정할 매물 정보가 없습니다.");
         return false;
+      }
+
+      if (!isEditMode) {
+        const claimId = PropertyManagement.saleRegistrationState.currentClaimId;
+        if (!claimId) {
+          this.showError("매물 정보가 없습니다.");
+          return false;
+        }
       }
 
       // 폼 데이터 수집 및 검증
@@ -287,8 +318,13 @@
         return false; // 오류는 collectSaleFormData에서 처리
       }
 
-      // 서버에 판매 등록 요청
-      this.sendSaleRegistrationRequest(claimId, formData);
+      // 수정 모드면 업데이트, 아니면 신규 등록
+      if (isEditMode) {
+        await this.updateSaleOffer(editingOfferId, formData);
+      } else {
+        const claimId = PropertyManagement.saleRegistrationState.currentClaimId;
+        await this.sendSaleRegistrationRequest(claimId, formData);
+      }
     } catch (error) {
       console.error(
         "[PropertyManagement] Error submitting sale request:",
@@ -539,6 +575,69 @@
     }
   };
 
+  // 판매 매물 업데이트 메서드
+  PropertyManagement.prototype.updateSaleOffer = async function (
+    offerId,
+    formData
+  ) {
+    console.log("[PropertyManagement] Updating sale offer", {
+      offerId,
+      formData,
+    });
+
+    try {
+      // 업데이트 요청 데이터 구성
+      const updateRequest = {
+        housetype: formData.housetype,
+        type: formData.transactionType,
+        floor: formData.floor,
+        oftion: this.convertOptionsToString(formData.options),
+        totalPrice: formData.prices.totalPrice || null,
+        deposit: formData.prices.deposit || null,
+        monthlyRent: formData.prices.monthlyRent || null,
+        maintenanceFee: formData.maintenanceFee,
+        negotiable: formData.negotiable,
+        availableFrom: formData.availableFrom,
+        isActive: formData.isActive,
+      };
+
+      const response = await fetch(`/api/offers/${offerId}`, {
+        method: "PUT",
+        headers: {
+          ...AuthUtils.getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateRequest),
+      });
+
+      if (response.ok) {
+        const updatedOffer = await response.json();
+        console.log(
+          "[PropertyManagement] Offer updated successfully:",
+          updatedOffer
+        );
+
+        this.showSuccess("판매 매물이 수정되었습니다.");
+        this.hideSaleRegistrationPanel();
+
+        // 판매 매물 목록 새로고침
+        await this.loadMySalesProperties();
+      } else if (response.status === 401) {
+        this.handleAuthError();
+      } else {
+        const errorText = await response.text();
+        console.error(
+          "[PropertyManagement] Failed to update offer:",
+          errorText
+        );
+        throw new Error("판매 매물 수정에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("[PropertyManagement] Error updating offer:", error);
+      this.showError(`판매 매물 수정에 실패했습니다: ${error.message}`);
+    }
+  };
+
   // 판매 등록 요청 전송 메서드
   PropertyManagement.prototype.sendSaleRegistrationRequest = function (
     claimId,
@@ -553,6 +652,12 @@
     // 임시 성공 처리
     this.showSuccess("판매 등록 요청이 완료되었습니다.");
     this.hideSaleRegistrationPanel();
+  };
+
+  // 옵션 배열을 문자열로 변환 (bit string)
+  PropertyManagement.prototype.convertOptionsToString = function (options) {
+    if (!Array.isArray(options)) return "0000000000";
+    return options.map((opt) => (opt ? "1" : "0")).join("");
   };
 
   // DOM 요소 존재 확인 유틸리티 메서드

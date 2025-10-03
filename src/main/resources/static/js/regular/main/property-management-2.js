@@ -277,5 +277,104 @@
     console.log("[PropertyManagement] Modal state reset complete");
   };
 
+  // 탭 전환 메서드
+  PropertyManagement.prototype.switchTab = async function (tabName) {
+    console.log(`[PropertyManagement] Switching to tab: ${tabName}`);
+
+    try {
+      // 유효한 탭 이름인지 확인
+      const validTabs = ["ownership", "sales"];
+      if (!validTabs.includes(tabName)) {
+        console.error("[PropertyManagement] Invalid tab name:", tabName);
+        return false;
+      }
+
+      // 현재 탭 업데이트
+      this.currentTab = tabName;
+
+      // 탭 버튼 스타일 업데이트
+      this.updateTabStyles(tabName);
+
+      // 콘텐츠 표시/숨김
+      this.updateTabContent(tabName);
+
+      // 탭에 따라 데이터 로드
+      if (tabName === "sales") {
+        if (this.mySalesProperties.length === 0) {
+          // 판매 매물 데이터가 없으면 로드
+          console.log("[PropertyManagement] Loading sales properties");
+          await this.loadMySalesProperties();
+        } else {
+          // 이미 데이터가 있으면 필터 탭 스타일만 업데이트
+          this.updateSalesFilterTabs();
+        }
+      }
+
+      console.log("[PropertyManagement] Tab switched successfully");
+      return true;
+    } catch (error) {
+      console.error("[PropertyManagement] Error switching tab:", error);
+      this.showError("탭 전환 중 오류가 발생했습니다.");
+      return false;
+    }
+  };
+
+  // 탭 스타일 업데이트 메서드
+  PropertyManagement.prototype.updateTabStyles = function (activeTab) {
+    try {
+      const ownershipTab = document.getElementById("ownership-tab");
+      const salesTab = document.getElementById("sales-tab");
+
+      if (!ownershipTab || !salesTab) {
+        console.warn("[PropertyManagement] Tab buttons not found");
+        return;
+      }
+
+      // 기본 스타일 (비활성)
+      const inactiveClass =
+        "flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700";
+      // 활성 스타일
+      const activeClass =
+        "flex-1 px-4 py-2 text-center border-b-2 border-blue-500 text-blue-600 font-medium";
+
+      if (activeTab === "ownership") {
+        ownershipTab.className = activeClass;
+        salesTab.className = inactiveClass;
+      } else {
+        ownershipTab.className = inactiveClass;
+        salesTab.className = activeClass;
+      }
+
+      console.log("[PropertyManagement] Tab styles updated");
+    } catch (error) {
+      console.error("[PropertyManagement] Error updating tab styles:", error);
+    }
+  };
+
+  // 탭 콘텐츠 업데이트 메서드
+  PropertyManagement.prototype.updateTabContent = function (activeTab) {
+    try {
+      const ownershipContent = document.getElementById("ownership-content");
+      const salesContent = document.getElementById("sales-content");
+
+      if (!ownershipContent || !salesContent) {
+        console.warn("[PropertyManagement] Tab content containers not found");
+        return;
+      }
+
+      if (activeTab === "ownership") {
+        ownershipContent.style.display = "block";
+        salesContent.style.display = "none";
+      } else {
+        ownershipContent.style.display = "none";
+        salesContent.style.display = "block";
+      }
+
+      console.log("[PropertyManagement] Tab content updated");
+    } catch (error) {
+      console.error("[PropertyManagement] Error updating tab content:", error);
+    }
+  };
+
   console.log("[PropertyManagement Part 2] Modal management methods loaded");
 })();

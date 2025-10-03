@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>중개인 관리 페이지</title>
+    <!-- Token Validator - 페이지 로드 시 토큰 유효성 검증 -->
+    <script src="/js/utils/token-validator.js"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- JavaScript 파일 (ES6 Module) -->
+    <script src="/js/utils/auth-utils.js"></script>
     <script type="module" src="/js/broker/main/intermediary-main.js"></script>
-    <script src="/js/broker/delegation/broker-delegation-management.js" defer></script>
+    <script
+      src="/js/broker/delegation/broker-delegation-management.js"
+      defer
+    ></script>
     <!-- Google Fonts (Inter & Noto Sans KR) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -453,10 +459,12 @@
     <aside
       id="delegation-request-panel"
       class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
-      style="right: 75px; display: none;"
+      style="right: 75px; display: none"
     >
       <!-- 위임 요청 관리 패널 헤더 -->
-      <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+      <div
+        class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0"
+      >
         <h2 class="text-xl font-bold text-gray-800">위임 요청 관리</h2>
         <button
           id="close-delegation-panel"
@@ -519,15 +527,21 @@
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div class="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div id="pending-count" class="text-lg font-bold text-orange-600">0</div>
+              <div id="pending-count" class="text-lg font-bold text-orange-600">
+                0
+              </div>
               <div class="text-xs text-gray-600">대기 중</div>
             </div>
             <div>
-              <div id="approved-count" class="text-lg font-bold text-green-600">0</div>
+              <div id="approved-count" class="text-lg font-bold text-green-600">
+                0
+              </div>
               <div class="text-xs text-gray-600">승인됨</div>
             </div>
             <div>
-              <div id="rejected-count" class="text-lg font-bold text-red-600">0</div>
+              <div id="rejected-count" class="text-lg font-bold text-red-600">
+                0
+              </div>
               <div class="text-xs text-gray-600">거절됨</div>
             </div>
           </div>
