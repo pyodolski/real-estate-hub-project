@@ -1,0 +1,53 @@
+/* Custom Styles for loginO.html */
+
+/* Font Family */
+body {
+  font-family: "Inter", "Noto Sans KR", sans-serif;
+}
+
+/* Custom scrollbar for better aesthetics */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 부드러운 스크롤 */
+.custom-scrollbar {
+  scroll-behavior: smooth;
+}
+
+/* 판매 등록 패널 전용 스크롤 개선 */
+#sale-registration-panel .custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f1f1f1;
+}
+
+/* Z-index 설정 */
+#right-side-panel {
+  z-index: 30;
+}
+
+#notification-panel {
+  z-index: 20;
+}
+
+#favorite-panel {
+  z-index: 20;
+}
+
+#compare-panel {
+  z-index: 20;
+}
