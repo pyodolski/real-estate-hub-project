@@ -365,6 +365,51 @@ public class OwnershipClaimService {
                 .collect(Collectors.toList());
     }
 
+    // 매물 신청 삭제 (취소)
+    public void deleteClaim(Long claimId, Long userId) {
+        OwnershipClaim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new IllegalArgumentException("신청 내역을 찾을 수 없습니다."));
+        
+        // 본인의 신청인지 확인
+        if (!claim.getApplicant().getId().equals(userId)) {
+            throw new IllegalArgumentException("본인의 신청만 취소할 수 있습니다.");
+        }
+        
+        // PENDING 상태만 취소 가능
+        if (claim.getStatus() != OwnershipClaim.Status.PENDING) {
+            throw new IllegalStateException("심사 중인 신청만 취소할 수 있습니다.");
+        }
+        
+        // 관련 문서 파일 삭제
+        List<OwnershipDocument> documents = claim.getDocuments();
+        for (OwnershipDocument document : documents) {
+            try {
+                fileStorageService.deleteFile(document.getFilePath());
+            } catch (Exception e) {
+                // 파일 삭제 실패는 로그만 남기고 계속 진행
+                System.err.println("파일 삭제 실패: " + document.getFilePath() + " - " + e.getMessage());
+            }
+        }
+        
+        // 문서 레코드 삭제
+        documentRepository.deleteAll(documents);
+        
+        // 신청 삭제
+        claimRepository.delete(claim);
+        
+        // 감사 로그 기록
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        
+        auditLogService.createAuditLog(
+                user,
+                "DELETE_OWNERSHIP_CLAIM",
+                "OwnershipClaim",
+                claimId,
+                "매물 신청 취소: " + claim.getApplicantName()
+        );
+    }
+
     private OwnershipClaimResponse convertToResponse(OwnershipClaim claim) {
         List<OwnershipClaimResponse.DocumentInfo> documentInfos = claim.getDocuments().stream()
                 .map(doc -> OwnershipClaimResponse.DocumentInfo.builder()

@@ -12,7 +12,9 @@ class BrokerDelegationManagement {
 
   setupEventListeners() {
     // 위임 요청 버튼 클릭
-    const delegationButton = document.getElementById("delegation-request-button");
+    const delegationButton = document.getElementById(
+      "delegation-request-button"
+    );
     if (delegationButton) {
       delegationButton.addEventListener("click", () => {
         this.showDelegationPanel();
@@ -54,54 +56,166 @@ class BrokerDelegationManagement {
     this.currentFilter = status;
 
     // 탭 스타일 업데이트
-    document.querySelectorAll('[id$="-tab"]').forEach(tab => {
-      tab.className = "flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700";
+    document.querySelectorAll('[id$="-tab"]').forEach((tab) => {
+      tab.className =
+        "flex-1 px-4 py-2 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700";
     });
 
-    const activeTab = status === "ALL" ? "all-tab" :
-                     status === "PENDING" ? "pending-tab" :
-                     status === "APPROVED" ? "approved-tab" : "rejected-tab";
+    const activeTab =
+      status === "ALL"
+        ? "all-tab"
+        : status === "PENDING"
+        ? "pending-tab"
+        : status === "APPROVED"
+        ? "approved-tab"
+        : "rejected-tab";
 
     const activeTabElement = document.getElementById(activeTab);
     if (activeTabElement) {
-      activeTabElement.className = "flex-1 px-4 py-2 text-center border-b-2 border-blue-500 text-blue-600 font-medium";
+      activeTabElement.className =
+        "flex-1 px-4 py-2 text-center border-b-2 border-blue-500 text-blue-600 font-medium";
     }
 
-    this.renderDelegationRequests();
+    // API에서 필터링된 데이터 다시 로드
+    this.loadDelegationRequests();
   }
 
   // 위임 요청 목록 로드
   async loadDelegationRequests() {
     try {
-      const response = await fetch("/api/delegations/incoming", {
+      const token = AuthUtils.getToken();
+      if (!token) {
+        this.showError("로그인이 필요합니다.");
+        this.redirectToLogin();
+        return;
+      }
+
+      // PENDING 상태의 요청만 가져오기 (기본값)
+      const statusParam =
+        this.currentFilter === "ALL" ? "" : `?status=${this.currentFilter}`;
+      const response = await fetch(`/api/delegations/incoming${statusParam}`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${this.getToken()}`
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
+      if (response.status === 401) {
+        this.handleAuthError();
+        return;
+      }
+
       if (response.ok) {
-        this.delegationRequests = await response.json();
+        const data = await response.json();
+        console.log("=== 위임 요청 API 응답 ===");
+        console.log("응답 데이터:", data);
+        console.log("데이터 타입:", typeof data);
+        console.log(
+          "데이터 길이:",
+          Array.isArray(data) ? data.length : "배열 아님"
+        );
+
+        if (Array.isArray(data) && data.length > 0) {
+          console.log("첫 번째 아이템:", data[0]);
+        }
+
+        // 서버 응답 데이터를 프론트엔드 형식으로 변환
+        this.delegationRequests = data.map((item) => ({
+          id: item.id,
+          propertyId: item.propertyId,
+          propertyTitle: item.propertyTitle,
+          propertyAddress: item.propertyAddress,
+          ownerId: item.ownerId,
+          ownerName: item.ownerName,
+          brokerId: item.brokerId,
+          brokerName: item.brokerName,
+          status: item.status,
+          rejectionReason: item.rejectionReason,
+          offer: item.offer,
+          createdAt: item.createdAt || new Date().toISOString(),
+        }));
+
+        console.log("변환된 delegationRequests:", this.delegationRequests);
+        console.log("변환된 데이터 길이:", this.delegationRequests.length);
+
+        await this.updateStatistics();
+        this.renderDelegationRequests();
+        console.log("=== 렌더링 완료 ===");
+      } else {
+        const errorText = await response.text();
+        console.error("API 오류:", errorText);
+        this.showError("위임 요청 목록을 불러올 수 없습니다: " + errorText);
+
+        // 빈 배열로 초기화
+        this.delegationRequests = [];
         this.updateStatistics();
         this.renderDelegationRequests();
-      } else {
-        throw new Error("위임 요청 목록을 불러올 수 없습니다.");
       }
     } catch (error) {
       console.error("위임 요청 로드 오류:", error);
-      this.showError("위임 요청 목록을 불러오는 중 오류가 발생했습니다.");
+      this.showError("서버 연결에 실패했습니다: " + error.message);
+
+      // 빈 배열로 초기화
+      this.delegationRequests = [];
+      this.updateStatistics();
+      this.renderDelegationRequests();
     }
   }
 
   // 통계 업데이트
-  updateStatistics() {
-    const pendingCount = this.delegationRequests.filter(req => req.status === "PENDING").length;
-    const approvedCount = this.delegationRequests.filter(req => req.status === "APPROVED").length;
-    const rejectedCount = this.delegationRequests.filter(req => req.status === "REJECTED").length;
+  async updateStatistics() {
+    try {
+      const token = AuthUtils.getToken();
+      if (!token) return;
 
-    document.getElementById("pending-count").textContent = pendingCount;
-    document.getElementById("approved-count").textContent = approvedCount;
-    document.getElementById("rejected-count").textContent = rejectedCount;
+      // 각 상태별로 카운트를 가져오기
+      const statuses = ["PENDING", "APPROVED", "REJECTED"];
+      const counts = {};
+
+      for (const status of statuses) {
+        const response = await fetch(
+          `/api/delegations/incoming?status=${status}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          counts[status] = data.length;
+        } else {
+          counts[status] = 0;
+        }
+      }
+
+      document.getElementById("pending-count").textContent =
+        counts.PENDING || 0;
+      document.getElementById("approved-count").textContent =
+        counts.APPROVED || 0;
+      document.getElementById("rejected-count").textContent =
+        counts.REJECTED || 0;
+    } catch (error) {
+      console.error("통계 업데이트 오류:", error);
+      // 에러 발생 시 현재 로드된 데이터로 통계 표시
+      const pendingCount = this.delegationRequests.filter(
+        (req) => req.status === "PENDING"
+      ).length;
+      const approvedCount = this.delegationRequests.filter(
+        (req) => req.status === "APPROVED"
+      ).length;
+      const rejectedCount = this.delegationRequests.filter(
+        (req) => req.status === "REJECTED"
+      ).length;
+
+      document.getElementById("pending-count").textContent = pendingCount;
+      document.getElementById("approved-count").textContent = approvedCount;
+      document.getElementById("rejected-count").textContent = rejectedCount;
+    }
   }
 
   // 위임 요청 목록 렌더링
@@ -112,7 +226,9 @@ class BrokerDelegationManagement {
     // 필터링
     let filteredRequests = this.delegationRequests;
     if (this.currentFilter !== "ALL") {
-      filteredRequests = this.delegationRequests.filter(req => req.status === this.currentFilter);
+      filteredRequests = this.delegationRequests.filter(
+        (req) => req.status === this.currentFilter
+      );
     }
 
     if (filteredRequests.length === 0) {
@@ -128,7 +244,7 @@ class BrokerDelegationManagement {
     }
 
     container.innerHTML = "";
-    filteredRequests.forEach(request => {
+    filteredRequests.forEach((request) => {
       const requestCard = this.createRequestCard(request);
       container.appendChild(requestCard);
     });
@@ -137,7 +253,8 @@ class BrokerDelegationManagement {
   // 요청 카드 생성
   createRequestCard(request) {
     const card = document.createElement("div");
-    card.className = "bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow";
+    card.className =
+      "bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow";
 
     const statusInfo = this.getStatusInfo(request.status);
     const offer = request.offer || {};
@@ -152,7 +269,9 @@ class BrokerDelegationManagement {
             ${request.propertyAddress || "주소 정보 없음"}
           </p>
         </div>
-        <span class="px-2 py-1 text-xs rounded-full ${statusInfo.bgColor} ${statusInfo.textColor}">
+        <span class="px-2 py-1 text-xs rounded-full ${statusInfo.bgColor} ${
+      statusInfo.textColor
+    }">
           ${statusInfo.label}
         </span>
       </div>
@@ -164,43 +283,55 @@ class BrokerDelegationManagement {
         </div>
         <div class="flex justify-between text-xs">
           <span class="text-gray-500">거래 유형:</span>
-          <span class="text-gray-800">${this.getTransactionTypeLabel(offer.type)}</span>
+          <span class="text-gray-800">${this.getTransactionTypeLabel(
+            offer.type
+          )}</span>
         </div>
         <div class="flex justify-between text-xs">
           <span class="text-gray-500">주거 형태:</span>
-          <span class="text-gray-800">${this.getHouseTypeLabel(offer.housetype)}</span>
+          <span class="text-gray-800">${this.getHouseTypeLabel(
+            offer.housetype
+          )}</span>
         </div>
         <div class="flex justify-between text-xs">
           <span class="text-gray-500">가격:</span>
           <span class="text-gray-800">${this.formatPrice(offer)}</span>
         </div>
-        ${request.status === "REJECTED" && request.rejectionReason ? `
+        ${
+          request.status === "REJECTED" && request.rejectionReason
+            ? `
           <div class="text-xs">
             <span class="text-gray-500">거절 사유:</span>
             <p class="text-red-600 mt-1">${request.rejectionReason}</p>
           </div>
-        ` : ""}
+        `
+            : ""
+        }
       </div>
 
-      ${request.status === "PENDING" ? `
-        <div class="flex gap-2">
+      ${
+        request.status === "PENDING"
+          ? `
+        <div class="flex gap-2 mb-2">
           <button
             onclick="brokerDelegation.rejectRequest(${request.id})"
-            class="flex-1 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors">
+            class="flex-1 px-4 py-2.5 text-sm font-medium bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm">
             거절
           </button>
           <button
             onclick="brokerDelegation.approveRequest(${request.id})"
-            class="flex-1 px-3 py-2 text-xs bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors">
+            class="flex-1 px-4 py-2.5 text-sm font-medium bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors shadow-sm">
             승인
           </button>
         </div>
-      ` : ""}
+      `
+          : ""
+      }
 
       <div class="mt-2 pt-2 border-t">
         <button
           onclick="brokerDelegation.viewRequestDetail(${request.id})"
-          class="w-full px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
+          class="w-full px-4 py-2 text-sm font-medium bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm">
           상세보기
         </button>
       </div>
@@ -216,25 +347,25 @@ class BrokerDelegationManagement {
         return {
           label: "대기 중",
           bgColor: "bg-orange-100",
-          textColor: "text-orange-700"
+          textColor: "text-orange-700",
         };
       case "APPROVED":
         return {
           label: "승인됨",
           bgColor: "bg-green-100",
-          textColor: "text-green-700"
+          textColor: "text-green-700",
         };
       case "REJECTED":
         return {
           label: "거절됨",
           bgColor: "bg-red-100",
-          textColor: "text-red-700"
+          textColor: "text-red-700",
         };
       default:
         return {
           label: "알 수 없음",
           bgColor: "bg-gray-100",
-          textColor: "text-gray-700"
+          textColor: "text-gray-700",
         };
     }
   }
@@ -242,20 +373,28 @@ class BrokerDelegationManagement {
   // 거래 유형 라벨
   getTransactionTypeLabel(type) {
     switch (type) {
-      case "SALE": return "매매";
-      case "JEONSE": return "전세";
-      case "WOLSE": return "월세";
-      default: return "정보 없음";
+      case "SALE":
+        return "매매";
+      case "JEONSE":
+        return "전세";
+      case "WOLSE":
+        return "월세";
+      default:
+        return "정보 없음";
     }
   }
 
   // 주거 형태 라벨
   getHouseTypeLabel(type) {
     switch (type) {
-      case "APART": return "아파트";
-      case "BILLA": return "빌라";
-      case "ONE": return "원룸";
-      default: return "정보 없음";
+      case "APART":
+        return "아파트";
+      case "BILLA":
+        return "빌라";
+      case "ONE":
+        return "원룸";
+      default:
+        return "정보 없음";
     }
   }
 
@@ -280,23 +419,38 @@ class BrokerDelegationManagement {
     }
 
     try {
+      const token = AuthUtils.getToken();
+      if (!token) {
+        this.showError("로그인이 필요합니다.");
+        this.redirectToLogin();
+        return;
+      }
+
       const response = await fetch(`/api/delegations/${requestId}/approve`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.getToken()}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
+
+      if (response.status === 401) {
+        this.handleAuthError();
+        return;
+      }
 
       if (response.ok) {
         this.showSuccess("요청이 성공적으로 승인되었습니다.");
         this.loadDelegationRequests();
       } else {
-        throw new Error("요청 승인에 실패했습니다.");
+        const errorText = await response.text();
+        throw new Error(errorText || "요청 승인에 실패했습니다.");
       }
     } catch (error) {
       console.error("요청 승인 오류:", error);
-      this.showError("요청 승인 중 오류가 발생했습니다.");
+      this.showError(
+        "요청 승인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+      );
     }
   }
 
@@ -308,30 +462,45 @@ class BrokerDelegationManagement {
     }
 
     try {
+      const token = AuthUtils.getToken();
+      if (!token) {
+        this.showError("로그인이 필요합니다.");
+        this.redirectToLogin();
+        return;
+      }
+
       const response = await fetch(`/api/delegations/${requestId}/reject`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.getToken()}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason }),
       });
+
+      if (response.status === 401) {
+        this.handleAuthError();
+        return;
+      }
 
       if (response.ok) {
         this.showSuccess("요청이 거절되었습니다.");
         this.loadDelegationRequests();
       } else {
-        throw new Error("요청 거절에 실패했습니다.");
+        const errorText = await response.text();
+        throw new Error(errorText || "요청 거절에 실패했습니다.");
       }
     } catch (error) {
       console.error("요청 거절 오류:", error);
-      this.showError("요청 거절 중 오류가 발생했습니다.");
+      this.showError(
+        "요청 거절 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+      );
     }
   }
 
   // 요청 상세보기
   viewRequestDetail(requestId) {
-    const request = this.delegationRequests.find(req => req.id === requestId);
+    const request = this.delegationRequests.find((req) => req.id === requestId);
     if (!request) return;
 
     // 상세 정보 모달 표시 (간단한 alert로 대체)
@@ -346,9 +515,18 @@ class BrokerDelegationManagement {
     `);
   }
 
-  // 토큰 가져오기
-  getToken() {
-    return localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+  // 인증 오류 처리
+  handleAuthError() {
+    AuthUtils.removeToken();
+    this.showError("로그인이 만료되었습니다. 다시 로그인해주세요.");
+    setTimeout(() => {
+      this.redirectToLogin();
+    }, 2000);
+  }
+
+  // 로그인 페이지로 리다이렉트
+  redirectToLogin() {
+    window.location.href = "/loginX.html";
   }
 
   // 성공 메시지 표시
