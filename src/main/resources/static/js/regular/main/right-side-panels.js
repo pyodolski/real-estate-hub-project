@@ -305,15 +305,22 @@ const RightSidePanels = {
 
         <!-- 알림 설정 -->
         <div class="mb-4 flex-shrink-0">
-          <div
-            class="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
-          >
-            <span class="text-sm text-gray-700">모든 알림 읽음 처리</span>
-            <button
-              class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              모두 읽음
-            </button>
+          <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+            <span class="text-sm text-gray-700">알림 관리</span>
+            <div class="flex space-x-2">
+              <button
+                id="mark-all-read-btn"
+                class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded"
+              >
+                모두 읽음
+              </button>
+              <button
+                id="delete-read-btn"
+                class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded"
+              >
+                읽은 알림 삭제
+              </button>
+            </div>
           </div>
         </div>
 

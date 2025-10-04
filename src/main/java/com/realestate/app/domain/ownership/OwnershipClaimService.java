@@ -2,6 +2,7 @@ package com.realestate.app.domain.ownership;
 
 import com.realestate.app.domain.audit.AuditLog;
 import com.realestate.app.domain.audit.AuditLogService;
+import com.realestate.app.domain.notification.NotificationService;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimCreateRequest;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimResponse;
 import com.realestate.app.domain.ownership.dto.OwnershipClaimRequest;
@@ -30,6 +31,7 @@ public class OwnershipClaimService {
     private final PropertyRepository propertyRepository;
     private final FileStorageService fileStorageService;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     // 파일과 함께 자산 증명 신청
     public OwnershipClaimResponse createOwnershipClaim(OwnershipClaimCreateRequest request) {
@@ -240,6 +242,13 @@ public class OwnershipClaimService {
                 claim.getPropertyAddress())
         );
 
+        // 승인 알림 생성
+        notificationService.createPropertyApprovedNotification(
+            claim.getApplicant().getId(),
+            claimId,
+            claim.getPropertyAddress()
+        );
+
         return convertToResponse(savedClaim);
     }
 
@@ -332,6 +341,14 @@ public class OwnershipClaimService {
                 claim.getApplicantName(), 
                 claim.getPropertyAddress(),
                 rejectionReason)
+        );
+
+        // 거절 알림 생성
+        notificationService.createPropertyRejectedNotification(
+            claim.getApplicant().getId(),
+            claimId,
+            claim.getPropertyAddress(),
+            rejectionReason
         );
 
         return convertToResponse(savedClaim);
