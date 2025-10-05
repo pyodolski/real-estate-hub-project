@@ -3,6 +3,8 @@ package com.realestate.app.domain.property.controller;
 
 import com.realestate.app.domain.auth.security.AuthUser;
 import com.realestate.app.domain.property.dto.CompleteDealRequest;
+import com.realestate.app.domain.property.dto.JeonseRatioResponse;
+import com.realestate.app.domain.property.service.JeonseRatioService;
 import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.dto.PropertyMarkerDto;
 import com.realestate.app.domain.property.service.propertyservice;
@@ -25,6 +27,7 @@ import java.util.List;
 public class PropertyController {
 
     private final propertyservice service;
+    private final JeonseRatioService jeonseRatioService;
 
     // GET /api/properties?swLat=&swLng=&neLat=&neLng=&status=AVAILABLE&minPrice=&maxPrice=
     @GetMapping
@@ -77,5 +80,13 @@ public class PropertyController {
         Long newOwnerId = (body == null ? null : body.newOwnerId());
         service.completeDealByBroker(id, brokerUserId, newOwnerId);
         return ResponseEntity.noContent().build(); // 204
+    }
+
+    @GetMapping("/{propertyId}/jeonse-ratio")
+    public JeonseRatioResponse jeonseRatioByProperty(
+            @PathVariable Long propertyId,
+            @RequestParam(value = "salePriceFallback", required = false) BigDecimal salePriceFallback
+    ) {
+        return jeonseRatioService.computeByProperty(propertyId, salePriceFallback);
     }
 }
