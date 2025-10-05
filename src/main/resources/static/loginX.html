@@ -129,6 +129,9 @@
       </div>
     </div>
 
+    <!-- AuthUtils 스크립트 로드 -->
+    <script src="js/utils/auth-utils.js"></script>
+
     <script type="module">
       function setToken(raw) {
         const bearer = raw?.startsWith("Bearer ") ? raw : `Bearer ${raw}`;
@@ -140,12 +143,11 @@
       window.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem("auth_token"); // ★ 추가
         localStorage.removeItem("refresh_token"); // ★ 추가
-        // localStorage에서 모든 인증 토큰 제거
-        localStorage.removeItem("accessToken");
+        // AuthUtils를 사용하여 토큰 제거
+        AuthUtils.removeToken();
         localStorage.removeItem("refreshToken");
 
         // sessionStorage에서도 토큰 제거 (혹시 있을 수 있는 경우)
-        sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         sessionStorage.removeItem("auth_token");
         sessionStorage.removeItem("refresh_token");
@@ -195,8 +197,9 @@
 
             const tokenData = await loginResponse.json();
             setToken(tokenData.accessToken);
-            // 2. 액세스 토큰을 localStorage에 저장
-            localStorage.setItem("accessToken", tokenData.accessToken);
+            // 2. AuthUtils를 사용하여 액세스 토큰 저장 (표준 키 사용 + 호환성 키)
+            AuthUtils.setToken(tokenData.accessToken);
+            // 리프레시 토큰은 별도로 저장
             localStorage.setItem("refreshToken", tokenData.refreshToken);
 
             // 3. 사용자 정보 가져오기

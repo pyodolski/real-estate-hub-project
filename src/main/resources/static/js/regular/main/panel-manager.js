@@ -177,6 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
         : `-${p.width}px`;
     });
 
+    // 판매 매물 등록 패널도 닫기
+    const salePanel = document.getElementById('sale-registration-panel');
+    if (salePanel && window.propertyManagement && typeof window.propertyManagement.hideSaleRegistrationPanel === 'function') {
+      window.propertyManagement.hideSaleRegistrationPanel();
+    }
+
     if (isRightPanelOpen) {
       rightToggleButton.style.right = `${RIGHT_SIDE_PANEL_WIDTH}px`;
       searchBarContainer.style.right = `${RIGHT_SIDE_PANEL_WIDTH + MARGIN}px`;

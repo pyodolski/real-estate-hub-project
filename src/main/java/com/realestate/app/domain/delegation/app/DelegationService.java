@@ -94,8 +94,29 @@ public class DelegationService {
 
     @Transactional(readOnly = true)
     public List<DelegationResponse> mineForOwner(Long ownerUserId) {
-        return reqRepo.findAllByOwner_Id(ownerUserId).stream()
-                .map(this::toDto).toList();
+        List<BrokerDelegationRequest> requests = reqRepo.findAllByOwner_Id(ownerUserId);
+        
+        // Get all property IDs
+        List<Long> propertyIds = requests.stream()
+                .map(r -> r.getProperty().getId())
+                .toList();
+        
+        // Fetch all offers for these properties
+        List<PropertyOffer> offers = propertyOfferRepo.findByPropertyIdIn(propertyIds);
+        
+        // Create a map for quick lookup
+        var offerMap = offers.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        o -> o.getProperty().getId(),
+                        java.util.stream.Collectors.collectingAndThen(
+                                java.util.stream.Collectors.toList(),
+                                list -> list.isEmpty() ? null : list.get(0)
+                        )
+                ));
+        
+        return requests.stream()
+                .map(r -> toDtoWithOffer(r, offerMap.get(r.getProperty().getId())))
+                .toList();
     }
 
     @Transactional
@@ -148,10 +169,31 @@ public class DelegationService {
         return new DelegationResponse(
                 r.getId(),
                 r.getProperty().getId(),
+                r.getProperty().getTitle(),
+                r.getProperty().getAddress(),
                 r.getOwner().getId(),
+                r.getOwner().getUsername(),
                 r.getBroker().getUserId(),
+                r.getBroker().getUser().getUsername(),
                 r.getStatus(),
-                r.getRejectReason()
+                r.getRejectReason(),
+                null
+        );
+    }
+
+    private DelegationResponse toDtoWithOffer(BrokerDelegationRequest r, PropertyOffer offer) {
+        return new DelegationResponse(
+                r.getId(),
+                r.getProperty().getId(),
+                r.getProperty().getTitle(),
+                r.getProperty().getAddress(),
+                r.getOwner().getId(),
+                r.getOwner().getUsername(),
+                r.getBroker().getUserId(),
+                r.getBroker().getUser().getUsername(),
+                r.getStatus(),
+                r.getRejectReason(),
+                com.realestate.app.domain.property.dto.PropertyOfferDto.from(offer)
         );
     }
 
