@@ -31,7 +31,7 @@ public class PropertyOffer {
     @Column(length = 16, nullable = false)
     private BigDecimal floor;
 
-    @Column(name = "oftion", columnDefinition = "bit(10)", nullable = true)
+    @Column(name = "oftion", columnDefinition = "TEXT")
     private String oftion;
 
     @Column(name = "total_price", precision = 14, scale = 2)
