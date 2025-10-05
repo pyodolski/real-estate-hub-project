@@ -6,7 +6,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
@@ -58,6 +61,11 @@ public class SecurityConfig {
 
                         // 브로커 목록은 공개 (누구나 조회 가능)
                         .requestMatchers(HttpMethod.GET, "/api/brokers/**").permitAll()
+
+                        // 부동산 검색 / 조회 공개
+                        .requestMatchers(HttpMethod.GET, "/api/properties/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/properties/**").permitAll()
 
                         // 자산 승인 시스템 API (인증 필요)
                         .requestMatchers("/api/ownership/**").authenticated()

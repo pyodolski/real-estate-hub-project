@@ -1,11 +1,19 @@
 package com.realestate.app.domain.property.controller;
 
+
+import com.realestate.app.domain.auth.security.AuthUser;
+import com.realestate.app.domain.property.dto.CompleteDealRequest;
 import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.dto.PropertyMarkerDto;
 import com.realestate.app.domain.property.service.propertyservice;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -53,5 +61,21 @@ public class PropertyController {
 
         log.info("[RES] count={}", out.size());
         return out;
+    }
+
+    // ✅ 최종 경로: POST /api/properties/{id}/complete
+    @PostMapping("/{id}/complete")
+    @PreAuthorize("hasRole('BROKER')")
+    public ResponseEntity<Void> completeDeal(
+            @PathVariable Long id,
+            @AuthenticationPrincipal(expression = "id") Long brokerUserId,
+            @RequestBody(required = false) CompleteDealRequest body
+    ) {
+        if (brokerUserId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        Long newOwnerId = (body == null ? null : body.newOwnerId());
+        service.completeDealByBroker(id, brokerUserId, newOwnerId);
+        return ResponseEntity.noContent().build(); // 204
     }
 }
