@@ -15,18 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 데이터 렌더링 함수 ---
 
-  // 알림 렌더링
+  // 알림 렌더링 - notification-management.js에서 처리
   function renderNotifications() {
-    if (
-      !notificationList ||
-      typeof notificationData === "undefined" ||
-      typeof createNotificationCard !== "function"
-    )
-      return;
-    notificationList.innerHTML = "";
-    notificationData.forEach((notification) => {
-      notificationList.innerHTML += createNotificationCard(notification);
-    });
+    if (window.notificationManagement) {
+      window.notificationManagement.loadNotifications();
+    }
   }
   // 다른 스크립트(panel-manager.js)에서 호출할 수 있도록 window 객체에 할당
   window.renderNotifications = renderNotifications;
@@ -117,9 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("mark-all-read-button")
     ?.addEventListener("click", () => {
-      if (typeof notificationData !== "undefined") {
-        notificationData.forEach((n) => (n.isRead = true));
-        renderNotifications();
+      if (window.notificationManagement) {
+        window.notificationManagement.markAllAsRead();
       }
     });
 

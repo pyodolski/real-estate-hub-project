@@ -70,6 +70,9 @@ public class SecurityConfig {
                         // 자산 승인 시스템 API (인증 필요)
                         .requestMatchers("/api/ownership/**").authenticated()
 
+                        // 알림 API (인증 필요)
+                        .requestMatchers("/api/notifications/**").authenticated()
+
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()
                 )
