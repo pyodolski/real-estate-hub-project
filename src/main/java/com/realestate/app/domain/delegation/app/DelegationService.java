@@ -198,7 +198,9 @@ public class DelegationService {
                 r.getBroker().getUser().getUsername(),
                 r.getStatus(),
                 r.getRejectReason(),
-                null
+                null,
+                r.getProperty().getLocationX(),
+                r.getProperty().getLocationY()
         );
     }
 
@@ -214,7 +216,9 @@ public class DelegationService {
                 r.getBroker().getUser().getUsername(),
                 r.getStatus(),
                 r.getRejectReason(),
-                com.realestate.app.domain.property.dto.PropertyOfferDto.from(offer)
+                com.realestate.app.domain.property.dto.PropertyOfferDto.from(offer),
+                r.getProperty().getLocationX(),
+                r.getProperty().getLocationY()
         );
     }
 

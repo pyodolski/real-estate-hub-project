@@ -120,6 +120,8 @@
             rejectionReason: delegation.rejectionReason || null,
             createdAt: delegation.createdAt,
             updatedAt: delegation.updatedAt,
+            locationX: delegation.locationX,
+            locationY: delegation.locationY,
           };
 
           // Offer 정보 추출 및 가공
@@ -305,7 +307,16 @@
     createSalesPropertyCard(property) {
       const card = document.createElement("div");
       card.className =
-        "bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow";
+        "bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer";
+      
+      // 카드 클릭 시 지도 이동
+      card.addEventListener('click', (e) => {
+        // 버튼 클릭은 제외 (이벤트 버블링 방지)
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+          return;
+        }
+        this.moveMapToSalesProperty(property);
+      });
 
       // 활성 상태 정보
       const isActive = property.offer?.isActive !== false;
