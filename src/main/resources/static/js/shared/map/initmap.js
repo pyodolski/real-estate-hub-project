@@ -7,7 +7,14 @@ import { renderMarkerPopup, closeMarkerPopup } from './marker-popup.js';
 export function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
   app.map = new naver.maps.Map('map', { center, zoom: 13, zoomControl: false });
-
+  window.__naverMap = app.map;
+  const el = document.getElementById('map');
+  if (el) el.__MAP_CREATED__ = true;
+  
+  // 지도 렌더 후(첫 idle) map:ready 발행
+  naver.maps.Event.once(app.map, 'idle', () => {
+    window.dispatchEvent(new Event('map:ready'));
+  });
   // (선택) 상단 상태 필터가 따로 있다면 사용
   const statusFilterEl = document.getElementById('statusFilter');
 
