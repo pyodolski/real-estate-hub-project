@@ -14,5 +14,7 @@ public record DelegationResponse(
         String brokerName,
         Status status,
         String rejectReason,
-        PropertyOfferDto offer
+        PropertyOfferDto offer,
+        Double locationX,
+        Double locationY
 ) {}
