@@ -639,19 +639,86 @@
   };
 
   // 판매 등록 요청 전송 메서드
-  PropertyManagement.prototype.sendSaleRegistrationRequest = function (
+  PropertyManagement.prototype.sendSaleRegistrationRequest = async function (
     claimId,
     formData
   ) {
-    // 이 메서드는 향후 구현될 예정
     console.log(
-      "[PropertyManagement] Sending sale registration request (placeholder)",
+      "[PropertyManagement] Sending sale registration request",
       { claimId, formData }
     );
 
-    // 임시 성공 처리
-    this.showSuccess("판매 등록 요청이 완료되었습니다.");
-    this.hideSaleRegistrationPanel();
+    try {
+      // claimId로부터 property 정보 찾기
+      const property = this.myProperties.find((p) => p.claimId === claimId);
+      if (!property || !property.propertyId) {
+        this.showError("매물 정보를 찾을 수 없습니다.");
+        return false;
+      }
+
+      const propertyId = property.propertyId;
+
+      // API 요청 데이터 구성
+      const requestBody = {
+        brokerUserId: formData.brokerId,
+        offer: {
+          housetype: formData.housetype,
+          type: formData.transactionType,
+          floor: formData.floor,
+          option: this.convertOptionsToString(formData.options),
+          totalPrice: formData.prices.totalPrice || null,
+          deposit: formData.prices.deposit || null,
+          monthlyRent: formData.prices.monthlyRent || null,
+          maintenanceFee: formData.maintenanceFee,
+          negotiable: formData.negotiable,
+          availableFrom: formData.availableFrom,
+          isActive: formData.isActive
+        }
+      };
+
+      console.log("[PropertyManagement] Request body:", requestBody);
+
+      // API 호출
+      const response = await fetch(`/api/properties/${propertyId}/delegations`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("[PropertyManagement] Sale registration success:", result);
+        this.showSuccess(
+          "판매 매물 등록 요청이 완료되었습니다. 중개인 승인 후 매물이 공개됩니다."
+        );
+        this.hideSaleRegistrationPanel();
+        
+        // 목록 새로고침
+        await this.loadMyProperties();
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error("[PropertyManagement] Sale registration failed:", errorText);
+        
+        let errorMessage = "등록에 실패했습니다.";
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        this.showError(`판매 등록 요청 실패: ${errorMessage}`);
+        return false;
+      }
+    } catch (error) {
+      console.error("[PropertyManagement] Error sending sale request:", error);
+      this.showError("판매 등록 요청 중 오류가 발생했습니다: " + error.message);
+      return false;
+    }
   };
 
   // 옵션 배열을 문자열로 변환 (bit string)

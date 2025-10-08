@@ -128,6 +128,14 @@
     const d = data || {};
     const offer = d.offer || {};
 
+    // 디버깅: 받은 데이터 확인
+    console.log('[DelegationDetailPanel] 렌더링 데이터:', {
+      전체데이터: d,
+      offer데이터: offer,
+      ownerName: d.ownerName,
+      brokerName: d.brokerName
+    });
+
     // 상태 배지
     const statusInfo = getStatusBadge(d.status);
     if (el.statusBadge) {
