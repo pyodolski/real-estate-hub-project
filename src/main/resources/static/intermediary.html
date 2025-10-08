@@ -15,6 +15,9 @@
       src="/js/broker/delegation/broker-delegation-management.js"
       defer
     ></script>
+    <!-- 위임 요청 상세 패널 -->
+    <script src="/js/broker/delegation/delegation-detail-overlay.js"></script>
+    <script src="/js/broker/delegation/delegation-detail-panel.js"></script>
     <!-- Google Fonts (Inter & Noto Sans KR) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -555,5 +558,17 @@
         </div>
       </div>
     </aside>
+
+    <!-- 위임 요청 상세 패널 삽입 스크립트 -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof DelegationDetailOverlay !== 'undefined') {
+          const container = document.querySelector('.relative.w-full.h-full');
+          if (container) {
+            container.insertAdjacentHTML('beforeend', DelegationDetailOverlay.render());
+          }
+        }
+      });
+    </script>
   </body>
 </html>

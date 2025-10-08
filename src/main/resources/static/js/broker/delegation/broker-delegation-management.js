@@ -8,6 +8,17 @@ class BrokerDelegationManagement {
   init() {
     this.setupEventListeners();
     this.loadDelegationRequests();
+    this.initDetailPanel();
+  }
+
+  // 상세 패널 초기화
+  initDetailPanel() {
+    if (typeof window.initDelegationDetailPanel === 'function') {
+      window.initDelegationDetailPanel({
+        onApprove: (delegationId) => this.approveRequest(delegationId),
+        onReject: (delegationId) => this.rejectRequest(delegationId)
+      });
+    }
   }
 
   setupEventListeners() {
@@ -503,16 +514,10 @@ class BrokerDelegationManagement {
     const request = this.delegationRequests.find((req) => req.id === requestId);
     if (!request) return;
 
-    // 상세 정보 모달 표시 (간단한 alert로 대체)
-    alert(`요청 상세 정보:
-
-매물: ${request.propertyTitle || "정보 없음"}
-주소: ${request.propertyAddress || "정보 없음"}
-신청자: ${request.ownerName || "정보 없음"}
-거래 유형: ${this.getTransactionTypeLabel(request.offer?.type)}
-상태: ${this.getStatusInfo(request.status).label}
-신청일: ${new Date(request.createdAt).toLocaleDateString()}
-    `);
+    // 상세 패널 열기
+    if (typeof window.openDelegationDetail === 'function') {
+      window.openDelegationDetail(requestId, request);
+    }
   }
 
   // 인증 오류 처리

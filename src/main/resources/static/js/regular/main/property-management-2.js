@@ -308,6 +308,12 @@
           // 이미 데이터가 있으면 필터 탭 스타일만 업데이트
           this.updateSalesFilterTabs();
         }
+        
+        // 판매 매물을 지도에 마커로 표시
+        this.showSalesPropertiesOnMap();
+      } else if (tabName === "ownership") {
+        // ownership 탭으로 돌아가면 마커 제거
+        this.clearSalesMarkersFromMap();
       }
 
       console.log("[PropertyManagement] Tab switched successfully");
