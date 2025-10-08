@@ -88,8 +88,29 @@ public class DelegationService {
 
     @Transactional(readOnly = true)
     public List<DelegationResponse> incomingForBroker(Long brokerUserId, Status status) {
-        return reqRepo.findAllByBroker_UserIdAndStatus(brokerUserId, status).stream()
-                .map(this::toDto).toList();
+        List<BrokerDelegationRequest> requests = reqRepo.findAllByBroker_UserIdAndStatus(brokerUserId, status);
+        
+        // Get all property IDs
+        List<Long> propertyIds = requests.stream()
+                .map(r -> r.getProperty().getId())
+                .toList();
+        
+        // Fetch all offers for these properties
+        List<PropertyOffer> offers = propertyOfferRepo.findByPropertyIdIn(propertyIds);
+        
+        // Create a map for quick lookup
+        var offerMap = offers.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        o -> o.getProperty().getId(),
+                        java.util.stream.Collectors.collectingAndThen(
+                                java.util.stream.Collectors.toList(),
+                                list -> list.isEmpty() ? null : list.get(0)
+                        )
+                ));
+        
+        return requests.stream()
+                .map(r -> toDtoWithOffer(r, offerMap.get(r.getProperty().getId())))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -177,7 +198,9 @@ public class DelegationService {
                 r.getBroker().getUser().getUsername(),
                 r.getStatus(),
                 r.getRejectReason(),
-                null
+                null,
+                r.getProperty().getLocationX(),
+                r.getProperty().getLocationY()
         );
     }
 
@@ -193,7 +216,9 @@ public class DelegationService {
                 r.getBroker().getUser().getUsername(),
                 r.getStatus(),
                 r.getRejectReason(),
-                com.realestate.app.domain.property.dto.PropertyOfferDto.from(offer)
+                com.realestate.app.domain.property.dto.PropertyOfferDto.from(offer),
+                r.getProperty().getLocationX(),
+                r.getProperty().getLocationY()
         );
     }
 
