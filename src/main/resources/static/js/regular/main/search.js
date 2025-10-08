@@ -1,5 +1,9 @@
 // js/search.js
 (() => {
+  // 중복 실행 방지
+  if (window.__SEARCH_INITED__) return;
+  window.__SEARCH_INITED__ = true;
+
   // MapFilterPanel이 준비될 때까지 대기
   const initSearch = () => {
     const $input   = document.getElementById('global-search-input');
@@ -20,47 +24,81 @@
     const $suggest = document.getElementById('global-search-suggest');
 
     // ===============================
-    // 0) 네이버 로드 가드 + 안전 변환
+    // 0) 네이버 로드 가드
     // ===============================
-    function whenNaverReady(cb) {
-      if (window.naver?.maps?.Map && window.naver?.maps?.TransCoord) return cb();
+    function whenNaverReady(cb, timeoutMs = 8000) {
+      console.log("[CLICK] 버튼 클릭됨:");
+      const ready = () => !!(window.naver?.maps?.Map);
+      if (ready()) return cb();
+      const start = Date.now();
       const i = setInterval(() => {
-        if (window.naver?.maps?.Map && window.naver?.maps?.TransCoord) {
+        if (ready()) {
           clearInterval(i);
           cb();
+        } else if (Date.now() - start > timeoutMs) {
+          clearInterval(i);
+          console.error("[NAVER] Map 로드 타임아웃");
         }
       }, 50);
     }
 
-    function tm128ToLatLng(mapx, mapy) {
-      if (!window.naver?.maps?.TransCoord) return null; // 아직 준비 안 됨
-      const tm = new naver.maps.Point(Number(mapx), Number(mapy));
-      return naver.maps.TransCoord.fromTM128ToLatLng(tm); // {x:lng, y:lat}
+    // ===============================
+    // 좌표 스마트 변환 (WGS84, 스케일된 WGS84(×1e7), TM128 모두 처리)
+    // ===============================
+    function toLatLngSmart(mapx, mapy) {
+      let x = Number(mapx), y = Number(mapy);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+
+      // Case A) 이미 경위도 범위 (x=lng, y=lat)
+      if (Math.abs(y) <= 90 && Math.abs(x) <= 180) {
+        return new naver.maps.LatLng(y, x);
+      }
+
+      // Case B) 스케일된 경위도(WGS84 × 1e7) — 네이버 로컬검색 형식
+      // 예: mapx "1286017630" -> 128.6017630 (lng), mapy "358713898" -> 35.8713898 (lat)
+      if (Math.abs(x) > 180 && Math.abs(y) > 90) {
+        const sx = x / 1e7, sy = y / 1e7; // sx=lng, sy=lat
+        if (Math.abs(sx) <= 180 && Math.abs(sy) <= 90) {
+          return new naver.maps.LatLng(sy, sx);
+        }
+      }
+
+      // Case C) TM128처럼 보이면 변환 (geocoder 서브모듈 필요)
+      if (!window.naver?.maps?.TransCoord) {
+        console.warn("[NAVER] TransCoord 미로드: TM128 → WGS84 변환 불가 (스크립트에 &submodules=coord,geocoder 권장)");
+        return null;
+      }
+      const tm = new naver.maps.Point(x, y);
+      const p  = naver.maps.TransCoord.fromTM128ToLatLng(tm);
+      if (p instanceof naver.maps.LatLng) return p;
+      if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+        return new naver.maps.LatLng(p.y, p.x);
+      }
+      return null;
     }
 
     // ===============================
     // 1) 지도/마커 관리
     // ===============================
-    let map;
-    const markers = [];
-    const clearMarkers = () => { markers.forEach(m => m.setMap(null)); markers.length = 0; };
-    const addMarker = (latlng, title) => {
-      const m = new naver.maps.Marker({ position: latlng, map, title });
-      markers.push(m);
-      return m;
-    };
-
-    whenNaverReady(() => {
-      if (!window.__naverMap) {
-        window.__naverMap = new naver.maps.Map('map', {
-          center: new naver.maps.LatLng(37.5665, 126.9780),
-          zoom: 14,
-          minZoom: 6,
-          maxZoom: 18
-        });
+    // ✅ initmap.js가 만든 지도만 쓴다
+    let map = null;
+    function getMapOrWait(cb) {
+      if (window.__naverMap) { cb(window.__naverMap); return; }
+      const onReady = () => { window.removeEventListener('map:ready', onReady); cb(window.__naverMap); };
+      window.addEventListener('map:ready', onReady);
+    }
+    // ✅ 검색 포커스 마커 1개만 (property 마커와 충돌 방지)
+    let searchMarker = null;
+    function setSearchMarker(latlng, title) {
+      if (!map) return;
+      if (!searchMarker) {
+        searchMarker = new naver.maps.Marker({ position: latlng, map, title });
+      } else {
+        searchMarker.setPosition(latlng);
+        searchMarker.setTitle?.(title);
+        searchMarker.setMap(map);
       }
-      map = window.__naverMap;
-    });
+    }
 
     // ===============================
     // 2) 디바운스
@@ -123,8 +161,12 @@
       if (q.length < 2) { renderSuggest([]); return; }
       try {
         const data = await fetchPlaces(q);
-        const items = filterPOI(data.items || [], q);
-        renderSuggest(items);
+        // 좌표 숫자 유효성만 1차 필터
+        const raw = (data.items || []).filter(it =>
+          it.mapx && it.mapy && Number.isFinite(Number(it.mapx)) && Number.isFinite(Number(it.mapy))
+        );
+        const items = filterPOI(raw, q);
+        renderSuggest(items.length ? items : raw.slice(0, 5));
       } catch (err) {
         console.error(err);
         renderSuggest([]);
@@ -156,27 +198,17 @@
 
       console.log("[CLICK] 버튼 클릭됨:", { name, mapx, mapy });
 
-      whenNaverReady(() => {
-        const latlng = tm128ToLatLng(mapx, mapy);
-        console.log("[CONVERT] tm128ToLatLng 결과:", latlng);
-
-        if (!latlng) {
-          console.warn('Naver Maps TransCoord not ready');
-          return;
-        }
-
+      getMapOrWait((m) => {
+        map = m;
+        const latlng = toLatLngSmart(mapx, mapy);
+        if (!latlng) { console.warn('좌표 변환 실패'); return; }
         $input.value = name;
         $suggest.classList.add('hidden');
 
-        clearMarkers();
-        const marker = addMarker(latlng, name);
-        console.log("[MARKER] 추가됨:", marker);
-
-        map.setCenter(latlng);
-        console.log("[MAP] setCenter 호출:", latlng);
-
+        setSearchMarker(latlng, name);      // ✅ 검색 포커스 마커만
+        naver.maps.Event.trigger(map, 'resize');
+        map.panTo(latlng);
         map.setZoom(16, true);
-        console.log("[MAP] setZoom 호출");
       });
     });
 
@@ -195,14 +227,16 @@
   if (!initSearch()) {
     // 실패하면 이벤트 대기
     console.log('[Search] MapFilterPanel 준비 대기 중...');
-    window.addEventListener('mapFilterPanelReady', () => {
-      console.log('[Search] MapFilterPanel 준비 완료, 재시도');
+    const boot = () => {
+      console.log('[Search] 재시도');
       if (!initSearch()) {
         console.error('[Search] MapFilterPanel이 준비되었지만 검색 요소를 찾을 수 없습니다.');
         return;
       }
       setupSearchHandlers();
-    });
+    };
+    window.addEventListener('mapFilterPanelReady', boot, { once: true });
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
     return;
   }
 
