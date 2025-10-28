@@ -2,46 +2,67 @@
 **GENERAL CHARACTERISTICS**<br>
 * * *
 **Summary**<br>
-사용자의 지도 화면에 매물 위치를 아이콘으로 표시한다.<br>
+* 사용자의 지도 화면에 매물 위치를 아이콘으로 표시한다.<br> 
 **Scope**<br>
+* <br>
 **Level**<br>
+* User level<br>
 **Author**<br>
+<br>
 **Last Update**<br>
+<br>
 **Status**<br>
+* Analysis<br>
 **Primary Actor**<br>
+* 로그인한 사용자(구직/중개/소유자 등 공통)<br>
 **Preconditions**<br>
+* 로그인을 한 상태여야 한다.<br>
 **Trigger**<br>
+* 지도 화면 최초 진입, 또는 줌/팬 등 뷰포트 변경 이벤트 발생.<br>
 **Success Post Conditions**<br>
+* 지도에 현재 뷰포트 내 매물이 상태별 컬러 마커로 표시된다.<br>
+* 매물 선택 시 요약 패널/시트에 상세 정보가 로드된다.<br>
+**Failure Post Conditions**<br>
+* 지도에 매물 띄우기를 실패한다<br>
 * * *
 **MAIN SUCCESS SCENARIO**<br>
 **Step** Action<br>
-**S**<br>
-**1**<br>
+**S**<br> 
+* 사용자가 지도를 띄운다<br>
+**1**<br> 
+* 시스템이 현재 지도 뷰포트(BBOX: south, west, north, east)와 필터(상태, 가격 범위 등)를 읽는다.<br>
 **2**<br>
-**3**<br>
-**4**<br>
-**5**<br>
+* 시스템이 Supabase(PostgREST)로 매물 목록을 조회한다. (BBOX + 상태 필터, 페이지네이션)<br>
+**3**<br> 
+* 시스템이 결과를 상태별 컬러 규칙에 따라 마커/클러스터로 렌더링한다.<br>
+**4**
+* 사용자가 마커를 탭하면 시스템이 properties, property_images, property_offers에서 상세를 조회하여 하단 시트/카드에 표시한다.<br>
 * * *
 **EXTENSION SCENARIOS**<br>
-**Step**<br>
-****
+**Step**<br> 
+Branching Action<br>
+**1**<br>
+*1a. 네이버 지도 API를 이용하여 지도를 띄운다<br>
+**1a1. 일정 시간 후 지도를 재조회 하여 새로운 정보를 받아와 지도에 띄운다.<br>
+**1a2. 지도의 줌/팬 이벤트 발생 시 범위 재조회 및 마커 갱신한다.<br>
+**2**<br>
+*1b. 등록된 매물의 위치 정보를 불러와 지도에 마커와 함께 표시한다.<br>
+**1b1. 매물의 상태 정보 [available|pending|sold]을 기준으로 색상을 달리하며 마커의 색상을 변경한다.<br>
+**1b2. 매물 클릭시 매물의 정보를 properties , property_images, property_offers table에서 받아와 각 정보를 띄운다.<br>
+**3**<br>
+*3a.로그인을 하지않아 토큰이 없으면 실패한다.<br>
+**3a1.토큰이 없다는 메시지를 출력한다.<br>
+**3a2.아이디 입력단계로 돌아간다.<br>
+**4**<br>
+*3b.지도 호출을 실패한다.<br>
+**3b1. 재시도 및 오률를 출력한다<br>
 * * *
 **RELATED IMFORMATION**<br>
-**Performance**<br>
-**Frequency**<br>
-**<Concurrency>**<br>
+**Performance**<br> ≤ 1 second<br>
+**Frequency**<br> 지도를 호출할 때 마다<br>
+**<Concurrency>**<br> 제한없음<br>
 **Due Date**<br>
 * * *
-
-	네이버 지도 API를 이용하여 지도를 띄운다.
-	로그인을 하지 않아 토큰이 없으면 오류 메시지를 띄우며 로그인 페이지로 이동한다.
-	지도 호출 실패시 재시도 및 오류를 출력한다.
-	등록된 매물의 위치 정보를 불러와 지도에 마커와 함께 표시한다
-	매물의 상태 정보 [available|pending|sold]을 기준으로 색상을 달리하며 마커의 색상을 변경한다.
-	매물 클릭시 매물의 정보를 properties , property_images, property_offers table에서 받아와 각 정보를 띄운다. 
-	일정 시간 후 지도를 재조회 하여 새로운 정보를 받아와 지도에 띄운다.
-	지도의 줌*팬 이벤트 발생 시 범위 재조회 및 마커 갱신한다.
-	사용자 지정 조건 필터 적용 시 해당 매물만 표시한다.
 
   
 **Use case 27. 사용자 위치 표시**
