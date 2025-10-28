@@ -1,36 +1,36 @@
 # Use case 26. 지도 매물 시각화
-**GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**<br>
 * * *
-**Summary**
-사용자의 지도 화면에 매물 위치를 아이콘으로 표시한다.
-**Scope**
-**Level**
-**Author**
-**Last Update**
-**Status**
-**Primary Actor**
-**Preconditions**
-**Trigger**
-**Success Post Conditions**
+**Summary**<br>
+사용자의 지도 화면에 매물 위치를 아이콘으로 표시한다.<br>
+**Scope**<br>
+**Level**<br>
+**Author**<br>
+**Last Update**<br>
+**Status**<br>
+**Primary Actor**<br>
+**Preconditions**<br>
+**Trigger**<br>
+**Success Post Conditions**<br>
 * * *
-**MAIN SUCCESS SCENARIO**
-**Step** Action
-**S**
-**1**
-**2**
-**3**
-**4**
-**5**
+**MAIN SUCCESS SCENARIO**<br>
+**Step** Action<br>
+**S**<br>
+**1**<br>
+**2**<br>
+**3**<br>
+**4**<br>
+**5**<br>
 * * *
-**EXTENSION SCENARIOS**
-**Step**
+**EXTENSION SCENARIOS**<br>
+**Step**<br>
 ****
 * * *
-**RELATED IMFORMATION**
-**Performance**
-**Frequency**
-**<Concurrency>**
-**Due Date**
+**RELATED IMFORMATION**<br>
+**Performance**<br>
+**Frequency**<br>
+**<Concurrency>**<br>
+**Due Date**<br>
 * * *
 
 	네이버 지도 API를 이용하여 지도를 띄운다.
