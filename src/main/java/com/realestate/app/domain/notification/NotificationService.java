@@ -64,6 +64,11 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
+    public int markChatMessageNotificationsRead(Long userId, Long roomId) {
+        return notificationRepository.markChatMessageNotificationsRead(userId, roomId);
+    }
+
     /**
      * 모든 알림 읽음 처리
      */
