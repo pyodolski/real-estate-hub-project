@@ -4,6 +4,7 @@ import com.realestate.app.domain.chat.ChatRoom;
 import com.realestate.app.domain.chat.api.dto.*;
 import com.realestate.app.domain.chat.app.ChatService;
 import com.realestate.app.domain.chat.support.AuthFacade;
+import com.realestate.app.domain.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +19,7 @@ import java.util.List;
 public class ChatRestController {
     private final ChatService chatService;
     private final AuthFacade auth;
+    private final NotificationService notificationService;
 
     @PostMapping("/rooms")
     public RoomResponse createRoom(@RequestBody CreateRoomRequest req) {
@@ -96,6 +98,7 @@ public class ChatRestController {
         Long me = auth.currentUserId();
         chatService.assertRoomMember(roomId, me);
         chatService.markRead(roomId, me, req.lastReadMessageId());
+        notificationService.markChatMessageNotificationsRead(me, roomId);
     }
 
     @PostMapping("/rooms/{roomId}/read-all")
@@ -103,5 +106,8 @@ public class ChatRestController {
         Long me = auth.currentUserId();
         chatService.assertRoomMember(roomId, me);
         chatService.markAllOpponentRead(roomId, me);
+        notificationService.markChatMessageNotificationsRead(me, roomId);
     }
+
+
 }

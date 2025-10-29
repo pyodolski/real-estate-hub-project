@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 
 @Repository
 public interface FavoriteJpaRepository extends JpaRepository<Favorite, Long> {
@@ -17,6 +18,9 @@ public interface FavoriteJpaRepository extends JpaRepository<Favorite, Long> {
     long deleteByUserIdAndPropertyId(Long userId, Long propertyId);
 
     long countByPropertyId(Long propertyId);
+    @Query("select f.user.id from Favorite f where f.property.id = :pid")
+    List<Long> findUserIdsByPropertyId(@Param("pid") Long propertyId);
+
 /*
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
