@@ -134,38 +134,18 @@ classDiagram
 # Broker 클래스
 
 classDiagram
-  %% --- Base Classes & Enums (from previous context) ---
-  class BaseEntity {
-    +createdAt: LocalDateTime
-    +updatedAt: LocalDateTime
-  }
-
-  <<enumeration>> UserRole {
-    GENERAL
-    BROKER
-    ADMIN
-  }
-
+  %% --- 연관된 클래스 (이름만 표시) ---
   class User {
-    -userId: Long
-    -email: String
-    -password: String
-    -name: String
-    -phoneNumber: String
-    -role: UserRole
-    -isActive: boolean
-    +getRole(): UserRole
-    %% ... other methods
+    %% 2.2.2. Broker가 OneToOne으로 참조하는 User 객체
   }
 
-  %% --- Implied Class (from Broker's operations) ---
   class BrokerProfile {
-    %% 브로커 상세 프로필 DTO 또는 객체
+    %% 2.3.5. getBrokerProfile()이 반환하는 객체
   }
 
-  %% --- New Broker Class ---
+  %% --- Broker 클래스 상세 정의 ---
   class Broker {
-    %% 2.1. class description: User를 확장하는 브로커 정보
+    %% 2.1. class description: 브로커 사용자의 정보 관리
     -brokerId: Long
     -user: User
     -licenseNumber: String
@@ -183,14 +163,8 @@ classDiagram
     +getBrokerProfile(): BrokerProfile
   }
 
-  %% --- 관계 정의 (Relationships) ---
-  BaseEntity <|-- User : 상속 (Inheritance)
-  User ..> UserRole : 사용 (Uses)
-  
-  %% 2.2.2. 'user' 속성을 기반으로 OneToOne 관계 명시
-  User "1" -- "1" Broker : OneToOne 연관
-  
-  %% 2.3.5. getBrokerProfile() 메서드의 반환 타입
+  %% --- 관계 정의 ---
+  Broker "1" -- "1" User : OneToOne 연관
   Broker ..> BrokerProfile : 사용 (Returns)
 
 ## 2.1. class description
@@ -289,52 +263,20 @@ classDiagram
 # Admin 클래스
 
 classDiagram
-  %% --- Base Classes & Enums ---
-  class BaseEntity {
-    +createdAt: LocalDateTime
-    +updatedAt: LocalDateTime
-  }
-
-  <<enumeration>> UserRole {
-    GENERAL
-    BROKER
-    ADMIN
-  }
-  
-  class BrokerProfile {
-    %% 브로커 상세 프로필 DTO
-  }
-  
-  class Property {
-    %% 매물 클래스 (Admin이 관리)
-  }
-
-  %% --- User Class ---
+  %% --- 연관된 클래스 (이름만 표시) ---
   class User {
-    -userId: Long
-    -email: String
-    -name: String
-    -role: UserRole
-    -isActive: boolean
-    +getRole(): UserRole
-    +deactivateAccount(): void
-    %% ... other methods
+    %% 3.2.2. Admin이 OneToOne으로 참조하는 User 객체
   }
-
-  %% --- Broker Class ---
+  class Property {
+    %% 3.3.2. Admin이 deleteProperty로 관리하는 매물 객체
+  }
   class Broker {
-    -brokerId: Long
-    -user: User
-    -licenseNumber: String
-    -isVerified: boolean
-    +verifyBroker(): void
-    +getBrokerProfile(): BrokerProfile
-    %% ... other methods
+    %% 3.3.3. Admin이 verifyBrokerLicense로 검증하는 브로커 객체
   }
 
-  %% --- Admin Class ---
+  %% --- Admin 클래스 상세 정의 ---
   class Admin {
-    %% 3.1. class description: 시스템 관리자
+    %% 3.1. class description: 시스템 관리자 정보 관리
     -adminId: Long
     -user: User
     -adminLevel: int
@@ -351,18 +293,8 @@ classDiagram
     +hasPermission(permissionType: String): boolean
   }
 
-  %% --- 관계 정의 (Relationships) ---
-  BaseEntity <|-- User : 상속 (Inheritance)
-  User ..> UserRole : 사용 (Uses)
-  
-  %% User <-> Broker/Admin (OneToOne)
-  User "1" -- "1" Broker : OneToOne 연관
-  User "1" -- "1" Admin : OneToOne 연관
-  
-  %% Broker related
-  Broker ..> BrokerProfile : 사용 (Returns)
-  
-  %% Admin Operations (Admin이 다른 객체들을 관리)
+  %% --- 관계 정의 ---
+  Admin "1" -- "1" User : OneToOne 연관
   Admin ..> User : 사용 (Manages)
   Admin ..> Property : 사용 (Manages)
   Admin ..> Broker : 사용 (Manages)
@@ -456,6 +388,51 @@ classDiagram
 
 # AuthService 클래스
 
+classDiagram
+  %% --- 의존 컴포넌트 및 엔티티 (이름만 표시) ---
+  class UserRepository {
+    %% 4.2.1. AuthService가 의존하는 리포지토리
+  }
+  class JwtTokenProvider {
+    %% 4.2.2. AuthService가 의존하는 토큰 프로바이더
+  }
+  class BCryptPasswordEncoder {
+    %% 4.2.3. AuthService가 의존하는 패스워드 인코더
+  }
+  class User {
+    %% 4.3.1. register()가 반환하고
+    %% 4.3.5. getUserFromToken()이 반환하는 객체
+  }
+  class TokenResponse {
+    %% 4.3.2. login()이 반환하는 토큰 객체
+  }
+
+  %% --- AuthService 클래스 상세 정의 ---
+  class AuthService {
+    %% 4.1. class description: 사용자 인증 및 인가 처리
+    -userRepository: UserRepository
+    -jwtTokenProvider: JwtTokenProvider
+    -passwordEncoder: BCryptPasswordEncoder
+    -tokenExpirationTime: long
+    -refreshTokenExpirationTime: long
+
+    +register(registerRequest: Object): User
+    +login(loginRequest: Object): TokenResponse
+    +validateToken(token: String): boolean
+    +refreshAccessToken(refreshToken: String): String
+    +getUserFromToken(token: String): User
+    -encryptPassword(password: String): String
+    +logout(token: String): void
+  }
+
+  %% --- 관계 정의 (Dependencies & Usage) ---
+  AuthService ..> UserRepository : 의존 (Depends on)
+  AuthService ..> JwtTokenProvider : 의존 (Depends on)
+  AuthService ..> BCryptPasswordEncoder : 의존 (Depends on)
+  
+  AuthService ..> User : 사용 (Uses/Returns)
+  AuthService ..> TokenResponse : 사용 (Returns)
+
 ## 4.1. class description
 사용자 인증 및 인가를 처리하는 서비스 클래스이다. 회원가입, 로그인, JWT 토큰 생성 및 검증, 비밀번호 암호화 등 인증과 관련된 모든 비즈니스 로직을 담당한다.
 
@@ -539,6 +516,26 @@ classDiagram
 
 # UserRole 클래스
 
+classDiagram
+  %% 5.1. class description: 사용자의 권한 수준을 정의하는 열거형
+  <<enumeration>> UserRole {
+    %% 5.2.1-5.2.3: Enum Constants
+    GENERAL
+    BROKER
+    ADMIN
+    
+    %% 5.2.4-5.2.5: Attributes
+    -roleName: String
+    -description: String
+    
+    %% 5.3.1-5.3.5: Operations
+    +getRoleName(): String
+    +getDescription(): String
+    +hasPermission(permission: String): boolean
+    +isHigherThan(otherRole: UserRole): boolean
+    +valueOf(name: String): UserRole$
+  }
+
 ## 5.1. class description
 사용자의 권한 수준을 정의하는 열거형(Enum) 클래스이다. GENERAL, BROKER, ADMIN의 세 가지 역할을 정의하며, 각 역할에 따라 시스템 접근 권한이 달라진다.
 
@@ -609,6 +606,51 @@ classDiagram
 
 
 # 6. BrokerProfile 클래스
+
+classDiagram
+  %% --- 연관된 클래스 (이름만 표시) ---
+  class Broker {
+    %% 6.2.2. BrokerProfile이 OneToOne으로 참조하는 Broker 객체
+  }
+
+  <<enumeration>> PropertyType {
+    %% 6.2.5. 취급 매물 유형 (예: APARTMENT, VILLA)
+  }
+
+  %% --- BrokerProfile 클래스 상세 정의 ---
+  class BrokerProfile {
+    %% 6.1. class description: 브로커 상세 프로필 정보 관리
+    -profileId: Long
+    -broker: Broker
+    -introduction: String
+    -specializedAreas: List~String~
+    -propertyTypesHandled: List~PropertyType~
+    -totalDeals: int
+    -totalDealAmount: long
+    -businessHours: String
+    -officeAddress: String
+    -profileImageUrl: String
+    -certifications: List~String~
+    -responseRate: double
+    -averageResponseTime: int
+    -isAvailable: boolean
+    -viewCount: int
+    
+    +updateProfile(profileData: Object): void
+    +addSpecializedArea(area: String): void
+    +removeSpecializedArea(area: String): void
+    +addPropertyType(type: PropertyType): void
+    +incrementTotalDeals(dealAmount: long): void
+    +updateResponseMetrics(isResponded: boolean, time: int): void
+    +setAvailability(isAvailable: boolean): void
+    +incrementViewCount(): void
+    +updateProfileImage(imageUrl: String): void
+    +getProfileSummary(): String
+  }
+
+  %% --- 관계 정의 ---
+  BrokerProfile "1" -- "1" Broker : OneToOne 연관
+  BrokerProfile ..> PropertyType : 사용 (Uses)
 
 ## 6.1. class description
 브로커의 상세 프로필 정보를 관리하는 클래스이다. Broker 클래스와 OneToOne 관계를 맺으며, 브로커의 자기소개, 전문 지역, 거래 실적, 영업시간 등 고객에게 보여질 상세한 프로필 정보를 담고 있다. 이 클래스는 사용자가 브로커를 선택할 때 참고하는 핵심 정보를 제공한다.
@@ -771,6 +813,56 @@ classDiagram
 
 # 7. BrokerReview 클래스
 
+classDiagram
+  %% --- 연관된 클래스 (이름만 표시) ---
+  class Broker {
+    %% 7.2.2. 리뷰 대상 브로커
+  }
+  class User {
+    %% 7.2.3. 리뷰 작성자
+  }
+  class Delegation {
+    %% 7.2.4. 연관된 중개 위임 건
+  }
+  class BaseEntity {
+    +createdAt: LocalDateTime
+    +updatedAt: LocalDateTime
+  }
+
+  %% --- BrokerReview 클래스 상세 정의 ---
+  class BrokerReview {
+    %% 7.1. class description: 브로커에 대한 고객 리뷰 관리
+    -reviewId: Long
+    -broker: Broker
+    -reviewer: User
+    -delegation: Delegation
+    -rating: int
+    -content: String
+    -serviceQualityRating: int
+    -responseSpeedRating: int
+    -communicationRating: int
+    -isVerifiedPurchase: boolean
+    -helpfulCount: int
+    -isReported: boolean
+    -brokerResponse: String
+    %% createdAt, updatedAt은 BaseEntity로부터 상속
+    
+    +updateReview(rating: int, content: String): void
+    +addBrokerResponse(response: String): void
+    +incrementHelpfulCount(): void
+    +reportReview(reason: String): void
+    +deleteReview(): void
+    +verifyPurchase(): void
+    +getAverageDetailRating(): double
+    +isEditableBy(user: User): boolean
+  }
+
+  %% --- 관계 정의 ---
+  BaseEntity <|-- BrokerReview : 상속 (Inheritance)
+  BrokerReview "N" -- "1" Broker : ManyToOne
+  BrokerReview "N" -- "1" User : ManyToOne (reviewer)
+  BrokerReview "1" -- "1" Delegation : OneToOne
+
 ## 7.1. class description
 브로커에 대한 고객의 리뷰를 관리하는 클래스이다. 중개 서비스를 이용한 사용자가 브로커에게 남긴 평점과 후기를 저장하며, 다른 사용자들이 브로커를 선택할 때 중요한 참고 자료가 된다. 각 리뷰는 작성자, 대상 브로커, 평점, 내용, 작성일 등의 정보를 포함한다.
 
@@ -920,6 +1012,48 @@ classDiagram
 
 # 8. BrokerRating 클래스
 
+classDiagram
+  %% --- 연관된 클래스 (이름만 표시) ---
+  class Broker {
+    %% 8.2.2. 이 평점이 속한 브로커 (OneToOne)
+  }
+  class BrokerReview {
+    %% 8.3.2, 8.3.4. 평점 계산 시 참조하는 리뷰 객체
+  }
+
+  %% --- BrokerRating 클래스 상세 정의 ---
+  class BrokerRating {
+    %% 8.1. class description: 브로커 평점 계산 및 관리
+    -ratingId: Long
+    -broker: Broker
+    -overallRating: double
+    -totalReviews: int
+    -averageServiceQuality: double
+    -averageResponseSpeed: double
+    -averageCommunication: double
+    -fiveStarCount: int
+    -fourStarCount: int
+    -threeStarCount: int
+    -twoStarCount: int
+    -oneStarCount: int
+    -lastUpdated: LocalDateTime
+    -ratingTrend: String
+    
+    +recalculateRatings(): void
+    +addNewReviewRating(review: BrokerReview): void
+    -updateStarDistribution(newRating: int): void
+    +removeReviewRating(review: BrokerReview): void
+    +getStarDistribution(): Map~Integer,Integer~
+    +calculateRatingTrend(): void
+    +getOverallRating(): double
+    +getDetailedRatingSummary(): String
+    +isReliableRating(): boolean
+  }
+
+  %% --- 관계 정의 ---
+  BrokerRating "1" -- "1" Broker : OneToOne 연관
+  BrokerRating ..> BrokerReview : 사용 (Uses)
+
 ## 8.1. class description
 브로커의 평점을 계산하고 관리하는 클래스이다. 여러 리뷰의 평점을 종합하여 브로커의 전체 평균 평점을 계산하고, 각 세부 항목별 평점도 산출한다. 이 클래스는 브로커의 평가 지표를 실시간으로 업데이트하고, 사용자에게 신뢰할 수 있는 평점 정보를 제공하는 역할을 한다.
 
@@ -1068,6 +1202,78 @@ classDiagram
 
 
 # 9. Delegation 클래스
+
+classDiagram
+  %% --- 연관된 클래스 (이름만 표시) ---
+  class User {
+    %% 9.2.2. 중개 요청자
+  }
+  class Broker {
+    %% 9.2.3. 중개 담당자
+  }
+  class Property {
+    %% 9.2.4. 중개 대상 매물
+  }
+  class BaseEntity {
+    %% 9.2.10. createdAt을 상속
+    +createdAt: LocalDateTime
+  }
+  class StatusChange {
+    %% 9.3.11. 상태 변경 이력 객체
+  }
+
+  <<enumeration>> DelegationStatus {
+    %% 9.2.5. 위임 상태 열거형
+    PENDING
+    ACCEPTED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+    REJECTED
+  }
+
+  %% --- Delegation 클래스 상세 정의 ---
+  class Delegation {
+    %% 9.1. class description: 사용자-브로커 간의 중개 위임 관리
+    -delegationId: Long
+    -user: User
+    -broker: Broker
+    -property: Property
+    -status: DelegationStatus
+    -requestMessage: String
+    -brokerResponse: String
+    -desiredBudget: long
+    -desiredMoveInDate: LocalDate
+    -requestedAt: LocalDateTime
+    -acceptedAt: LocalDateTime
+    -completedAt: LocalDateTime
+    -cancelledAt: LocalDateTime
+    -estimatedCommission: long
+    -actualCommission: long
+    -priority: int
+    -notes: String
+    -isReviewSubmitted: boolean
+    
+    +acceptDelegation(brokerResponse: String): void
+    +rejectDelegation(reasonMessage: String): void
+    +startProgress(): void
+    +completeDelegation(actualCommission: long): void
+    +cancelDelegation(reason: String): void
+    +updateStatus(newStatus: DelegationStatus): void
+    +calculateEstimatedCommission(): void
+    +updateNotes(newNote: String): void
+    +canBeCancelledBy(user: User): boolean
+    +getDuration(): long
+    +getStatusHistory(): List~StatusChange~
+  }
+
+  %% --- 관계 정의 ---
+  BaseEntity <|-- Delegation : 상속 (Inheritance)
+  Delegation "N" -- "1" User : ManyToOne
+  Delegation "N" -- "1" Broker : ManyToOne
+  Delegation "N" -- "1" Property : ManyToOne
+  Delegation ..> DelegationStatus : 사용 (Uses)
+  Delegation ..> StatusChange : 사용 (Returns)
 
 ## 9.1. class description
 사용자가 브로커에게 부동산 중개를 위임한 건에 대한 정보를 관리하는 핵심 클래스이다. 위임의 생성부터 완료까지의 전체 생명주기를 추적하며, 사용자와 브로커 간의 중개 계약 관계를 나타낸다. 이 클래스는 누가 누구에게 어떤 매물에 대해 중개를 요청했는지, 현재 진행 상태는 어떠한지, 언제 요청되고 완료되었는지 등의 모든 정보를 포함하고 있다. 중개 위임은 사용자가 매물을 직접 거래하는 것이 아니라 전문가인 브로커의 도움을 받아 거래를 진행하고자 할 때 생성되며, Real Estate Hub 플랫폼의 핵심 비즈니스 프로세스를 구현한다.
@@ -1255,6 +1461,37 @@ classDiagram
 
 # 10. DelegationStatus 클래스
 
+classDiagram
+  %% 10.1. class description: 중개 위임의 진행 상태를 정의하는 열거형
+  <<enumeration>> DelegationStatus {
+    %% 10.2.1-10.2.6: Enum Constants
+    PENDING
+    ACCEPTED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+    REJECTED
+    
+    %% 10.2.7-10.2.10: Attributes
+    -statusCode: String
+    -statusName: String
+    -description: String
+    -allowedNextStatuses: List~DelegationStatus~
+    
+    %% 10.3.1-10.3.8: Operations
+    +getStatusCode(): String
+    +getStatusName(): String
+    +getDescription(): String
+    +canTransitionTo(targetStatus: DelegationStatus): boolean
+    +isTerminalStatus(): boolean
+    +requiresBrokerAction(): boolean
+    +requiresUserAction(): boolean
+    +getNextRecommendedAction(): String
+  }
+  
+  %% 10.2.10. allowedNextStatuses에 대한 자기 참조 관계
+  DelegationStatus ..> DelegationStatus : "allowedNextStatuses"
+
 ## 10.1. class description
 중개 위임의 진행 상태를 정의하는 열거형(Enum) 클래스이다. 위임의 생명주기 전체를 여섯 가지 주요 상태로 구분하여 관리하며, 각 상태는 특정한 의미와 다음 가능한 상태 전환을 정의한다. 이 열거형은 위임 프로세스의 명확한 흐름을 보장하고, 각 상태에 따라 사용자와 브로커에게 적절한 기능과 정보를 제공하는 기준이 된다. 예를 들어 PENDING 상태에서는 브로커에게 수락/거절 버튼이 표시되고, IN_PROGRESS 상태에서는 진행 상황 업데이트와 채팅 기능이 활성화된다.
 
@@ -1373,6 +1610,55 @@ classDiagram
 
 
 # 11. DelegationRequest 클래스
+
+classDiagram
+  %% --- 연관된 엔티티 (이름만 표시) ---
+  class Delegation {
+    %% 11.3.7. toDelegation() 메서드가 생성/반환하는 엔티티
+  }
+  class User {
+    %% 11.3.7. toDelegation()의 매개변수로 사용됨
+  }
+  class Broker {
+    %% 11.3.2. 유효성 검증 대상 및 11.3.7. 매개변수로 사용됨
+  }
+  class Property {
+    %% 11.3.3. 유효성 검증 대상
+  }
+
+  %% --- DelegationRequest DTO 클래스 상세 정의 ---
+  class DelegationRequest {
+    %% 11.1. class description: 중개 요청 DTO
+    -brokerId: Long
+    -propertyId: Long
+    -requestMessage: String
+    -desiredBudget: Long
+    -desiredMoveInDate: LocalDate
+    -priority: Integer
+    -contactMethod: String
+    -preferredContactTime: String
+    -additionalRequirements: String
+    -isUrgent: Boolean
+    -agreeToTerms: Boolean
+    -agreeToCommission: Boolean
+
+    +validate(): boolean
+    -validateBrokerId(): boolean
+    -validatePropertyId(): boolean
+    -validateDates(): boolean
+    -validateBudget(): boolean
+    +sanitizeInputs(): void
+    +toDelegation(user: User, broker: Broker): Delegation
+    +getEstimatedCommission(): long
+    +checkAvailability(): boolean
+    +generateRequestSummary(): String
+  }
+
+  %% --- 관계 정의 ---
+  DelegationRequest ..> Delegation : "Creates"
+  DelegationRequest ..> User : "Uses"
+  DelegationRequest ..> Broker : "Uses"
+  DelegationRequest ..> Property : "Uses"
 
 ## 11.1. class description
 사용자가 브로커에게 중개를 요청할 때 전달하는 정보를 담은 DTO(Data Transfer Object) 클래스이다. 실제 Delegation 엔티티가 생성되기 전에 사용자로부터 필요한 모든 정보를 수집하고 검증하는 역할을 한다. 이 클래스는 웹 요청의 바디로 전달되거나 폼 데이터로 제출되며, 서비스 레이어에서 유효성을 검증한 후 실제 Delegation 엔티티로 변환된다. DTO 패턴을 사용함으로써 엔티티 클래스를 직접 노출하지 않고, 요청에 필요한 데이터만 선택적으로 받을 수 있어 보안과 유연성이 향상된다.
