@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.context.ApplicationEventPublisher;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -24,6 +24,7 @@ public class propertyservice {
 
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher events;
 
     /** 지도 마커 목록 */
     public List<PropertyMarkerDto> findInBounds(
@@ -100,6 +101,18 @@ public class propertyservice {
 
         p.setStatus(Property.Status.SOLD);
         p.setUpdatedAt(OffsetDateTime.now().toLocalDateTime());
+
+        // 🚀 찜 매물 거래완료 이벤트
+        events.publishEvent(new com.realestate.app.domain.property.event.PropertySoldEvent(
+                p.getId(), p.getTitle(), p.getUpdatedAt()
+        ));
+
+        // 🚀 구매 완료 이벤트 (구매자 지정된 경우)
+        if (newOwnerIdOrNull != null) {
+            events.publishEvent(new com.realestate.app.domain.property.event.PurchaseCompletedEvent(
+                    p.getId(), newOwnerIdOrNull, /*transactionId*/ p.getId(), p.getUpdatedAt()
+            ));
+        }
     }
 
 }

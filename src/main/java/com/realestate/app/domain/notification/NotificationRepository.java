@@ -39,4 +39,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.user.id = :userId AND n.isRead = true")
     int deleteReadNotificationsByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("""
+update Notification n
+   set n.isRead = true, n.readAt = CURRENT_TIMESTAMP
+ where n.user.id = :userId
+   and n.type = com.realestate.app.domain.notification.Notification$NotificationType.CHAT_MESSAGE
+   and n.relatedId = :roomId
+   and n.isRead = false
+""")
+    int markChatMessageNotificationsRead(@Param("userId") Long userId, @Param("roomId") Long roomId);
+
 }

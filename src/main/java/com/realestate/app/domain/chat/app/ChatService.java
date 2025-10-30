@@ -1,5 +1,6 @@
 package com.realestate.app.domain.chat.app;
 
+import org.springframework.context.ApplicationEventPublisher;
 import com.realestate.app.domain.chat.ChatMessage;
 import com.realestate.app.domain.chat.ChatRoom;
 import com.realestate.app.domain.chat.infra.jpa.ChatMessageJpaRepository;
@@ -22,6 +23,7 @@ public class ChatService {
     private final ChatRoomJpaRepository roomRepo;
     private final ChatMessageJpaRepository msgRepo;
     private final EntityManager em;
+    private final ApplicationEventPublisher events;
 
     private record Trio(Long u1, Long u2, Long u3) {}
 
@@ -92,12 +94,13 @@ public class ChatService {
         if (sender == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "보낸 유저 없음: " + senderId);
 
         ChatMessage msg = ChatMessage.builder()
-                .room(room)
-                .sender(sender)
-                .content(content)
-                .isRead(false)
-                .build();
-        return msgRepo.save(msg);
+                .room(room).sender(sender).content(content).isRead(false).build();
+        ChatMessage saved = msgRepo.save(msg);
+
+        events.publishEvent(new com.realestate.app.domain.chat.event.ChatMessageCreatedEvent(
+                roomId, saved.getId(), senderId, saved.getContent(), saved.getSentAt()
+        ));
+        return saved;
     }
 
     private boolean isMember(ChatRoom r, Long uid) {
