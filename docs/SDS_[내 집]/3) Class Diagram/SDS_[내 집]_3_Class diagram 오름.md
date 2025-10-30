@@ -1,17 +1,11 @@
 # User 클래스
 
+```mermaid
 classDiagram
   %% --- 부모 클래스 정의 (상속 관계) ---
   class BaseEntity {
     +createdAt: LocalDateTime
     +updatedAt: LocalDateTime
-  }
-
-  %% --- 열거형 정의 (사용 관계) ---
-  <<enumeration>> UserRole {
-    GENERAL
-    BROKER
-    ADMIN
   }
 
   %% --- User 클래스 정의 ---
@@ -36,7 +30,7 @@ classDiagram
 
   %% --- 관계 정의 ---
   BaseEntity <|-- User : 상속 (Inheritance)
-  User ..> UserRole : 사용 (Uses)
+```
 
 ## 1.1. class description
 일반 사용자의 기본 정보와 인증 정보를 관리하는 클래스이다. 회원가입, 로그인, 프로필 수정 등 사용자와 관련된 핵심 정보를 담고 있으며, 모든 사용자 유형의 기본이 되는 클래스이다.
@@ -133,6 +127,7 @@ classDiagram
 
 # Broker 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class User {
@@ -166,6 +161,7 @@ classDiagram
   %% --- 관계 정의 ---
   Broker "1" -- "1" User : OneToOne 연관
   Broker ..> BrokerProfile : 사용 (Returns)
+```
 
 ## 2.1. class description
 브로커 사용자의 정보를 관리하는 클래스이다. User 클래스를 상속받아 일반 사용자의 모든 속성을 포함하며, 브로커 고유의 프로필 정보와 자격증 정보를 추가로 관리한다.
@@ -262,6 +258,7 @@ classDiagram
 
 # Admin 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class User {
@@ -298,6 +295,7 @@ classDiagram
   Admin ..> User : 사용 (Manages)
   Admin ..> Property : 사용 (Manages)
   Admin ..> Broker : 사용 (Manages)
+```
 
 ## 3.1. class description
 시스템 관리자의 정보를 관리하는 클래스이다. User 클래스를 상속받아 일반 사용자의 모든 속성을 포함하며, 관리자 고유의 권한 및 활동 이력을 추가로 관리한다.
@@ -388,6 +386,7 @@ classDiagram
 
 # AuthService 클래스
 
+```mermaid
 classDiagram
   %% --- 의존 컴포넌트 및 엔티티 (이름만 표시) ---
   class UserRepository {
@@ -432,6 +431,7 @@ classDiagram
   
   AuthService ..> User : 사용 (Uses/Returns)
   AuthService ..> TokenResponse : 사용 (Returns)
+```
 
 ## 4.1. class description
 사용자 인증 및 인가를 처리하는 서비스 클래스이다. 회원가입, 로그인, JWT 토큰 생성 및 검증, 비밀번호 암호화 등 인증과 관련된 모든 비즈니스 로직을 담당한다.
@@ -516,13 +516,14 @@ classDiagram
 
 # UserRole 클래스
 
+```mermaid
 classDiagram
-  %% 5.1. class description: 사용자의 권한 수준을 정의하는 열거형
-  <<enumeration>> UserRole {
-    %% 5.2.1-5.2.3: Enum Constants
-    GENERAL
-    BROKER
-    ADMIN
+  %% 5.1. class description: 사용자의 권한 수준을 정의 (클래스로 변경)
+  class UserRole {
+    %% 5.2.1-5.2.3: Enum Constants (클래스에서는 static 상수로 표현될 수 있음)
+    <<static>> GENERAL
+    <<static>> BROKER
+    <<static>> ADMIN
     
     %% 5.2.4-5.2.5: Attributes
     -roleName: String
@@ -533,8 +534,9 @@ classDiagram
     +getDescription(): String
     +hasPermission(permission: String): boolean
     +isHigherThan(otherRole: UserRole): boolean
-    +valueOf(name: String): UserRole$
+    +valueOf(name: String): UserRole
   }
+```
 
 ## 5.1. class description
 사용자의 권한 수준을 정의하는 열거형(Enum) 클래스이다. GENERAL, BROKER, ADMIN의 세 가지 역할을 정의하며, 각 역할에 따라 시스템 접근 권한이 달라진다.
@@ -607,14 +609,11 @@ classDiagram
 
 # 6. BrokerProfile 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class Broker {
     %% 6.2.2. BrokerProfile이 OneToOne으로 참조하는 Broker 객체
-  }
-
-  <<enumeration>> PropertyType {
-    %% 6.2.5. 취급 매물 유형 (예: APARTMENT, VILLA)
   }
 
   %% --- BrokerProfile 클래스 상세 정의 ---
@@ -650,7 +649,7 @@ classDiagram
 
   %% --- 관계 정의 ---
   BrokerProfile "1" -- "1" Broker : OneToOne 연관
-  BrokerProfile ..> PropertyType : 사용 (Uses)
+```
 
 ## 6.1. class description
 브로커의 상세 프로필 정보를 관리하는 클래스이다. Broker 클래스와 OneToOne 관계를 맺으며, 브로커의 자기소개, 전문 지역, 거래 실적, 영업시간 등 고객에게 보여질 상세한 프로필 정보를 담고 있다. 이 클래스는 사용자가 브로커를 선택할 때 참고하는 핵심 정보를 제공한다.
@@ -813,6 +812,7 @@ classDiagram
 
 # 7. BrokerReview 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class Broker {
@@ -862,6 +862,7 @@ classDiagram
   BrokerReview "N" -- "1" Broker : ManyToOne
   BrokerReview "N" -- "1" User : ManyToOne (reviewer)
   BrokerReview "1" -- "1" Delegation : OneToOne
+```
 
 ## 7.1. class description
 브로커에 대한 고객의 리뷰를 관리하는 클래스이다. 중개 서비스를 이용한 사용자가 브로커에게 남긴 평점과 후기를 저장하며, 다른 사용자들이 브로커를 선택할 때 중요한 참고 자료가 된다. 각 리뷰는 작성자, 대상 브로커, 평점, 내용, 작성일 등의 정보를 포함한다.
@@ -1012,6 +1013,7 @@ classDiagram
 
 # 8. BrokerRating 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class Broker {
@@ -1053,6 +1055,7 @@ classDiagram
   %% --- 관계 정의 ---
   BrokerRating "1" -- "1" Broker : OneToOne 연관
   BrokerRating ..> BrokerReview : 사용 (Uses)
+```
 
 ## 8.1. class description
 브로커의 평점을 계산하고 관리하는 클래스이다. 여러 리뷰의 평점을 종합하여 브로커의 전체 평균 평점을 계산하고, 각 세부 항목별 평점도 산출한다. 이 클래스는 브로커의 평가 지표를 실시간으로 업데이트하고, 사용자에게 신뢰할 수 있는 평점 정보를 제공하는 역할을 한다.
@@ -1203,6 +1206,7 @@ classDiagram
 
 # 9. Delegation 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class User {
@@ -1222,8 +1226,9 @@ classDiagram
     %% 9.3.11. 상태 변경 이력 객체
   }
 
-  <<enumeration>> DelegationStatus {
-    %% 9.2.5. 위임 상태 열거형
+  %% --- DelegationStatus를 일반 클래스로 표현 (요청 사항) ---
+  class DelegationStatus {
+    %% 9.2.5. 위임 상태 (클래스로 표현됨)
     PENDING
     ACCEPTED
     IN_PROGRESS
@@ -1274,6 +1279,7 @@ classDiagram
   Delegation "N" -- "1" Property : ManyToOne
   Delegation ..> DelegationStatus : 사용 (Uses)
   Delegation ..> StatusChange : 사용 (Returns)
+```
 
 ## 9.1. class description
 사용자가 브로커에게 부동산 중개를 위임한 건에 대한 정보를 관리하는 핵심 클래스이다. 위임의 생성부터 완료까지의 전체 생명주기를 추적하며, 사용자와 브로커 간의 중개 계약 관계를 나타낸다. 이 클래스는 누가 누구에게 어떤 매물에 대해 중개를 요청했는지, 현재 진행 상태는 어떠한지, 언제 요청되고 완료되었는지 등의 모든 정보를 포함하고 있다. 중개 위임은 사용자가 매물을 직접 거래하는 것이 아니라 전문가인 브로커의 도움을 받아 거래를 진행하고자 할 때 생성되며, Real Estate Hub 플랫폼의 핵심 비즈니스 프로세스를 구현한다.
@@ -1461,10 +1467,11 @@ classDiagram
 
 # 10. DelegationStatus 클래스
 
+```mermaid
 classDiagram
-  %% 10.1. class description: 중개 위임의 진행 상태를 정의하는 열거형
-  <<enumeration>> DelegationStatus {
-    %% 10.2.1-10.2.6: Enum Constants
+  %% 10.1. class description: 중개 위임의 진행 상태를 정의 (class로 표현)
+  class DelegationStatus {
+    %% 10.2.1-10.2.6: Enum Constants (각각 별도 줄에 작성)
     PENDING
     ACCEPTED
     IN_PROGRESS
@@ -1489,8 +1496,9 @@ classDiagram
     +getNextRecommendedAction(): String
   }
   
-  %% 10.2.10. allowedNextStatuses에 대한 자기 참조 관계
-  DelegationStatus ..> DelegationStatus : "allowedNextStatuses"
+  %% 10.2.10. allowedNextStatuses에 대한 자기 참조 관계 (집약 관계)
+  DelegationStatus "1" o--> "0..*" DelegationStatus : "allowedNextStatuses"
+```
 
 ## 10.1. class description
 중개 위임의 진행 상태를 정의하는 열거형(Enum) 클래스이다. 위임의 생명주기 전체를 여섯 가지 주요 상태로 구분하여 관리하며, 각 상태는 특정한 의미와 다음 가능한 상태 전환을 정의한다. 이 열거형은 위임 프로세스의 명확한 흐름을 보장하고, 각 상태에 따라 사용자와 브로커에게 적절한 기능과 정보를 제공하는 기준이 된다. 예를 들어 PENDING 상태에서는 브로커에게 수락/거절 버튼이 표시되고, IN_PROGRESS 상태에서는 진행 상황 업데이트와 채팅 기능이 활성화된다.
@@ -1611,6 +1619,7 @@ classDiagram
 
 # 11. DelegationRequest 클래스
 
+```mermaid
 classDiagram
   %% --- 연관된 엔티티 (이름만 표시) ---
   class Delegation {
@@ -1659,6 +1668,7 @@ classDiagram
   DelegationRequest ..> User : "Uses"
   DelegationRequest ..> Broker : "Uses"
   DelegationRequest ..> Property : "Uses"
+```
 
 ## 11.1. class description
 사용자가 브로커에게 중개를 요청할 때 전달하는 정보를 담은 DTO(Data Transfer Object) 클래스이다. 실제 Delegation 엔티티가 생성되기 전에 사용자로부터 필요한 모든 정보를 수집하고 검증하는 역할을 한다. 이 클래스는 웹 요청의 바디로 전달되거나 폼 데이터로 제출되며, 서비스 레이어에서 유효성을 검증한 후 실제 Delegation 엔티티로 변환된다. DTO 패턴을 사용함으로써 엔티티 클래스를 직접 노출하지 않고, 요청에 필요한 데이터만 선택적으로 받을 수 있어 보안과 유연성이 향상된다.
