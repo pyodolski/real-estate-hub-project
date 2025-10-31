@@ -1,7 +1,7 @@
 # 8. Glossary
 
 ## Access Token
- JWT(JSON Web Token) 기반의 단기 인증 토큰으로, 사용자 인증 후 발급되어 API 요청 시 권한을 검증하는 데 사용됨
+- JWT(JSON Web Token) 기반의 단기 인증 토큰으로, 사용자 인증 후 발급되어 API 요청 시 권한을 검증하는 데 사용됨
 
 ## API Endpoint
 - 클라이언트에서 서버의 특정 기능을 호출하기 위한 URL 경로와 HTTP 메서드의 조합
