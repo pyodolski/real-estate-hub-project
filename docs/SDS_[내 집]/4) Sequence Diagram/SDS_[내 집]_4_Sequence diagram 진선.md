@@ -105,7 +105,19 @@ sequenceDiagram
 ```
 
 **설명**  
-이 시퀀스 다이어그램은 사용자가 회원가입 페이지에 접속하여 계정을 생성하는 전체 과정을 보여준다. 사용자가 회원가입 페이지에 접속하면 클라이언트(Frontend)는 회원가입 폼을 렌더링한다. 사용자는 사용자 유형으로 REGULAR, BROKER, ADMIN 중에 선택한다. BROKER를 선택한 경우 클라이언트는 중개사 정보 필드(licenseNumber, agencyName)를 표시하고, 사용자는 등록번호를 필수로, 상호명을 선택적으로 입력한다. 이후 사용자는 필수 정보(이메일, 사용자명, 비밀번호 8~64자)와 선택 정보(태그, 최대 30개, 중복 불가)를 입력한다. 회원가입 버튼을 클릭하면 클라이언트는 먼저 입력값의 유효성을 검증한다(이메일 형식, 비밀번호 길이 등). 검증이 실패하면 오류 메시지를 표시하고, 통과되면 POST /api/auth/signup 요청을 AuthController로 전송한다. 컨트롤러는 요청 검증을 수행한 후 AuthService의 register 메서드를 호출한다. 서비스는 이메일 형식을 검증한 뒤 UserRepository를 통해 existsByEmail을 호출하여 데이터베이스에서 이메일 중복 여부를 확인한다. 이미 등록된 이메일이면 400 Bad Request를 반환하고, 사용 가능한 경우 비밀번호 검증(8~64자)을 수행한다. 검증 통과 후 PasswordEncoder를 사용하여 비밀번호를 BCrypt로 해시화하고, User 엔티티를 생성하여 UserRepository.save로 데이터베이스에 저장한다. 사용자 유형이 BROKER인 경우 BrokerProfile 엔티티를 생성하여 BrokerProfileRepository.save로 저장한다. 태그가 입력된 경우 각 태그마다 TagRepository.findOrCreateByName을 호출하여 태그를 조회하거나 새로 생성하고, UserTag 관계를 생성하여 저장한다. 모든 과정이 완료되면 서비스는 생성된 사용자 정보를 컨트롤러에 반환하고, 컨트롤러는 201 Created 응답과 함께 결과를 클라이언트에 전달한다. 클라이언트는 성공 메시지를 표시하고 로그인 페이지로 자동 이동한다.
+사용자가 회원가입 페이지에 접속하면 Frontend는 회원가입 폼을 렌더링한다. 사용자는 사용자 유형(REGULAR/BROKER/ADMIN)을 선택한다. BROKER 선택 시 Frontend는 내부에서 중개사 정보 필드를 추가로 표시하고, 사용자는 등록번호(필수)와 상호명(선택)을 입력한다. 이후 필수 정보(이메일, 사용자명, 8~64자 비밀번호)와 태그(최대 30개, 중복 불가)를 입력하고 회원가입 버튼을 클릭한다.
+
+Frontend는 내부에서 입력값을 검증한다. 클라이언트 검증이 실패하면 Frontend는 사용자에게 오류 메시지를 표시한다. 클라이언트 검증이 성공하면 Frontend는 AuthController로 POST 요청을 전송한다.
+
+Controller는 내부에서 요청을 검증한 후 AuthService의 register 메서드를 호출한다. Service는 내부에서 이메일 형식을 검증한 후 UserRepository를 통해 이메일 중복을 확인한다. Repository는 Database에 SELECT 쿼리를 실행하여 중복 여부를 확인하고 결과를 Service로 반환한다. 이메일이 이미 존재하면 Service는 오류 응답을 Controller로 전달하고, Controller는 Frontend로 400 오류를 응답한다.
+
+이메일이 미존재하면 Service는 내부에서 비밀번호를 검증(8~64자)한 후 PasswordEncoder를 통해 해시화한다. PasswordEncoder는 해시된 비밀번호를 Service로 반환한다. Service는 내부에서 User 엔티티를 생성한 후 UserRepository의 save 메서드를 호출한다. Repository는 Database에 INSERT 쿼리를 실행하여 사용자를 저장하고, Database는 생성된 userId를 Repository로 반환한다. Repository는 User 엔티티를 Service로 반환한다.
+
+사용자 유형이 BROKER인 경우 Service는 내부에서 BrokerProfile 엔티티를 생성한 후 BrokerRepository의 save 메서드를 호출한다. Repository는 Database에 INSERT 쿼리를 실행하여 브로커 정보를 저장하고, Database는 저장 완료를 Repository로 알린다. Repository는 BrokerProfile을 Service로 반환한다.
+
+태그가 입력된 경우 각 태그마다 Service는 TagRepository의 findOrCreateByName 메서드를 호출한다. 태그가 존재하면 Repository는 Database에서 SELECT하여 tagId를 반환하고, 태그가 미존재하면 Repository는 Database에 INSERT하여 새 tagId를 반환한다. Service는 내부에서 UserTag 관계를 생성한 후 TagRepository의 save 메서드를 호출한다. Repository는 Database에 INSERT 쿼리를 실행하여 관계를 저장한다.
+
+모든 저장이 완료되면 Service는 회원가입 완료 응답을 Controller로 반환하고, Controller는 201 Created 응답을 Frontend로 전송한다. Frontend는 내부에서 성공 메시지를 표시하고 로그인 페이지로 자동 이동한 후, 사용자에게 "회원가입 완료. 로그인해주세요" 메시지를 표시한다.
 
 ---
 
@@ -235,7 +247,27 @@ sequenceDiagram
 ```
 
 **설명**  
-이 시퀀스 다이어그램은 사용자의 로그인, 토큰 발급 및 갱신, 로그아웃의 전체 과정을 보여준다. 사용자가 로그인 페이지에 접근하면 클라이언트는 로그인 폼(이메일, 비밀번호)을 표시한다. 사용자가 이메일과 비밀번호를 입력한 후 로그인 버튼을 클릭하면 클라이언트는 POST /api/auth/login 요청을 AuthController로 전송한다. 컨트롤러는 AuthService의 login 메서드를 호출하고, 서비스는 UserRepository를 통해 findByEmail로 데이터베이스에서 사용자를 조회한다. 사용자가 존재하지 않거나 비밀번호가 일치하지 않으면 401 Unauthorized 응답과 함께 "이메일 또는 비밀번호가 잘못되었습니다" 오류 메시지를 반환한다. 인증이 성공하면 서비스는 TokenService의 generateTokens를 호출하여 AccessToken(JWT, 15분 유효)과 RefreshToken(14일 또는 30일 유효)을 생성한다. 생성된 RefreshToken은 UserRepository.saveRefreshToken을 통해 데이터베이스에 저장된다. 토큰은 클라이언트에 반환되며, 클라이언트는 이를 쿠키나 LocalStorage에 저장한 후 사용자의 역할(role)에 따라 메인 페이지, 브로커 대시보드, 관리자 페이지 중 하나로 이동한다. 사용 중 AccessToken이 만료되면 클라이언트는 자동으로 POST /api/auth/refresh 요청을 보내고, 컨트롤러는 TokenService.refreshAccessToken을 호출한다. TokenService는 UserRepository를 통해 데이터베이스에서 RefreshToken을 조회하고, 만료되거나 폐기된 경우 InvalidTokenException을 던져 로그인 화면으로 리다이렉트한다. RefreshToken이 유효한 경우 새로운 AccessToken을 생성하여 반환하고, 클라이언트는 새 토큰을 저장한 후 원래 요청을 재시도한다. 사용자가 로그아웃 버튼을 클릭하면 POST /api/auth/logout 요청이 전송되고, 서비스는 UserRepository.revokeRefreshToken을 호출하여 데이터베이스에서 RefreshToken을 revoked=true로 업데이트한다. 클라이언트는 로컬에 저장된 토큰을 삭제하고 로그인 페이지로 리다이렉트한다.
+사용자가 로그인 페이지에 접근하면 클라이언트는 내부에서 로그인 폼을 표시한다. 사용자가 이메일과 비밀번호를 입력하고 로그인 버튼을 클릭하면 클라이언트는 AuthController로 POST 요청을 전송한다.
+
+Controller는 AuthService의 login 메서드를 호출한다. Service는 UserRepository를 통해 이메일로 사용자를 조회한다. Repository는 Database에 SELECT 쿼리를 실행하고 사용자 정보를 Service로 반환한다. 사용자가 없으면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 401 오류를 응답한다. 클라이언트는 오류 메시지를 사용자에게 표시한다.
+
+사용자가 존재하면 Service는 내부에서 비밀번호를 검증한다. 비밀번호가 일치하지 않으면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 401 오류를 응답한다. 클라이언트는 오류 메시지를 사용자에게 표시한다.
+
+비밀번호가 일치하면 Service는 TokenService의 generateTokens 메서드를 호출한다. TokenService는 내부에서 AccessToken(JWT, 15분 유효)을 생성하고, RefreshToken(14일 또는 30일 유효)을 생성한 후 Service로 반환한다. Service는 Repository의 saveRefreshToken 메서드를 호출한다. Repository는 Database에 INSERT 쿼리를 실행하여 RefreshToken을 저장하고, Database는 저장 완료를 Repository로 알린다.
+
+Service는 Controller로 200 응답과 AccessToken, RefreshToken을 전달한다. Controller는 클라이언트로 200 응답과 토큰을 전송한다. 클라이언트는 내부에서 토큰을 저장하고, 역할에 따라 메인 페이지로 이동한다. 역할이 regular/owner인 경우 메인 페이지를 표시하고, broker인 경우 브로커 대시보드를 표시하고, admin인 경우 관리자 페이지를 표시한다.
+
+사용 중 사용자가 API 요청을 하면 클라이언트는 Controller로 API 요청과 AccessToken을 전송한다. Controller는 내부에서 토큰을 검증한다. AccessToken이 유효하면 Controller는 Service를 호출하여 요청을 처리하고, Service는 결과를 Controller로 반환한다. Controller는 클라이언트로 200 응답을 전송한다.
+
+AccessToken이 만료되었으면 Controller는 내부에서 401 Unauthorized를 처리한다. 클라이언트는 Controller로 POST 요청과 RefreshToken을 전송한다. Controller는 TokenService의 refreshAccessToken 메서드를 호출한다. TokenService는 Repository를 통해 RefreshToken을 조회한다. Repository는 Database에 SELECT 쿼리를 실행하고 토큰 정보를 TokenService로 반환한다.
+
+RefreshToken이 만료되거나 폐기되었으면 TokenService는 Controller로 예외를 전달하고, Controller는 클라이언트로 401 오류를 응답한다. 클라이언트는 내부에서 로그인 화면으로 리다이렉트하고 사용자에게 "세션이 만료되었습니다. 다시 로그인하세요" 메시지를 표시한다.
+
+RefreshToken이 유효하면 TokenService는 내부에서 새로운 AccessToken을 생성하여 Controller로 반환한다. Controller는 클라이언트로 200 응답과 새로운 AccessToken을 전송한다. 클라이언트는 내부에서 새 토큰을 저장하고 원래 요청을 새 AccessToken과 함께 Controller로 재전송한다. Controller는 Service를 호출하여 요청을 처리하고, Service는 결과를 Controller로 반환한다. Controller는 클라이언트로 200 응답을 전송하고, 클라이언트는 요청 완료를 사용자에게 표시한다.
+
+사용자가 로그아웃 버튼을 클릭하면 클라이언트는 Controller로 POST 요청을 전송한다. Controller는 Service의 logout 메서드를 호출한다. Service는 Repository의 revokeRefreshToken 메서드를 호출한다. Repository는 Database에 UPDATE 쿼리를 실행하여 RefreshToken을 무효화하고, Database는 업데이트 완료를 Repository로 알린다. Service는 Controller로 200 응답을 전달하고, Controller는 클라이언트로 200 응답을 전송한다. 클라이언트는 내부에서 토큰을 삭제하고, 로그인 페이지로 리다이렉트한 후 사용자에게 로그인 페이지를 표시한다.
+
+오류가 발생하면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 500 오류를 응답한다. 클라이언트는 오류 발생 메시지와 재시도 버튼을 사용자에게 표시한다.
 
 ---
 
@@ -305,7 +337,17 @@ sequenceDiagram
 ```
 
 **설명**  
-이 시퀀스 다이어그램은 사용자가 사이드바의 로그아웃 버튼을 통해 세션을 종료하고 토큰을 무효화하는 과정을 보여준다. 사용자가 사이드바의 로그아웃 버튼을 클릭하면 클라이언트는 AccessToken을 포함하여 POST /api/auth/logout 요청을 AuthController로 전송한다. 컨트롤러는 먼저 JWT 토큰을 검증하여 사용자 인증 상태를 확인하고, 토큰이 없거나 유효하지 않으면 401 Unauthorized를 반환하여 로그인 화면으로 이동시킨다. 토큰이 유효한 경우 컨트롤러는 AuthService의 logout 메서드를 호출한다. 서비스는 TokenRepository를 통해 findRefreshToken으로 해당 사용자의 RefreshToken을 데이터베이스에서 조회한다. 이미 만료되거나 폐기된 토큰이면 이미 처리된 것으로 간주하여 200 OK를 반환한다. RefreshToken이 아직 유효한 경우 서비스는 TokenRepository.revokeRefreshToken을 호출하여 데이터베이스에서 해당 토큰을 revoked=true로 업데이트하여 무효화한다. 업데이트가 완료되면 서비스는 컨트롤러에 200 OK를 반환하고, 컨트롤러는 클라이언트에 성공 응답을 전달한다. 클라이언트는 응답을 받으면 로컬스토리지, 세션스토리지, 쿠키에 저장된 모든 토큰을 삭제한 후 로그인 페이지로 리다이렉트한다. 로그아웃 후 사용자가 만료된 AccessToken으로 API 요청을 시도하면 컨트롤러의 토큰 검증 단계에서 401 Unauthorized가 반환되고, 클라이언트는 "인증이 필요합니다. 로그인하세요" 오류 메시지를 표시한 뒤 로그인 페이지로 이동한다. 데이터베이스나 네트워크 오류가 발생할 경우 서비스는 예외를 컨트롤러에 전달하고, 컨트롤러는 500 Internal Server Error를 반환하여 클라이언트는 "오류 발생, 재시도 버튼" 메시지를 사용자에게 보여준다.
+사용자가 사이드바의 로그아웃 버튼을 클릭하면 클라이언트는 AccessToken을 포함하여 AuthController로 POST 요청을 전송한다. Controller는 내부에서 토큰을 검증하여 인증 상태를 확인한다. 토큰이 없으면 Controller는 클라이언트로 401 오류를 응답하고, 클라이언트는 로그인 화면으로 이동한다.
+
+토큰이 유효하면 Controller는 AuthService의 logout 메서드를 호출한다. Service는 TokenRepository의 findRefreshToken 메서드를 통해 해당 사용자의 RefreshToken을 조회한다. Repository는 Database에 SELECT 쿼리를 실행하여 RefreshToken 정보를 조회하고 Service로 반환한다.
+
+RefreshToken이 이미 만료되거나 폐기된 상태면 Service는 내부에서 이미 처리된 것으로 간주하고 Controller로 200 응답을 반환한다. RefreshToken이 유효한 경우 Service는 Repository의 revokeRefreshToken 메서드를 호출하여 토큰을 무효화한다. Repository는 Database에 UPDATE 쿼리를 실행하여 revoked를 true로 설정하고, Database는 업데이트 완료를 Repository로 알린다.
+
+Service는 Controller로 200 응답을 전달하고, Controller는 클라이언트로 200 응답을 전송한다. 클라이언트는 내부에서 로컬스토리지와 세션스토리지의 토큰을 삭제하고, 쿠키의 토큰을 삭제한 후, 로그인 페이지로 리다이렉트한다. 클라이언트는 사용자에게 로그인 페이지를 표시한다.
+
+로그아웃 후 사용자가 API 요청을 시도하면 클라이언트는 만료된 AccessToken과 함께 Controller로 API 요청을 전송한다. Controller는 내부에서 토큰을 검증한다. AccessToken이 유효하지 않으면 Controller는 클라이언트로 401 오류를 응답하고, 클라이언트는 "인증이 필요합니다. 로그인하세요" 오류 메시지를 사용자에게 표시한다. 클라이언트는 내부에서 로그인 페이지로 리다이렉트한다.
+
+Database 또는 네트워크 오류가 발생하면 Database는 Service로 예외를 전달하고, Service는 Controller로 전달한다. Controller는 클라이언트로 500 오류를 응답하고, 클라이언트는 "오류 발생, 재시도 버튼" 메시지를 사용자에게 표시한다.
 
 ---
 
@@ -443,7 +485,29 @@ sequenceDiagram
 ```
 
 **설명**  
-이 시퀀스 다이어그램은 사용자가 비밀번호를 잊었을 때 이메일을 통해 재설정하는 전체 프로세스를 보여준다. 사용자가 로그인 페이지에서 "비밀번호 찾기"를 클릭하면 클라이언트는 비밀번호 재설정 페이지로 이동하여 이메일 입력 폼을 표시한다. 사용자가 이메일을 입력하고 "재설정 링크 발송" 버튼을 클릭하면 POST /api/auth/password-reset/request 요청이 PasswordResetController로 전송된다. 컨트롤러는 요청을 PasswordResetService에 위임하고, 서비스는 UserRepository를 통해 입력된 이메일로 사용자를 조회한다. 사용자가 존재하지 않을 경우 보안을 위해 실제로는 이메일을 발송하지 않지만, 이메일 존재 여부를 노출하지 않기 위해 동일하게 200 OK를 반환하고 "이메일이 발송되었습니다" 메시지를 표시한다. 사용자가 존재하는 경우 서비스는 TokenService.generatePasswordResetToken을 호출하여 UUID 형태의 비밀번호 재설정 토큰을 생성한다(1시간 유효). 이 토큰은 데이터베이스의 password_reset_tokens 테이블에 저장된다. 이후 EmailService.sendPasswordResetEmail을 호출하여 비밀번호 재설정 링크를 포함한 이메일 템플릿을 생성하고 SMTP를 통해 사용자에게 발송한다. 사용자가 이메일에서 링크를 클릭하면 토큰이 포함된 GET /api/auth/password-reset 요청이 서버로 전송되고, 서비스는 데이터베이스에서 해당 토큰의 유효성을 검증한다(만료 시간 확인, 사용 여부 확인). 토큰이 유효하지 않으면 400 Bad Request와 함께 "유효하지 않거나 만료된 링크입니다" 오류를 반환하고, 유효한 경우 비밀번호 재설정 폼을 렌더링하여 새 비밀번호 입력 페이지를 표시한다. 사용자가 새 비밀번호를 두 번 입력하고 "재설정" 버튼을 클릭하면 POST /api/auth/password-reset/confirm 요청이 전송되고, 서비스는 토큰 유효성을 재검증한 후 비밀번호 형식을 검증한다(8~64자). 비밀번호가 기존과 동일하거나 형식이 맞지 않으면 각각 적절한 오류 메시지와 함께 400 Bad Request를 반환한다. 모든 검증이 통과하면 새 비밀번호를 BCrypt로 해시화하여 데이터베이스에 업데이트하고, 재설정 토큰은 used=true로 표시하여 재사용을 방지한다. 성공 시 클라이언트는 로그인 페이지로 리다이렉트하며 "비밀번호가 재설정되었습니다. 로그인하세요" 메시지를 표시한다. 이메일 발송 실패나 데이터베이스 오류가 발생할 경우 적절한 오류 메시지와 함께 500 Internal Server Error를 반환하여 사용자에게 상황을 알린다.
+사용자가 로그인 페이지에서 "비밀번호 찾기"를 클릭하면 클라이언트는 내부에서 비밀번호 재설정 페이지로 이동한다. 클라이언트는 이메일 입력 폼을 사용자에게 표시한다.
+
+사용자가 이메일을 입력하고 "재설정 링크 발송" 버튼을 클릭하면 클라이언트는 PasswordResetController로 POST 요청을 전송한다. Controller는 PasswordResetService의 requestPasswordReset 메서드를 호출한다. Service는 UserRepository의 findByEmail 메서드를 통해 이메일로 사용자를 조회한다. Repository는 Database에 SELECT 쿼리를 실행하고 사용자 정보를 Service로 반환한다.
+
+사용자가 없으면 보안을 위해 Service는 Controller로 200 응답을 반환하고, Controller는 클라이언트로 전달한다. 클라이언트는 "이메일이 발송되었습니다" 메시지를 사용자에게 표시한다(실제로는 이메일 발송 안 함).
+
+사용자가 존재하면 Service는 TokenService의 generatePasswordResetToken 메서드를 호출한다. TokenService는 내부에서 PasswordResetToken을 생성(UUID, 1시간 유효)한 후 Database에 INSERT 쿼리를 실행하여 저장한다. Database는 저장 완료를 TokenService로 알리고, TokenService는 PasswordResetToken을 Service로 반환한다. Service는 EmailService의 sendPasswordResetEmail 메서드를 호출한다. EmailService는 내부에서 재설정 링크가 포함된 이메일 템플릿을 생성하고, 이메일을 발송한 후 Service로 발송 완료를 알린다. Service는 Controller로 200 응답을 전달하고, Controller는 클라이언트로 전송한다. 클라이언트는 "비밀번호 재설정 링크가 이메일로 발송되었습니다" 메시지를 사용자에게 표시한다.
+
+사용자가 이메일을 확인하고 링크를 클릭하면 클라이언트는 토큰을 포함하여 Controller로 GET 요청을 전송한다. Controller는 Service의 validateResetToken 메서드를 호출한다. Service는 Database에 SELECT 쿼리를 실행하여 토큰의 유효성을 검증한다. Database는 토큰 정보를 Service로 반환한다. 토큰이 만료되었거나 사용되었거나 없으면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 400 오류를 응답한다. 클라이언트는 "유효하지 않거나 만료된 링크입니다" 오류 메시지를 사용자에게 표시한다.
+
+토큰이 유효하면 Service는 Controller로 200 응답과 비밀번호 재설정 페이지를 전달하고, Controller는 클라이언트로 전송한다. 클라이언트는 내부에서 비밀번호 재설정 폼을 렌더링하여 새 비밀번호 입력 폼을 사용자에게 표시한다.
+
+사용자가 새 비밀번호를 2회 입력하고 "재설정" 버튼을 클릭하면 클라이언트는 Controller로 POST 요청을 전송한다. Controller는 Service의 resetPassword 메서드를 호출한다. Service는 내부에서 토큰 유효성을 재검증하고 Database에 SELECT 쿼리를 실행한다. Database는 토큰 정보를 Service로 반환한다. 토큰이 유효하지 않으면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 400 오류를 응답한다. 클라이언트는 "유효하지 않거나 만료된 토큰입니다" 오류 메시지를 사용자에게 표시한다.
+
+토큰이 유효하면 Service는 내부에서 비밀번호 유효성을 검증한다(8~64자). 비밀번호 형식이 오류면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 400 오류를 응답한다. 클라이언트는 "비밀번호는 8~64자여야 합니다" 오류 메시지를 사용자에게 표시한다.
+
+비밀번호 형식이 맞으면 Service는 Repository의 findById 메서드를 호출한다. Repository는 Database에 SELECT 쿼리를 실행하여 사용자 정보를 조회하고 Service로 반환한다. Service는 내부에서 기존 비밀번호와 동일한지 확인한다. 기존과 동일하면 Service는 Controller로 예외를 전달하고, Controller는 클라이언트로 400 오류를 응답한다. 클라이언트는 "기존 비밀번호와 다른 비밀번호를 입력하세요" 오류 메시지를 사용자에게 표시한다.
+
+기존과 다르면 Service는 내부에서 새 비밀번호를 해시화하고 Repository의 updatePassword 메서드를 호출한다. Repository는 Database에 UPDATE 쿼리를 실행하여 비밀번호를 저장하고, Database는 업데이트 완료를 Repository로 알린다. Service는 Database에 UPDATE 쿼리를 실행하여 토큰을 used=true로 설정하고, Database는 토큰 사용 처리 완료를 Service로 알린다.
+
+Service는 Controller로 200 응답을 전달하고, Controller는 클라이언트로 전송한다. 클라이언트는 내부에서 로그인 페이지로 리다이렉트하고 "비밀번호가 재설정되었습니다. 로그인하세요" 메시지를 사용자에게 표시한다.
+
+이메일 발송이 실패하면 EmailService는 Service로 예외를 전달하고, Service는 Controller로 전달한다. Controller는 클라이언트로 500 오류를 응답하고, 클라이언트는 "이메일 발송에 실패했습니다. 재시도하세요" 오류 메시지를 사용자에게 표시한다. Database 또는 네트워크 오류가 발생하면 Database는 Service로 예외를 전달하고, Service는 Controller로 전달한다. Controller는 클라이언트로 500 오류를 응답하고, 클라이언트는 "오류 발생, 재시도 버튼" 메시지를 사용자에게 표시한다.
 
 ---
 
@@ -610,4 +674,26 @@ sequenceDiagram
 ```
 
 **설명**  
-이 시퀀스 다이어그램은 사용자가 자신의 프로필 정보를 조회하고 수정하는 전체 과정을 보여준다. 사용자가 프로필 버튼을 클릭하면 클라이언트는 GET /api/user/profile 요청을 UserController로 전송한다. 컨트롤러는 JWT 토큰을 검증하여 사용자 인증 상태를 확인한 뒤 토큰에서 userId를 추출하여 UserService의 getProfileDetail 메서드를 호출한다. 서비스는 UserRepository를 통해 findById로 사용자 기본 정보를 조회하고, 사용자의 역할이 BROKER인 경우 BrokerProfileRepository를 통해 추가 브로커 프로필 정보(licenseNumber, agencyName, intro, profileImageUrl)를 조회한다. 또한 TagRepository를 통해 findUserTags로 사용자와 연결된 태그 목록을 조회한 후, 모든 정보를 통합하여 프로필 정보 응답을 컨트롤러에 반환한다. 컨트롤러는 200 OK와 함께 프로필 정보를 클라이언트에 전달하고, 클라이언트는 프로필 패널에 정보를 표시한다. 사용자가 프로필 수정을 원하는 경우 "프로필 수정" 버튼을 클릭하면 클라이언트는 프로필 수정 폼을 활성화하고 현재 정보를 미리 채운다. 사용자는 기본 정보(전화번호, 소개글), 프로필 사진, 태그(최대 30개, 중복 불가), 비밀번호 등을 수정할 수 있으며, 클라이언트는 각 항목에 대해 유효성 검증을 수행한다. 수정 완료 버튼을 클릭하면 PUT /api/user/profile 요청이 전송되고, 서비스는 요청된 정보에 따라 데이터베이스를 업데이트한다. 비밀번호 변경이 포함된 경우 현재 비밀번호를 PasswordEncoder로 검증하고, 새 비밀번호가 기존과 다른지 확인한 후 BCrypt로 해시화하여 저장한다. 태그가 수정된 경우 기존 UserTag 관계를 모두 삭제한 뒤 새로운 태그들을 TagRepository.findOrCreateByName으로 찾거나 생성하여 UserTag 관계를 다시 설정한다. 기본 정보는 User 엔티티에 업데이트되고 updatedAt 필드가 자동으로 갱신된다. 모든 업데이트가 완료되면 서비스는 수정된 프로필 정보를 컨트롤러에 반환하고, 컨트롤러는 200 OK와 함께 업데이트된 정보를 클라이언트에 전달한다. 클라이언트는 성공 메시지를 표시하고 프로필 패널을 새로고침하여 변경사항을 반영한다.
+사용자가 프로필 버튼을 클릭하면 Frontend는 UserController로 GET 요청을 전송한다. Controller는 내부에서 JWT 토큰을 검증하여 현재 userId를 추출한 후 UserService의 getProfileDetail 메서드를 호출한다.
+
+Service는 UserRepository의 findById 메서드를 통해 사용자 정보를 조회한다. Repository는 Database에 SELECT 쿼리를 실행하고 User 정보를 Service로 반환한다. 사용자의 역할이 BROKER인 경우 Service는 BrokerRepository의 findById 메서드를 통해 브로커 프로필 정보를 조회한다. Repository는 Database에 SELECT 쿼리를 실행하여 BrokerProfile을 조회하고 Service로 반환한다.
+
+Service는 TagRepository의 findUserTags 메서드를 통해 사용자와 연결된 태그 목록을 조회한다. Repository는 Database에 SELECT 쿼리를 실행하여 태그 목록을 조회하고 Service로 반환한다. Service는 내부에서 프로필 정보를 조합하여 Controller로 프로필 정보 응답을 전달한다. Controller는 Frontend로 200 응답과 프로필 정보를 전송한다. Frontend는 내부에서 프로필 패널에 정보를 표시한다.
+
+프로필 수정을 원하지 않으면 Frontend는 프로필 조회 완료를 사용자에게 표시한다. 사용자가 "프로필 수정" 버튼을 클릭하면 Frontend는 내부에서 프로필 수정 폼을 활성화하고 현재 정보를 미리 채운다. 사용자는 기본 정보(전화번호, 소개글 등)를 수정한다.
+
+사진을 변경하는 경우 사용자가 새로운 사진을 업로드하면 Frontend는 내부에서 이미지 미리보기를 표시한다. 태그를 변경하는 경우 사용자가 태그를 삭제하고 추가하면 Frontend는 내부에서 태그 최대 30개를 확인하고 중복 태그를 검사한다. 비밀번호 변경이 필요한 경우 사용자가 현재 비밀번호를 입력하고, 새 비밀번호(8~64자)를 입력하고, 새 비밀번호를 재입력하면 Frontend는 내부에서 유효성을 검증한다.
+
+사용자가 "수정 완료" 버튼을 클릭하면 Frontend는 내부에서 클라이언트 검증을 수행한다. 비밀번호 변경이 포함된 경우 Frontend는 Controller로 PUT 요청(기본정보, 태그, 새비밀번호)을 전송하고, 포함되지 않은 경우 PUT 요청(기본정보, 태그)을 전송한다.
+
+Controller는 내부에서 JWT 토큰을 검증하여 현재 userId를 추출한 후 UserService의 updateProfile 메서드를 호출한다. Service는 UserRepository의 findById 메서드를 통해 사용자 정보를 조회한다. Repository는 Database에 SELECT 쿼리를 실행하고 User 정보를 Service로 반환한다.
+
+비밀번호 변경이 요청된 경우 Service는 내부에서 현재 비밀번호 입력 검증이 필요한지 확인한다. Service는 PasswordEncoder의 encode 메서드를 통해 현재 비밀번호를 해시화하고, PasswordEncoder는 비교를 위한 해시를 Service로 반환한다. Service는 내부에서 입력된 현재 비밀번호와 저장된 비밀번호를 비교한다. 현재 비밀번호가 일치하지 않으면 Service는 Controller로 오류 응답을 전달하고, Controller는 Frontend로 400 오류를 응답한다.
+
+현재 비밀번호가 일치하면 Service는 내부에서 새 비밀번호와 기존 비밀번호의 동일성을 확인한다. 새 비밀번호가 기존 비밀번호와 같으면 Service는 Controller로 오류 응답을 전달하고, Controller는 Frontend로 400 오류를 응답한다. 새 비밀번호가 기존 비밀번호와 다르면 Service는 PasswordEncoder의 encode 메서드를 통해 새 비밀번호를 해시화하고, PasswordEncoder는 새 해시 비밀번호를 Service로 반환한다.
+
+Service는 내부에서 기본 정보를 업데이트한다(전화번호, 소개글, 이미지 URL). 태그가 수정된 경우 Service는 TagRepository를 통해 기존 UserTag를 삭제한다. 각 기존 태그마다 Service는 Database에 DELETE 쿼리를 실행하고, Database는 삭제 완료를 TagRepository로 알린다. 그 후 각 새 태그마다 Service는 TagRepository의 findOrCreateByName 메서드를 호출한다. 태그가 존재하면 Repository는 Database에 SELECT 쿼리를 실행하여 tagId를 반환하고, 태그가 미존재하면 Repository는 Database에 INSERT 쿼리를 실행하여 새 tagId를 반환한다.
+
+Service는 TagRepository의 createUserTag 메서드를 호출하고, Repository는 Database에 INSERT 쿼리를 실행하여 관계를 저장한다. Database는 저장 완료를 Repository로 알린다. Service는 UserRepository의 save 메서드를 호출한다. Repository는 Database에 UPDATE 쿼리를 실행하여 사용자 정보와 updated_at을 갱신하고, Database는 업데이트 완료를 Repository로 알린다. Repository는 User를 Service로 반환한다.
+
+Service는 Controller로 수정 완료 응답을 전달하고, Controller는 Frontend로 200 응답과 업데이트된 프로필 정보를 전송한다. Frontend는 내부에서 성공 메시지를 표시하고 프로필 패널을 새로고침한 후, 사용자에게 프로필 수정 완료를 표시한다.
