@@ -1,4 +1,4 @@
-# 1번 매물 등록 신청
+# 1. 매물 등록 신청
 
 ```mermaid
 sequenceDiagram
@@ -77,7 +77,7 @@ sequenceDiagram
 
 ---
 
-# 2번 매물 신청 현황 조회
+# 2. 매물 신청 현황 조회
 
 ```mermaid
 sequenceDiagram
@@ -185,7 +185,7 @@ sequenceDiagram
 
 ---
 
-# 3번 매물 관리 현황 요약
+# 3. 매물 관리 현황 요약
 
 ```mermaid
 sequenceDiagram
@@ -249,7 +249,7 @@ sequenceDiagram
 
 ---
 
-# 4번 지도 위치 설정 기능
+# 4. 지도 위치 설정 기능
 
 ```mermaid
 sequenceDiagram
@@ -351,7 +351,7 @@ sequenceDiagram
 ---
 
 
-# 5번 소유권 증명 서류 업로드
+# 5. 소유권 증명 서류 업로드
 
 ```mermaid
 sequenceDiagram
@@ -480,7 +480,7 @@ sequenceDiagram
 ---
 
 
-#  6번 심사 중 매물 신청 수정
+# 6. 심사 중 매물 신청 수정
 
 ```mermaid
 sequenceDiagram
@@ -611,7 +611,7 @@ sequenceDiagram
 ---
 
 
-# 7번 관리자 매물 신청 검토 및 처리
+# 7. 관리자 매물 신청 검토 및 처리
 
 ```mermaid
 sequenceDiagram
@@ -748,7 +748,7 @@ sequenceDiagram
 
 ---
 
-# 8번 매물 자동 생성
+# 8. 매물 자동 생성
 
 ```mermaid
 sequenceDiagram
@@ -866,7 +866,7 @@ sequenceDiagram
 
 ---
 
-# 9번 채팅방 접속 및 생성
+# 9. 채팅방 접속 및 생성
 
 ```mermaid
 sequenceDiagram
@@ -957,7 +957,7 @@ sequenceDiagram
 
 ---
  
-# 10번 메시지 송수신
+# 10. 메시지 송수신
 
 ```mermaid
 sequenceDiagram
@@ -1081,7 +1081,7 @@ sequenceDiagram
 
 ---
 
-# 11번 기존 대화 내역 불러오기
+# 11. 기존 대화 내역 불러오기
 
 ```mermaid
 sequenceDiagram
@@ -1209,7 +1209,7 @@ sequenceDiagram
 
 ---
 
-# 12번 읽음 처리
+# 12. 읽음 처리
 
 ```mermaid
 sequenceDiagram
@@ -1320,7 +1320,7 @@ sequenceDiagram
 ---
 
 
-# 13번 재접속 시 이어보기
+# 13. 재접속 시 이어보기
 
 ```mermaid
 sequenceDiagram
@@ -1454,7 +1454,7 @@ sequenceDiagram
  이 시퀀스 다이어그램은 사용자가 채팅방에 다시 접속했을 때 마지막으로 읽은 메시지 이후의 새 메시지만 불러와 자연스럽게 이어볼 수 있도록 하는 전체 과정을 설명한다. 사용자가 재입장하면 컨트롤러가 우선 JWT를 검증해 로그인 여부를 확인하고, 사용자가 해당 채팅방의 참여자인지를 검사한다. 채팅방이 존재하지 않으면 404 오류를, 권한이 없을 경우 403 오류를 반환한다. 검증이 통과되면 UserChatStateRepository에서 사용자의 last_read_message_id를 조회해 이어보기 기준점을 결정한다. 만약 포인터 값이 없으면 기본적으로 최근 50개의 메시지를 불러오고, 포인터가 존재할 경우 해당 ID 이후의 메시지만 로드한다. 이후 서버는 가져온 메시지를 시간순으로 정렬해 클라이언트에 반환하며, UI는 응답받은 데이터를 기반으로 새 메시지를 기존 대화 뒤에 자연스럽게 이어서 표시한다. 사용자가 새로운 메시지를 모두 확인하면 클라이언트는 PUT /api/chat/read-state 요청을 통해 최신 메시지 ID로 읽음 포인터를 갱신해 서버에 저장한다. 처리 완료 후 UI는 “이어서 보기 완료”라는 안내 문구를 표시하고, 새로 불러온 메시지들은 시각적으로 강조 표시되어 사용자가 어디까지 읽었는지 쉽게 인지할 수 있게 한다.
 
 ---
-# 14 회원가입
+# 14. 회원가입
 
 ```mermaid
 sequenceDiagram
@@ -1560,6 +1560,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 사용자가 회원가입 페이지에 접속하면 Frontend는 회원가입 폼을 렌더링한다. 사용자는 사용자 유형(REGULAR/BROKER/ADMIN)을 선택한다. BROKER 선택 시 Frontend는 내부에서 중개사 정보 필드를 추가로 표시하고, 사용자는 등록번호(필수)와 상호명(선택)을 입력한다. 이후 필수 정보(이메일, 사용자명, 8~64자 비밀번호)와 태그(최대 30개, 중복 불가)를 입력하고 회원가입 버튼을 클릭한다.
 
@@ -1577,7 +1579,7 @@ Controller는 내부에서 요청을 검증한 후 AuthService의 register 메�
 
 ---
 
-# 15 로그인 / 토큰 관리
+# 15. 로그인 / 토큰 관리
 
 ```mermaid
 sequenceDiagram
@@ -1702,6 +1704,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 사용자가 로그인 페이지에 접근하면 클라이언트는 내부에서 로그인 폼을 표시한다. 사용자가 이메일과 비밀번호를 입력하고 로그인 버튼을 클릭하면 클라이언트는 AuthController로 POST 요청을 전송한다.
 
@@ -1727,7 +1731,7 @@ RefreshToken이 유효하면 TokenService는 내부에서 새로운 AccessToken�
 
 ---
 
-# 16 로그아웃
+# 16. 로그아웃
 
 ```mermaid
 sequenceDiagram
@@ -1792,6 +1796,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 사용자가 사이드바의 로그아웃 버튼을 클릭하면 클라이언트는 AccessToken을 포함하여 AuthController로 POST 요청을 전송한다. Controller는 내부에서 토큰을 검증하여 인증 상태를 확인한다. 토큰이 없으면 Controller는 클라이언트로 401 오류를 응답하고, 클라이언트는 로그인 화면으로 이동한다.
 
@@ -1807,7 +1813,7 @@ Database 또는 네트워크 오류가 발생하면 Database는 Service로 예�
 
 ---
 
-# 17 비밀번호 재설정
+# 17. 비밀번호 재설정
 
 ```mermaid
 sequenceDiagram
@@ -1940,6 +1946,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 사용자가 로그인 페이지에서 "비밀번호 찾기"를 클릭하면 클라이언트는 내부에서 비밀번호 재설정 페이지로 이동한다. 클라이언트는 이메일 입력 폼을 사용자에게 표시한다.
 
@@ -1967,7 +1975,7 @@ Service는 Controller로 200 응답을 전달하고, Controller는 클라이언�
 
 ---
 
-# 18 사용자 프로필 관리
+# 18. 사용자 프로필 관리
 
 ```mermaid
 sequenceDiagram
@@ -2129,6 +2137,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 사용자가 프로필 버튼을 클릭하면 Frontend는 UserController로 GET 요청을 전송한다. Controller는 내부에서 JWT 토큰을 검증하여 현재 userId를 추출한 후 UserService의 getProfileDetail 메서드를 호출한다.
 
@@ -2155,7 +2165,7 @@ Service는 TagRepository의 createUserTag 메서드를 호출하고, Repository�
 Service는 Controller로 수정 완료 응답을 전달하고, Controller는 Frontend로 200 응답과 업데이트된 프로필 정보를 전송한다. Frontend는 내부에서 성공 메시지를 표시하고 프로필 패널을 새로고침한 후, 사용자에게 프로필 수정 완료를 표시한다.
 
 ---
-# 19번 매물 목록 조회 (전체)
+# 19. 매물 목록 조회 (전체)
 
 ```mermaid
 sequenceDiagram
@@ -2278,7 +2288,7 @@ sequenceDiagram
 
 ---
 
-# 20번 내 매물 관리
+# 20. 내 매물 관리
 
 ```mermaid
 sequenceDiagram
@@ -2455,7 +2465,7 @@ sequenceDiagram
 
 ---
 
-# 21번 상의 매물 조회
+# 21. 상의 매물 조회
 
 ```mermaid
 sequenceDiagram
@@ -2578,7 +2588,7 @@ sequenceDiagram
 
 ---
 
-# 22번 매물 상세 조회
+# 22. 매물 상세 조회
 
 ```mermaid
 sequenceDiagram
@@ -2714,7 +2724,7 @@ sequenceDiagram
 
 ---
 
-## #23 위임(Delegation) 플로우
+# 23. 위임(Delegation) 플로우
 
 ```mermaid
 sequenceDiagram
@@ -2859,6 +2869,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 소유자가 매물 상세 화면에 진입하면 클라이언트는 먼저 GET /properties/{propertyId}를 호출해 매물 기초 정보를 당겨온다. 이후 소유자가 “브로커 위임 요청” 버튼을 누르면 클라이언트는 POST /delegations로 propertyId, brokerId, 거래유형(dealType), 금액(price) 등을 전송한다. 이 요청은 DelegationController에서 수신되며, 현재 로그인한 사용자(Owner) 정보를 확보한 뒤 DelegationService.createDelegation(ownerId, propertyId, brokerId, dealType, price)를 실행한다. 서비스의 첫 단계는 위임 대상 매물이 실제로 존재하는지 확인하는 것이다. 이를 위해 PropertyRepository.findById(propertyId)가 호출되고, 결과가 없으면 404 Not Found를 던진다. 매물이 존재하면 소유자 일치성 검증으로 넘어간다. 서비스는 property.owner.id == ownerId를 비교하고, 불일치 시 UnauthorizedException 혹은 AccessDeniedException을 던져 컨트롤러가 403 응답을 반환하게 한다. 소유자 일치가 확정되면 중복 진행 방지를 위해 DelegationRepository.existsByPropertyIdAndStatus(propertyId, PENDING) 또는 checkPending(propertyId)를 호출해 동일 매물에 대기(PENDING) 중인 요청이 이미 있는지 확인한다. 대기 건이 발견되면 비즈니스 충돌로 분류해 409 Conflict를 반환한다. 기존 대기 요청이 없다면 서비스는 새 Delegation 엔티티를 구성한다. 기본 상태는 PENDING이며, 요청자·대상 브로커·매물·요청 금액·거래유형 등의 필드를 채운다. 이 엔티티는 DelegationRepository.save(delegation)을 통해 DB에 영속화되며, 컨트롤러는 201 Created와 함께 생성 결과(식별자, 상태, 타임스탬프)를 반환한다. 클라이언트는 “위임 요청 생성됨” 토스트와 함께 상세 화면 UI를 갱신한다.
 
@@ -2874,7 +2886,7 @@ sequenceDiagram
 
 ---
 
-## #24 알림(Notification) 플로우
+# 24. 알림(Notification) 플로우
 
 ```mermaid
 sequenceDiagram
@@ -2970,6 +2982,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 시스템 내부에서 거래 완료, 가격 하락, 위임 상태 변경 등 이벤트가 감지되면 NotificationService.publish(event)를 호출한다. 이 서비스는 이벤트를 해당 사용자(또는 다수 구독자)의 Notification 도메인 모델로 변환하고, NotificationRepository.save(notification)로 즉시 저장한다. 저장 시점에는 메시지 본문, 이벤트 타입, 라우팅용 딥링크(예: 매물 상세, 채팅방, 위임 상세), 읽음 여부(isRead=false), 생성시각이 기록된다. 저장과는 별개로 NotificationService는 비동기 큐에 푸시 작업을 넣어, 모바일 푸시/이메일/SMS 등 외부 채널 발송을 시도한다. 외부 채널은 실패 시 재시도 정책(예: 최대 3회)을 적용하고, 최종 실패는 영구 로그에 남긴다.
 
@@ -2984,7 +2998,7 @@ sequenceDiagram
 ---
 # 시스템 시퀀스 다이어그램 통합 보고서 (26, 27, 28+29, 30, 34번)
 
-## 26번: 지도 기반 매물 조회 및 상세 정보 확인
+# 26. 지도 기반 매물 조회 및 상세 정보 확인
 
 ```mermaid
 sequenceDiagram
@@ -3111,13 +3125,14 @@ sequenceDiagram
     end
 ```
 
+---
+
 26번 기능 설명: 지도 기반 매물 조회 및 상세 정보 확인<br>
 사용자가 **클라이언트(UI)**를 통해 지도 화면에 진입하면, 클라이언트는 현재 지도의 영역($\text{BBOX}$)과 필터 조건을 포함하여 $\text{GET /api/properties/map}$ 요청을 MapController에게 전송합니다. MapController는 수신된 요청의 로그인 토큰을 검증하는 인증 절차를 거친 후, 실제 매물 조회를 PropertyMapService에게 위임합니다. Service는 $\text{BBOX}$와 필터 조건을 사용하여 **Database(DB)**에서 매물 목록을 조회합니다. DB에서 조회된 매물 데이터는 Service로 반환되며, Service는 이 데이터를 기반으로 매물 상태별 색상을 지정하고 매물 수에 따라 마커 또는 클러스터링을 결정하여 최종 표시 데이터를 준비합니다. 만약 초기 조회에 실패할 경우, 캐시 데이터가 폴백(Fallback) 정보로 사용됩니다. 최종적으로 준비된 매물 데이터는 MapController를 거쳐 **클라이언트(UI)**에 반환되어 지도 화면에 마커/클러스터 형태로 표시됩니다.이후 사용자가 지도를 줌(Zoom) 하거나 팬(Pan) 하여 **새로운 $\text{BBOX}$**가 생성되거나 필터 조건을 변경하면, **클라이언트(UI)**는 새로운 조건을 포함한 $\text{GET /api/properties/map}$ 요청을 MapController에 다시 전송하고, Service는 DB에 새로운 범위/조건에 맞는 매물 목록을 재조회하여 **클라이언트(UI)**에 반환합니다. **클라이언트(UI)**는 이 데이터를 받아 기존 마커를 제거하고 새로운 마커를 추가하여 지도 화면을 갱신합니다.만약 사용자가 지도상의 특정 매물 마커를 클릭하면, **클라이언트(UI)**는 해당 매물의 $\text{{propertyId}}$를 포함한 $\text{GET /api/properties/\{propertyId\}/details}$ 요청을 전송합니다. Service는 이 요청을 받아 DB에서 해당 $\text{ID}$의 매물 상세 정보(예: 이미지, 오퍼 정보 포함)를 조회합니다. 조회된 상세 정보는 **클라이언트(UI)**에 반환되며, **클라이언트(UI)**는 이 정보를 하단 시트 또는 카드 형태로 열어 사용자에게 최종적으로 표시합니다.
-    
-* * *
-* * *
 
-## 27번: 사용자 지도 상태(위치/줌 레벨) 관리
+---
+
+# 27. 사용자 지도 상태(위치/줌 레벨) 관리
 
 ```mermaid
 sequenceDiagram
@@ -3219,12 +3234,14 @@ sequenceDiagram
     UI->>UI: 지도 상태 업데이트 완료
 ```
 
+---
+
 27번 기능 설명: 사용자 지도 상태(위치/줌 레벨) 관리<br>
 사용자가 지도 화면에 진입할 때 **클라이언트(UI)**는 우선적으로 위치 권한을 확인합니다. 만약 위치 권한이 허용되면, 클라이언트는 LocationManager를 통해 현재 GPS 좌표를 획득하고 지도 중심을 이 위치로 이동시켜 지도를 초기화합니다. 하지만 GPS 획득에 실패하거나 위치 권한이 거부된 경우에는, **클라이언트(UI)**는 PreferenceController를 통해 $\text{GET /api/user/map-state}$ 요청을 UserMapStateService에 전송하여 마지막으로 저장된 지도 위치를 요청합니다. Service는 이 요청을 받아 **Database(DB)**에서 사용자 지도 상태 정보를 조회하며, 저장된 정보가 있다면 이를 **클라이언트(UI)**에 반환하여 지도를 초기화합니다. 만약 DB에 저장된 정보가 없다면, Service는 **기본 위치(예: 시청)**를 설정하여 **클라이언트(UI)**에 반환하고 이를 통해 지도를 초기 설정합니다.이후 사용자가 지도를 팬(Pan) 하거나 줌 레벨을 조정하여 지도 보기 상태를 변경하면, **클라이언트(UI)**는 변경된 위치 좌표와 줌 레벨을 포함하여 $\text{PUT /api/user/map-state}$ 요청을 Controller에 전송합니다. Controller는 이 요청을 Service에 위임하고, Service는 UserMapStateRepository를 통해 **Database(DB)**에서 해당 사용자의 기존 지도 상태를 찾습니다. 최종적으로 Service는 해당 상태 정보를 업데이트하거나, 정보가 없을 경우 새로운 상태를 생성하여 저장하는 과정을 거쳐 사용자의 변경된 지도 상태를 반영합니다.
 
-* * *
-* * *
-## 28번+29번: 매물 정보 표시/즐겨찾기(찜) 기능
+---
+
+# 28. 매물 정보 표시/즐겨찾기(찜) 기능
 ```mermaid
 sequenceDiagram
     actor User as 사용자
@@ -3345,12 +3362,15 @@ sequenceDiagram
         UI-->>User: "오류 발생, 재시도 버튼"
     end
 ```
+
+---
+
 28번+29번: 기능 설명: 매물 즐겨찾기(찜) 기능<br>
 로그인된 사용자가 **클라이언트(UI)**에서 즐겨찾기 탭에 접근하면, 클라이언트는 $\text{GET /api/favorites}$ 요청을 FavoriteController로 보냅니다. Controller는 이 요청을 FavoriteService에 위임하고, Service는 FavoriteRepository를 통해 **Database(DB)**에서 해당 사용자의 즐겨찾기 목록을 조회합니다. DB에서 조회된 목록이 **클라이언트(UI)**에 반환되면, 목록이 있을 경우 **클라이언트(UI)**는 지도상에 해당 매물을 하트 마크 마커로 표시하며, 목록이 없을 경우 사용자에게 "즐겨찾기한 매물이 없습니다"라는 메시지를 표시합니다.즐겨찾기 추가를 위해 사용자가 매물 카드에서 하트 버튼을 클릭하면, $\text{POST /api/favorites}$ 요청이 Controller를 거쳐 Service로 전달됩니다. Service는 요청을 처리하기 전 매물의 존재 여부와 해당 매물이 **이미 즐겨찾기에 등록되었는지 여부(중복 등록)**를 검사합니다. 중복이 아닐 경우, Service는 새로운 Favorite 엔티티를 생성하고 DB에 저장하며(응답: 201 Created), **클라이언트(UI)**는 성공 응답을 받아 하트 버튼의 색상을 변경하여 추가 상태를 반영합니다.반대로, 사용자가 이미 즐겨찾기된 하트 버튼을 다시 클릭하여 제거를 시도하면 $\text{DELETE /api/favorites/\{propertyId\}}$ 요청이 Controller를 거쳐 Service로 전달됩니다. Service는 DB에서 해당 레코드를 찾아 삭제를 수행하고(응답: 204 No Content), **클라이언트(UI)**는 삭제 응답을 받아 하트 버튼 색상을 원래대로 복원합니다.또한, 즐겨찾기된 매물 마커를 클릭하여 상세 정보를 확인하는 과정은 일반 매물과 동일하게 상세 정보 조회가 이루어집니다. 이 상세 정보 조회 과정 중에 Service는 해당 매물의 즐겨찾기 상태를 확인하여 상세 정보 데이터에 포함시켜 **클라이언트(UI)**에 전달하며, **클라이언트(UI)**는 전달받은 상태 정보를 바탕으로 상세 페이지 내의 하트 아이콘을 빨간색으로 표시하여 즐겨찾기 상태를 반영합니다.
 
-* * *
-* * *
-## 30번 : 상세 필터링 및 매물 마커 표시
+---
+
+# 30. 상세 필터링 및 매물 마커 표시
 
 ```mermaid
 sequenceDiagram
@@ -3455,13 +3475,15 @@ sequenceDiagram
         UI->>MapComponent: 필터 버튼 기본 색상으로 복원
     end
 ```
+
+---
+
 30번 기능 설명: 상세 필터링 및 매물 마커 표시<br>
 사용자가 상세 필터 패널에서 위치 검색, 매물 상태, 가격 범위, 추가 조건 등 다양한 조건을 설정하면, **클라이언트(UI)**는 입력된 조건들의 유효성을 검증합니다. 유효성 검증이 성공적으로 완료되면, **클라이언트(UI)**는 **현재 지도의 $\text{BBOX}$**와 모든 상세 필터 조건을 포함한 $\text{GET /api/properties/in-bounds}$ 요청을 PropertyController로 전송합니다.PropertyController는 요청을 받아 PropertyService에 필터링 처리를 위임합니다. PropertyService는 전달받은 상세 필터 조건을 $\text{DB}$ 쿼리에 맞게 정규화합니다. 이후 PropertyRepository를 통해 **Database ($\text{DB}$)**에 접근하여 위치 좌표($\text{BBOX}$), 상태, 가격 범위 등 모든 정규화된 필터 조건을 사용하여 매물을 조회합니다. 이때 가격 범위 필터링을 위해 PropertyOfferRepository를 통해 활성 오퍼 가격 정보가 조건에 사용될 수 있습니다.Service는 필터링된 매물 목록을 받아 지도 마커 표시에 필요한 **최소 정보 (PropertyMarkerDto)**로 변환하여 Controller에 반환합니다. Controller는 이 데이터를 **클라이언트(UI)**에 전송하고, **클라이언트(UI)**는 반환된 마커 데이터를 **지도 컴포넌트 (MapComponent)**에 전달합니다. MapComponent는 매물 상태별 ($\text{AVAILABLE, PENDING, SOLD}$ 등)로 색상을 다르게 적용하여 최종적으로 지도에 마커를 표시하고 갱신합니다. 만약 사용자가 "필터 해제" 버튼을 누르면, **클라이언트(UI)**는 필터 조건을 초기화하고 현재 $\text{BBOX}$ 내의 모든 매물 목록을 다시 조회하여 지도에 표시합니다.
 
-* * *
-* * *
+---
 
-## 34번: 인공지능 기반 매물 추천 기능
+# 34. 인공지능 기반 매물 추천 기능
 
 ```mermaid
 sequenceDiagram
@@ -3571,12 +3593,15 @@ sequenceDiagram
         UI-->>User: "동기화 실패" 메시지 + 캐시 데이터
     end
 ```
+
+---
+
 34번 기능 설명: 인공지능 기반 매물 추천 기능<br>
  사용자가 **클라이언트(UI)**에 로그인한 후 추천 매물 섹션에 접근하면 $\text{GET /api/recommendations}$ 요청이 RecommendationController로 전송됩니다. Controller는 이 요청을 RecommendationService에 위임하고, Service는 PropertyViewRepository를 통해 **Database ($\text{DB}$)**에서 **사용자의 최근 열람 매물 이력(최대 20개)**을 조회합니다.Service는 조회된 열람 이력의 개수를 확인합니다. 만약 열람 매물이 최소 기준(5개) 미만일 경우, PreferenceRepository를 통해 사용자 선호도 정보를 조회하여 추천에 활용하거나, 데이터가 충분하지 않다는 폴백 메시지를 반환합니다. 반면, 열람 매물이 충분하다면 Service는 이 데이터를 바탕으로 사용자 벡터를 생성하여 AIRecommendationEngine에 전달합니다.AIRecommendationEngine은 전체 공개 매물 목록을 가져와 사용자 벡터와 **각 매물 벡터 간의 유사도(코사인 유사도)**를 계산하고, 유사도 순으로 정렬하여 상위 10개의 매물을 추천 목록으로 Service에 반환합니다. Service는 이 추천 목록을 Controller를 거쳐 **클라이언트(UI)**에 전달하며, **클라이언트(UI)**는 반환된 추천 매물 목록을 유사도 바와 함께 사용자에게 표시합니다.이후 사용자가 추천 매물을 클릭하여 $\text{GET /api/properties/\{propertyId\}}$ 요청으로 상세 페이지에 진입하면, Service는 상세 정보를 **클라이언트(UI)**에 반환하기 직전에 ViewRepository를 통해 해당 매물에 대한 새로운 열람 이력을 DB에 저장합니다. 이 열람 이력 저장이 완료된 후, Service는 백그라운드에서 AIRecommendationEngine에 추천 재계산을 비동기로 트리거하여, 다음번 추천 요청 시 최신 열람 데이터를 반영할 수 있도록 피드백 루프를 완성합니다.
 
 ---
 
-## #35 중개인 목록/검색/상세/연락/위임요청 플로우
+# 35. 중개인 목록/검색/상세/연락/위임요청 플로우
 
 ```mermaid
 sequenceDiagram
@@ -3714,6 +3739,8 @@ sequenceDiagram
 
 ```
 
+---
+
 **설명**  
 사용자가 “중개인 목록” 아이콘을 누르면 클라이언트는 GET /brokers?page=0&size=20 요청을 보낸다. BrokerController는 BrokerService.getBrokerList(pageable)을 호출한다. 서비스는 BrokerRepository.findAllActiveBrokers(pageable)로 활성(is_active=true) 브로커 프로필을 최신순으로 조회한다. 성공 시 200 OK와 함께 (이름, 프로필 이미지 URL, 평점, 면허번호, 지역) 등 리스트용 요약 DTO가 반환된다. DB 오류가 발생하면 컨트롤러는 500을 반환하고, UI는 “불러오기에 실패했습니다”와 재시도 버튼을 표시한다.
 
@@ -3727,7 +3754,7 @@ sequenceDiagram
 
 ---
 
-## #38 전세가율(Jeonse Ratio) 계산 플로우
+# 38. 전세가율(Jeonse Ratio) 계산 플로우
 
 ```mermaid
 sequenceDiagram
@@ -3797,6 +3824,8 @@ sequenceDiagram
     end
 
 ```
+
+---
 
 **설명**  
 사용자가 매물 상세로 진입하면 클라이언트는 GET /properties/{propertyId}와 함께 전세가율 표시를 위해 서버에 계산을 의뢰한다. 컨트롤러는 JeonseRatioService.calculate(propertyId)(혹은 computeByProperty(propertyId, fallbackSalePrice) 형태)를 호출한다. 서비스의 1순위 데이터 소스는 해당 매물에 연결된 최신 활성 전세 오퍼다. 보통 PropertyOfferRepository.findTopByPropertyIdAndTypeAndIsActiveOrderByUpdatedAtDesc(propertyId, JEONSE, true) 같은 쿼리로 보증금(deposit)을 가져온다. 동시에 매매가 소스를 결정해야 하는데, 우선순위는 첫 번째는 요청에서 제공된 임시 매매가(클라 폴백), 두 번째는 매물 테이블의 price, 마지막으로는 둘 다 없으면 “계산 불가”로 처리한다. 전세 보증금과 매매가가 둘 다 확보되면 ratio = round((deposit / salePrice) * 100, 2)로 전세가율을 산출한다.
