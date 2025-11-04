@@ -1,3 +1,18 @@
+<img width="546" height="2493" alt="image" src="https://github.com/user-attachments/assets/afaccc34-d6ee-4232-964a-b603a9254d75" />
+
+ 이 Use Case Diagram은 부동산 통합 플랫폼(Real Estate Hub System)의 주요 기능과 외부 액터 간 상호작용을 시각화한 것이다.
+본 시스템은 일반 사용자(User), 매물 소유자(Owner), 브로커(Broker), 관리자(Admin), 시스템/엔진(System), 지도 서비스(Map Service)의 여섯 주체가 상호 연계되어 작동한다.
+전체 기능은 회원 인증, 매물 등록 및 검증, 지도 기반 매물 탐색, 대리중개(위임), 채팅/알림, 가격 분석 및 추천 등으로 구성된다.
+
+주요 액터 설명 <br>
+User (사용자)	일반 이용자. 매물 검색, 필터 적용, 지도 탐색, 즐겨찾기, 채팅, 평점 등록 등의 기능을 수행한다. <br>
+Owner (소유자)	자신의 부동산을 시스템에 등록하고, 서류 업로드 및 중개 위임 요청 등을 수행한다. <br>
+Broker (브로커)	소유자로부터 받은 위임을 관리하고, 매물 거래를 중개하며 평가를 받는다. <br>
+Admin (관리자)	시스템 전반의 데이터 검수, 매물 신청 검토, 승인·거절 처리 등을 담당한다. <br>
+System / Engine (시스템/엔진)	자동 추천, 가격 예측, 이상거래 탐지 등 백엔드 AI 및 데이터 분석 모듈을 의미한다. <br>
+Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로부터 위치, POI, 인구 통계 데이터를 제공한다. <br>
+
+
 # Use case 1. 매물 등록 신청
     **GENERAL CHARACTERISTICS**
 * * *
