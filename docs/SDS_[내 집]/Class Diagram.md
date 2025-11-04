@@ -5120,7 +5120,7 @@ classDiagram
 * **description**: 요청 내용을 요약한 문자열을 생성하는 메서드이다. 매물 정보, 예산, 희망 일정 등의 핵심 정보를 간단히 정리하여 확인 화면이나 알림 메시지에 사용할 수 있는 형태로 제공한다. 사용자가 요청을 제출하기 전 최종 확인 단계에서 활용된다.
 
 
-# 소유권 검증 관련
+8. 소유권 검증 관련
 
 ```mermaid
 classDiagram
@@ -5423,7 +5423,7 @@ OwnershipDocument 리포지토리 인터페이스. 문서 CRUD 및 주장 ID별 
 
 
 ---
-# 매물 비교 관련
+9. 매물 비교 관련
 
 ```mermaid
 classDiagram
@@ -5776,6 +5776,7 @@ classDiagram
     ComparisonItem --> Property : compares >
 ```
 
+10. 공통/유틸리티
 # 1. BaseEntity 클래스
 
 ```mermaid
