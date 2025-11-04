@@ -5119,8 +5119,9 @@ classDiagram
 * **visibility**: public
 * **description**: 요청 내용을 요약한 문자열을 생성하는 메서드이다. 매물 정보, 예산, 희망 일정 등의 핵심 정보를 간단히 정리하여 확인 화면이나 알림 메시지에 사용할 수 있는 형태로 제공한다. 사용자가 요청을 제출하기 전 최종 확인 단계에서 활용된다.
 
+---
 
-8. 소유권 검증 관련
+# 8. 소유권 검증 관련
 
 ```mermaid
 classDiagram
@@ -5129,61 +5130,80 @@ classDiagram
     -userId: Long
     -propertyId: Long
     -claimStatus: String
+    -reason: String
     -createdAt: LocalDateTime
-    +approveClaim(): void
-    +rejectClaim(): void
+    -updatedAt: LocalDateTime
+    +approve(): void
+    +reject(reason: String): void
+    +requestMoreDocs(reason: String): void
+    +isTerminal(): boolean
   }
   class OwnershipDocument {
     -id: Long
+    -claimId: Long
     -documentType: String
     -documentUrl: String
-    -claimId: Long
-    +uploadDocument(): void
+    -verified: boolean
+    -uploadedAt: LocalDateTime
+    +markVerified(): void
+    +isImageLike(): boolean
   }
   class OwnershipClaimCreateRequest {
     -userId: Long
     -propertyId: Long
-    -claimType: String
-    +validateClaim(): boolean
-  }
-  class OwnershipClaimRequest {
-    -claimId: Long
+    -message: String
     -documentUrls: List~String~
-    -additionalNotes: String
     +validate(): boolean
     +toEntity(): OwnershipClaim
   }
+  class OwnershipClaimRequest {
+    -claimId: Long
+    -action: String
+    -reason: String
+    -additionalDocumentUrls: List~String~
+    +validate(): boolean
+    +toUpdateInstruction(): Map~String,Object~
+  }
   class OwnershipClaimResponse {
     -claimId: Long
+    -userId: Long
     -propertyId: Long
     -status: String
-    -submittedAt: LocalDateTime
-    -documents: List~OwnershipDocument~
-    +fromEntity(claim: OwnershipClaim): OwnershipClaimResponse
+    -reason: String
+    -documents: List~OwnershipDocumentSummary~
+    -createdAt: LocalDateTime
+    -updatedAt: LocalDateTime
+    +from(entity: OwnershipClaim, docs: List~OwnershipDocument~): OwnershipClaimResponse
+    +summarize(): String
   }
   class OwnershipClaimRepository {
-    +save(claim: OwnershipClaim): OwnershipClaim
+    +save(entity: OwnershipClaim): OwnershipClaim
     +findById(id: Long): Optional~OwnershipClaim~
     +findAllByUserId(userId: Long): List~OwnershipClaim~
+    +existsByPropertyIdAndUserId(propertyId: Long, userId: Long): boolean
   }
   class OwnershipDocumentRepository {
     +save(doc: OwnershipDocument): OwnershipDocument
-    +findByClaimId(claimId: Long): List~OwnershipDocument~
+    +findAllByClaimId(claimId: Long): List~OwnershipDocument~
+    +deleteById(id: Long): void
   }
   class OwnershipClaimService {
-    -ownershipClaimRepository: OwnershipClaimRepository
-    -ownershipDocumentRepository: OwnershipDocumentRepository
-    +createClaim(req: OwnershipClaimCreateRequest): OwnershipClaimResponse
-    +approveClaim(claimId: Long): void
-    +rejectClaim(claimId: Long): void
-    +getClaimDetails(claimId: Long): OwnershipClaimResponse
+    -claimRepository: OwnershipClaimRepository
+    -documentRepository: OwnershipDocumentRepository
+    -clock: Clock
+    +create(req: OwnershipClaimCreateRequest): OwnershipClaimResponse
+    +update(req: OwnershipClaimRequest): OwnershipClaimResponse
+    +getDetail(id: Long): OwnershipClaimResponse
+    +listByUser(userId: Long): List~OwnershipClaimResponse~
+    +attachDocuments(id: Long, urls: List~String~): OwnershipClaimResponse
   }
   class OwnershipClaimController {
-    -ownershipClaimService: OwnershipClaimService
-    +createClaim(req: OwnershipClaimRequest): OwnershipClaimResponse
-    +getClaimsByUser(userId: Long): List~OwnershipClaimResponse~
-    +approveClaim(claimId: Long): void
-    +rejectClaim(claimId: Long): void
+    -service: OwnershipClaimService
+    -mapper: Object
+    +POST /ownership-claims: OwnershipClaimResponse
+    +PATCH /ownership-claims/{id}: OwnershipClaimResponse
+    +GET /ownership-claims/{id}: OwnershipClaimResponse
+    +GET /ownership-claims?userId=: List~OwnershipClaimResponse~
   }
 
   OwnershipClaim "1" --> "*" OwnershipDocument : has
@@ -5195,292 +5215,245 @@ classDiagram
   OwnershipClaimResponse --> OwnershipDocument : includes
 ```
 
-
 ## 1. class name : OwnershipClaim
 
-### 1.1. class description :
-부동산에 대한 소유권 주장을 표현하는 엔티티. 사용자와 매물 간의 소유권 검증 절차의 핵심 레코드를 담고, 상태 전이(PENDING→APPROVED/REJECTED), 생성/검토 시점을 추적한다.
+### 1.1. class description
+부동산에 대한 소유권 주장을 표현하는 엔티티. 사용자와 매물 간의 소유권 검증 절차의 핵심 레코드를 담고, 상태 전이(PENDING→APPROVED/REJECTED/NEED_MORE_DOCS), 생성/검토 시점을 추적한다.
 
 ### 1.2. attribution 구분
-* 1.2.1. name : id
-* 1.2.2. type : Long
-* 1.2.3. visibility : private
-* 1.2.4. description : PK. 소유권 주장 고유 식별자.
-
-* 1.2.1. name : userId
-* 1.2.2. type : Long
-* 1.2.3. visibility : private
-* 1.2.4. description : 주장을 제기한 사용자 ID. User와 연계 조회 용도.
-
-* 1.2.1. name : propertyId
-* 1.2.2. type : Long
-* 1.2.3. visibility : private
-* 1.2.4. description : 대상 매물 ID. Property와 연계.
-
-* 1.2.1. name : claimStatus
-* 1.2.2. type : String  (PENDING/APPROVED/REJECTED/NEED_MORE_DOCS 등)
-* 1.2.3. visibility : private
-* 1.2.4. description : 현재 주장 처리 상태.
-
-* 1.2.1. name : reason
-* 1.2.2. type : String
-* 1.2.3. visibility : private
-* 1.2.4. description : 거절/보류 사유 또는 비고.
-
-* 1.2.1. name : createdAt
-* 1.2.2. type : LocalDateTime
-* 1.2.3. visibility : private
-* 1.2.4. description : 주장 생성 시각.
-
-* 1.2.1. name : updatedAt
-* 1.2.2. type : LocalDateTime
-* 1.2.3. visibility : private
-* 1.2.4. description : 상태/내용 갱신 시각.
+- **id** : Long / private — PK. 소유권 주장 고유 식별자.
+- **userId** : Long / private — 주장을 제기한 사용자 ID. User와 연계 조회.
+- **propertyId** : Long / private — 대상 매물 ID. Property와 연계.
+- **claimStatus** : String / private — 처리 상태(PENDING/APPROVED/REJECTED/NEED_MORE_DOCS).
+- **reason** : String / private — 거절/보류 사유 또는 비고.
+- **createdAt** : LocalDateTime / private — 생성 시각.
+- **updatedAt** : LocalDateTime / private — 갱신 시각.
 
 ### 1.3. Operations 구분
-* 1.3.1. name : approve()
-* 1.3.2. type : void
-* 1.3.3. visibility : public
-* 1.3.4. description : claimStatus를 APPROVED로 변경하고 updatedAt을 갱신.
+- **approve() : void / public** — 상태를 APPROVED로, `updatedAt` 갱신.
+- **reject(reason: String) : void / public** — 상태를 REJECTED로, 사유 기록.
+- **requestMoreDocs(reason: String) : void / public** — 상태를 NEED_MORE_DOCS로 전환.
+- **isTerminal() : boolean / public** — APPROVED/REJECTED 여부.
 
-* 1.3.1. name : reject(reason: String)
-* 1.3.2. type : void
-* 1.3.3. visibility : public
-* 1.3.4. description : claimStatus를 REJECTED로 변경, 사유 기록.
-
-* 1.3.1. name : requestMoreDocs(reason: String)
-* 1.3.2. type : void
-* 1.3.3. visibility : public
-* 1.3.4. description : 추가 서류 요청 상태(NEED_MORE_DOCS)로 전환.
-
-* 1.3.1. name : isTerminal()
-* 1.3.2. type : boolean
-* 1.3.3. visibility : public
-* 1.3.4. description : APPROVED/REJECTED 여부 반환.
-
+---
 
 ## 2. class name : OwnershipDocument
 
-### 2.1. class description :
-소유권 주장에 첨부되는 증빙 문서(등기부등본, 세금영수증, 매매계약서 등)를 표현하는 엔티티. 스토리지 URL 및 문서 유형/검증 상태를 포함한다.
+### 2.1. class description
+소유권 주장에 첨부되는 증빙 문서(등기부등본, 세금영수증, 매매계약서 등). 스토리지 URL 및 문서 유형/검증 상태 포함.
 
 ### 2.2. attribution 구분
-* 2.2.1. name : id
-* 2.2.2. type : Long
-* 2.2.3. visibility : private
-* 2.2.4. description : PK.
-
-* 2.2.1. name : claimId
-* 2.2.2. type : Long
-* 2.2.3. visibility : private
-* 2.2.4. description : 소유권 주장(OwnershipClaim) 참조 FK.
-
-* 2.2.1. name : documentType
-* 2.2.2. type : String (DEED/TAX/BILL/ETC)
-* 2.2.3. visibility : private
-* 2.2.4. description : 문서 유형.
-
-* 2.2.1. name : documentUrl
-* 2.2.2. type : String
-* 2.2.3. visibility : private
-* 2.2.4. description : 문서 저장소의 절대/서명 URL.
-
-* 2.2.1. name : verified
-* 2.2.2. type : boolean
-* 2.2.3. visibility : private
-* 2.2.4. description : 검토자가 문서를 확인 완료했는지 여부.
-
-* 2.2.1. name : uploadedAt
-* 2.2.2. type : LocalDateTime
-* 2.2.3. visibility : private
-* 2.2.4. description : 업로드 시각.
+- **id** : Long / private — PK.
+- **claimId** : Long / private — OwnershipClaim FK.
+- **documentType** : String / private — 문서 유형(DEED/TAX/BILL/ETC).
+- **documentUrl** : String / private — 저장소 URL(절대/서명).
+- **verified** : boolean / private — 검토 완료 여부.
+- **uploadedAt** : LocalDateTime / private — 업로드 시각.
 
 ### 2.3. Operations 구분
-* 2.3.1. name : markVerified()
-* 2.3.2. type : void
-* 2.3.3. visibility : public
-* 2.3.4. description : verified=true로 설정.
+- **markVerified() : void / public** — `verified=true`로 설정.
+- **isImageLike() : boolean / public** — 확장자 기반 이미지형 판단.
 
-* 2.3.1. name : isImageLike()
-* 2.3.2. type : boolean
-* 2.3.3. visibility : public
-* 2.3.4. description : 확장자 기반 이미지형 문서 여부.
-
+---
 
 ## 3. class name : OwnershipClaimCreateRequest
 
-### 3.1. class description :
-소유권 주장 최초 생성에 사용되는 요청 DTO. 사용자/매물/초기 메시지/문서 목록을 포함.
+### 3.1. class description
+소유권 주장 최초 생성 요청 DTO. 사용자/매물/초기 메시지/문서 목록 포함.
 
 ### 3.2. attribution 구분
-* 3.2.1. name : userId (Long) / private / 주장을 제기한 사용자 ID.
-* 3.2.1. name : propertyId (Long) / private / 대상 매물 ID.
-* 3.2.1. name : message (String) / private / 검토자에게 전달할 보충 설명.
-* 3.2.1. name : documentUrls (List<String>) / private / 업로드된 문서 URL 목록.
+- **userId**(Long) / private — 주장자 ID.
+- **propertyId**(Long) / private — 대상 매물 ID.
+- **message**(String) / private — 검토자 참고 메시지.
+- **documentUrls**(List<String>) / private — 업로드 문서 URL 목록.
 
 ### 3.3. Operations 구분
-* 3.3.1. name : validate() / boolean / public / 필수 필드 검증.
-* 3.3.1. name : toEntity() / OwnershipClaim / public / 엔티티 변환(초기 상태:PENDING).
+- **validate() : boolean / public** — 필수 필드 검증.
+- **toEntity() : OwnershipClaim / public** — 엔티티 변환(초기 상태 PENDING).
 
+---
 
 ## 4. class name : OwnershipClaimRequest
 
-### 4.1. class description :
-소유권 주장 일반 갱신/추가 제출 등에 사용되는 요청 DTO. 상태 변경 요청, 추가 문서 첨부 등의 입력을 받는다.
+### 4.1. class description
+소유권 주장 일반 갱신/추가 제출 요청 DTO. 상태 변경 및 추가 문서 첨부 입력.
 
 ### 4.2. attribution 구분
-* 4.2.1. name : claimId (Long) / private / 대상 주장 ID.
-* 4.2.1. name : action (String) / private / APPROVE/REJECT/NEED_MORE_DOCS 등.
-* 4.2.1. name : reason (String) / private / 거절/보류 사유.
-* 4.2.1. name : additionalDocumentUrls (List<String>) / private / 추가 문서.
+- **claimId**(Long) / private — 대상 주장 ID.
+- **action**(String) / private — APPROVE/REJECT/NEED_MORE_DOCS 등.
+- **reason**(String) / private — 거절/보류 사유.
+- **additionalDocumentUrls**(List<String>) / private — 추가 문서 URL 목록.
 
 ### 4.3. Operations 구분
-* 4.3.1. name : validate() / boolean / public / 상태 전이 규칙 검증.
-* 4.3.1. name : toUpdateInstruction() / Map<String,Object> / public / 서비스 계층용 변경 명세 생성.
+- **validate() : boolean / public** — 상태 전이 규칙 검증.
+- **toUpdateInstruction() : Map<String,Object> / public** — 서비스 계층용 변경 명세 생성.
 
+---
 
 ## 5. class name : OwnershipClaimResponse
 
-### 5.1. class description :
-소유권 주장 상세/목록 응답 DTO. 엔티티/문서/상태/사유/타임스탬프를 클라이언트에 전달한다.
+### 5.1. class description
+소유권 주장 상세/목록 응답 DTO. 엔티티/문서/상태/사유/타임스탬프를 클라이언트에 전달.
 
 ### 5.2. attribution 구분
-* 5.2.1. name : claimId (Long) / private / 주장 ID.
-* 5.2.1. name : userId (Long) / private / 사용자 ID.
-* 5.2.1. name : propertyId (Long) / private / 매물 ID.
-* 5.2.1. name : status (String) / private / 처리 상태.
-* 5.2.1. name : reason (String) / private / 사유.
-* 5.2.1. name : documents (List<OwnershipDocumentSummary>) / private / 첨부 요약.
-* 5.2.1. name : createdAt (LocalDateTime) / private / 생성.
-* 5.2.1. name : updatedAt (LocalDateTime) / private / 갱신.
+- **claimId**(Long) / private
+- **userId**(Long) / private
+- **propertyId**(Long) / private
+- **status**(String) / private
+- **reason**(String) / private
+- **documents**(List<OwnershipDocumentSummary>) / private
+- **createdAt**(LocalDateTime) / private
+- **updatedAt**(LocalDateTime) / private
 
 ### 5.3. Operations 구분
-* 5.3.1. name : from(entity: OwnershipClaim, docs: List<OwnershipDocument>) / OwnershipClaimResponse / public / 매핑 팩토리.
-* 5.3.1. name : summarize() / String / public / 상태+문서수 요약 텍스트.
+- **from(entity: OwnershipClaim, docs: List<OwnershipDocument>) : OwnershipClaimResponse / public** — 매핑 팩토리.
+- **summarize() : String / public** — 상태+문서수 요약 텍스트.
 
+---
 
 ## 6. class name : OwnershipClaimService
 
-### 6.1. class description :
+### 6.1. class description
 소유권 주장 생성/수정/승인/거절/문서 첨부/조회 로직을 제공하는 서비스.
 
 ### 6.2. attribution 구분
-* 6.2.1. name : claimRepository (OwnershipClaimRepository) / private / 주장 저장소.
-* 6.2.1. name : documentRepository (OwnershipDocumentRepository) / private / 문서 저장소.
-* 6.2.1. name : clock (Clock) / private / 시간 주입(테스트 편의).
+- **claimRepository**(OwnershipClaimRepository) / private
+- **documentRepository**(OwnershipDocumentRepository) / private
+- **clock**(Clock) / private — 테스트 편의용 시간 주입.
 
 ### 6.3. Operations 구분
-* 6.3.1. name : create(req: OwnershipClaimCreateRequest) / OwnershipClaimResponse / public / 주장 생성, 문서 저장.
-* 6.3.1. name : update(req: OwnershipClaimRequest) / OwnershipClaimResponse / public / 상태 전이/사유/문서 추가 반영.
-* 6.3.1. name : getDetail(id: Long) / OwnershipClaimResponse / public / 상세 조회.
-* 6.3.1. name : listByUser(userId: Long) / List<OwnershipClaimResponse> / public / 사용자별 목록.
-* 6.3.1. name : attachDocuments(id: Long, urls: List<String>) / OwnershipClaimResponse / public / 문서 추가.
+- **create(req: OwnershipClaimCreateRequest) : OwnershipClaimResponse / public**
+- **update(req: OwnershipClaimRequest) : OwnershipClaimResponse / public**
+- **getDetail(id: Long) : OwnershipClaimResponse / public**
+- **listByUser(userId: Long) : List<OwnershipClaimResponse> / public**
+- **attachDocuments(id: Long, urls: List<String>) : OwnershipClaimResponse / public**
 
+---
 
 ## 7. class name : OwnershipClaimController
 
-### 7.1. class description :
+### 7.1. class description
 소유권 주장 REST 컨트롤러. 생성/갱신/조회 HTTP 엔드포인트 제공.
 
 ### 7.2. attribution 구분
-* 7.2.1. name : service (OwnershipClaimService) / private / 도메인 서비스.
-* 7.2.1. name : mapper (ObjectMapper or Mapper) / private / DTO 매핑 보조.
+- **service**(OwnershipClaimService) / private — 도메인 서비스.
+- **mapper**(ObjectMapper or Mapper) / private — DTO 매핑 보조.
 
 ### 7.3. Operations 구분
-* 7.3.1. name : POST /ownership-claims / OwnershipClaimResponse / public / 주장 생성.
-* 7.3.1. name : PATCH /ownership-claims/{id} / OwnershipClaimResponse / public / 상태 갱신/문서 추가.
-* 7.3.1. name : GET /ownership-claims/{id} / OwnershipClaimResponse / public / 상세 조회.
-* 7.3.1. name : GET /ownership-claims?userId= / List<OwnershipClaimResponse> / public / 사용자별 목록.
+- **POST /ownership-claims : OwnershipClaimResponse / public** — 주장 생성.
+- **PATCH /ownership-claims/{id} : OwnershipClaimResponse / public** — 상태 갱신/문서 추가.
+- **GET /ownership-claims/{id} : OwnershipClaimResponse / public** — 상세 조회.
+- **GET /ownership-claims?userId= : List<OwnershipClaimResponse> / public** — 사용자별 목록.
 
+---
 
 ## 8. class name : OwnershipClaimRepository
 
-### 8.1. class description :
-OwnershipClaim JPA/스프링 데이터 리포지토리 인터페이스. CRUD + 검색 제공.
+### 8.1. class description
+OwnershipClaim용 JPA/스프링 데이터 리포지토리 인터페이스.
 
 ### 8.2. attribution 구분
-* 8.2.1. name : (상태없음, 인터페이스) 
+- (상태 없음, 인터페이스)
 
 ### 8.3. Operations 구분
-* 8.3.1. name : save(entity: OwnershipClaim) / OwnershipClaim / public / 저장.
-* 8.3.1. name : findById(id: Long) / Optional<OwnershipClaim> / public / 단건 조회.
-* 8.3.1. name : findAllByUserId(userId: Long) / List<OwnershipClaim> / public / 사용자별 조회.
-* 8.3.1. name : existsByPropertyIdAndUserId(propertyId: Long, userId: Long) / boolean / public / 중복 주장 여부.
+- **save(entity: OwnershipClaim) : OwnershipClaim / public**
+- **findById(id: Long) : Optional<OwnershipClaim> / public**
+- **findAllByUserId(userId: Long) : List<OwnershipClaim> / public**
+- **existsByPropertyIdAndUserId(propertyId: Long, userId: Long) : boolean / public**
 
+---
 
 ## 9. class name : OwnershipDocumentRepository
 
-### 9.1. class description :
+### 9.1. class description
 OwnershipDocument 리포지토리 인터페이스. 문서 CRUD 및 주장 ID별 조회 제공.
 
 ### 9.2. attribution 구분
-* 9.2.1. name : (상태없음, 인터페이스)
+- (상태 없음, 인터페이스)
 
 ### 9.3. Operations 구분
-* 9.3.1. name : save(doc: OwnershipDocument) / OwnershipDocument / public / 저장.
-* 9.3.1. name : findAllByClaimId(claimId: Long) / List<OwnershipDocument> / public / 문서 목록.
-* 9.3.1. name : deleteById(id: Long) / void / public / 삭제.
-
+- **save(doc: OwnershipDocument) : OwnershipDocument / public**
+- **findAllByClaimId(claimId: Long) : List<OwnershipDocument> / public**
+- **deleteById(id: Long) : void / public**
 
 ---
-9. 매물 비교 관련
+
+# 9. 매물 비교 관련
 
 ```mermaid
 classDiagram
     %% ===== 엔티티 =====
     class ComparisonGroup {
         -id: Long
-        -groupName: String
+        -ownerUserId: Long
+        -name: String
         -description: String
-        +addItem(item: ComparisonItem): void
-        +removeItem(itemId: Long): void
+        -createdAt: LocalDateTime
+        -updatedAt: LocalDateTime
+        +rename(newName: String): void
+        +changeDescription(desc: String): void
     }
 
     class ComparisonItem {
         -id: Long
+        -groupId: Long
         -propertyId: Long
-        -comparisonValue: String
-        +compare(): void
+        -capturedPrice: Long
+        -capturedArea: Double
+        -capturedLocationScore: Double
+        -note: String
+        +updateSnapshot(price: Long, area: Double): void
+        +applyNote(note: String): void
     }
 
     %% ===== DTO =====
     class CreateGroupRequest {
-        -groupName: String
+        -name: String
         -description: String
-        +toEntity(): ComparisonGroup
+        +validate(): boolean
+        +toEntity(ownerUserId: Long): ComparisonGroup
     }
 
     class GroupDetailResponse {
-        -groupId: Long
-        -groupName: String
+        -group: GroupResponse
         -items: List~ItemResponse~
-        +fromEntity(group: ComparisonGroup): GroupDetailResponse
+        -weights: WeightsRequest
+        -computedScore: Double
+        +of(...): GroupDetailResponse
+        +summaryText(): String
     }
 
     class GroupResponse {
-        -groupId: Long
-        -groupName: String
-        +fromEntity(group: ComparisonGroup): GroupResponse
+        -id: Long
+        -name: String
+        -description: String
+        -itemCount: int
+        -createdAt: LocalDateTime
+        +from(entity: ComparisonGroup, itemCount: int): GroupResponse
     }
 
     class GroupSummaryResponse {
-        -groupId: Long
-        -groupName: String
-        -itemCount: int
-        +fromEntity(group: ComparisonGroup): GroupSummaryResponse
+        -groups: List~GroupResponse~
+        -totalCount: long
+        +of(list: List~GroupResponse~, total: long): GroupSummaryResponse
+        +hasMore(offset: int, limit: int): boolean
     }
 
     class AddItemRequest {
         -groupId: Long
         -propertyId: Long
-        -comparisonValue: String
-        +toEntity(group: ComparisonGroup): ComparisonItem
+        -note: String
+        +validate(): boolean
+        +toEntity(): ComparisonItem
     }
 
     class CompareResultResponse {
         -groupId: Long
-        -comparisonResults: Map~String,Double~
-        +calculateResults(): CompareResultResponse
+        -itemScores: List~Map~String,Object~~
+        -usedWeights: WeightsRequest
+        -computedAt: LocalDateTime
+        +of(...): CompareResultResponse
+        +topN(n: int): List~Long~
     }
 
     class RenameGroupRequest {
@@ -5492,35 +5465,46 @@ classDiagram
     class ItemResponse {
         -itemId: Long
         -propertyId: Long
-        -comparisonValue: String
-        +fromEntity(item: ComparisonItem): ItemResponse
+        -price: Long
+        -area: Double
+        -locationScore: Double
+        -note: String
+        +from(entity: ComparisonItem): ItemResponse
     }
 
     class WeightsRequest {
-        -priceWeight: double
-        -sizeWeight: double
-        -locationWeight: double
-        +normalizeWeights(): void
+        -priceWeight: Double
+        -areaWeight: Double
+        -locationWeight: Double
+        -normalize: boolean
+        +validate(): boolean
+        +normalized(): WeightsRequest
     }
 
     %% ===== Service, Repository =====
     class ComparisonService {
-        +createGroup(req: CreateGroupRequest): GroupResponse
-        +addItem(req: AddItemRequest): ItemResponse
-        +compareGroup(groupId: Long, weights: WeightsRequest): CompareResultResponse
-        +renameGroup(req: RenameGroupRequest): void
-        +getGroupSummary(userId: Long): List~GroupSummaryResponse~
+        -groupRepo: ComparisonGroupJpaRepository
+        -itemRepo: ComparisonItemJpaRepository
+        -scorer: Object
+        +createGroup(req: CreateGroupRequest, ownerUserId: Long): GroupResponse
+        +renameGroup(req: RenameGroupRequest, ownerUserId: Long): GroupResponse
+        +addItem(req: AddItemRequest, ownerUserId: Long): ItemResponse
+        +getGroupDetail(groupId: Long, ownerUserId: Long, weights: WeightsRequest): GroupDetailResponse
+        +compare(groupId: Long, weights: WeightsRequest): CompareResultResponse
     }
 
     class ComparisonGroupJpaRepository {
         +save(group: ComparisonGroup): ComparisonGroup
         +findById(id: Long): Optional~ComparisonGroup~
-        +findAllByUserId(userId: Long): List~ComparisonGroup~
+        +findAllByOwnerUserId(ownerUserId: Long): List~ComparisonGroup~
+        +deleteById(id: Long): void
     }
 
     class ComparisonItemJpaRepository {
         +save(item: ComparisonItem): ComparisonItem
+        +findById(id: Long): Optional~ComparisonItem~
         +findAllByGroupId(groupId: Long): List~ComparisonItem~
+        +deleteById(id: Long): void
     }
 
     %% ===== Relationships =====
@@ -5537,306 +5521,279 @@ classDiagram
     WeightsRequest --> CompareResultResponse : influences >
 ```
 
-
-
 ## 10. class name : ComparisonGroup
 
-### 10.1. class description :
+### 10.1. class description
 사용자별 매물 비교 그룹 엔티티. 여러 매물을 하나의 그룹으로 묶어 비교/공유/이름 변경/가중치 적용을 지원한다.
 
 ### 10.2. attribution 구분
-* 10.2.1. name : id (Long) / private / PK.
-* 10.2.1. name : ownerUserId (Long) / private / 그룹 소유 사용자 ID.
-* 10.2.1. name : name (String) / private / 그룹명.
-* 10.2.1. name : description (String) / private / 그룹 설명.
-* 10.2.1. name : createdAt (LocalDateTime) / private / 생성 시각.
-* 10.2.1. name : updatedAt (LocalDateTime) / private / 수정 시각.
+- **id**(Long) / private / PK
+- **ownerUserId**(Long) / private / 그룹 소유 사용자
+- **name**(String) / private / 그룹명
+- **description**(String) / private / 설명
+- **createdAt**(LocalDateTime) / private / 생성 시각
+- **updatedAt**(LocalDateTime) / private / 수정 시각
 
 ### 10.3. Operations 구분
-* 10.3.1. name : rename(newName: String) / void / public / 그룹명 변경.
-* 10.3.1. name : changeDescription(desc: String) / void / public / 설명 변경.
+- **rename(newName: String) : void / public**
+- **changeDescription(desc: String) : void / public**
 
+---
 
 ## 11. class name : ComparisonItem
 
-### 11.1. class description :
-비교 그룹에 포함된 개별 매물 항목 엔티티. 비교용 지표(가격/면적/위치 등)의 스냅샷 값을 보관한다.
+### 11.1. class description
+비교 그룹에 포함된 개별 매물 항목 엔티티. 비교용 지표(가격/면적/위치 등) 스냅샷 보관.
 
 ### 11.2. attribution 구분
-* 11.2.1. name : id (Long) / private / PK.
-* 11.2.1. name : groupId (Long) / private / ComparisonGroup FK.
-* 11.2.1. name : propertyId (Long) / private / 원본 매물 ID.
-* 11.2.1. name : capturedPrice (Long) / private / 비교 시점 가격.
-* 11.2.1. name : capturedArea (Double) / private / 전용/공급 면적 중 선택 값.
-* 11.2.1. name : capturedLocationScore (Double) / private / 가중치 연산용 점수.
-* 11.2.1. name : note (String) / private / 비고.
+- **id**(Long) / private / PK
+- **groupId**(Long) / private / ComparisonGroup FK
+- **propertyId**(Long) / private / 원본 매물 ID
+- **capturedPrice**(Long) / private / 비교 시점 가격
+- **capturedArea**(Double) / private / 면적
+- **capturedLocationScore**(Double) / private / 위치 점수
+- **note**(String) / private / 비고
 
 ### 11.3. Operations 구분
-* 11.3.1. name : updateSnapshot(price: Long, area: Double) / void / public / 스냅샷 갱신.
-* 11.3.1. name : applyNote(note: String) / void / public / 비고 저장.
+- **updateSnapshot(price: Long, area: Double) : void / public**
+- **applyNote(note: String) : void / public**
 
+---
 
 ## 12. class name : CreateGroupRequest
 
-### 12.1. class description :
+### 12.1. class description
 비교 그룹 생성 요청 DTO.
 
 ### 12.2. attribution 구분
-* 12.2.1. name : name (String) / private / 그룹명.
-* 12.2.1. name : description (String) / private / 설명(선택).
+- **name**(String) / private — 그룹명
+- **description**(String) / private — 설명(선택)
 
 ### 12.3. Operations 구분
-* 12.3.1. name : validate() / boolean / public / 이름 필수/길이 규칙.
-* 12.3.1. name : toEntity(ownerUserId: Long) / ComparisonGroup / public / 엔티티 변환.
+- **validate() : boolean / public**
+- **toEntity(ownerUserId: Long) : ComparisonGroup / public**
 
+---
 
 ## 13. class name : GroupDetailResponse
 
-### 13.1. class description :
+### 13.1. class description
 그룹 상세 응답 DTO. 그룹 메타 + 항목 목록 + 집계 지표.
 
 ### 13.2. attribution 구분
-* 13.2.1. name : group (GroupResponse) / private / 그룹 요약.
-* 13.2.1. name : items (List<ItemResponse>) / private / 항목들.
-* 13.2.1. name : weights (WeightsRequest) / private / 적용 가중치(에코 백).
-* 13.2.1. name : computedScore (Double) / private / 그룹 비교 결과 점수(예: 가중합).
+- **group**(GroupResponse) / private
+- **items**(List<ItemResponse>) / private
+- **weights**(WeightsRequest) / private
+- **computedScore**(Double) / private
 
 ### 13.3. Operations 구분
-* 13.3.1. name : of(...) / GroupDetailResponse / public / 조립 팩토리.
-* 13.3.1. name : summaryText() / String / public / UI 요약 문자열.
+- **of(...) : GroupDetailResponse / public**
+- **summaryText() : String / public**
 
+---
 
 ## 14. class name : GroupResponse
 
-### 14.1. class description :
+### 14.1. class description
 그룹 단건 응답 DTO(요약).
 
 ### 14.2. attribution 구분
-* 14.2.1. name : id (Long) / private
-* 14.2.1. name : name (String) / private
-* 14.2.1. name : description (String) / private
-* 14.2.1. name : itemCount (int) / private
-* 14.2.1. name : createdAt (LocalDateTime) / private
+- **id**(Long) / private
+- **name**(String) / private
+- **description**(String) / private
+- **itemCount**(int) / private
+- **createdAt**(LocalDateTime) / private
 
 ### 14.3. Operations 구분
-* 14.3.1. name : from(entity: ComparisonGroup, itemCount: int) / GroupResponse / public / 매핑.
+- **from(entity: ComparisonGroup, itemCount: int) : GroupResponse / public**
 
+---
 
 ## 15. class name : GroupSummaryResponse
 
-### 15.1. class description :
+### 15.1. class description
 여러 그룹의 요약 목록 응답 DTO.
 
 ### 15.2. attribution 구분
-* 15.2.1. name : groups (List<GroupResponse>) / private / 그룹 요약 배열.
-* 15.2.1. name : totalCount (long) / private / 전체 그룹 수.
+- **groups**(List<GroupResponse>) / private
+- **totalCount**(long) / private
 
 ### 15.3. Operations 구분
-* 15.3.1. name : of(list: List<GroupResponse>, total: long) / GroupSummaryResponse / public / 조립.
-* 15.3.1. name : hasMore(offset: int, limit: int) / boolean / public / 페이지네이션 보조.
+- **of(list: List<GroupResponse>, total: long) : GroupSummaryResponse / public**
+- **hasMore(offset: int, limit: int) : boolean / public**
 
+---
 
 ## 16. class name : AddItemRequest
 
-### 16.1. class description :
+### 16.1. class description
 그룹에 항목(매물)을 추가하는 요청 DTO.
 
 ### 16.2. attribution 구분
-* 16.2.1. name : groupId (Long) / private / 대상 그룹.
-* 16.2.1. name : propertyId (Long) / private / 추가할 매물.
-* 16.2.1. name : note (String) / private / 비고(선택).
+- **groupId**(Long) / private
+- **propertyId**(Long) / private
+- **note**(String) / private
 
 ### 16.3. Operations 구분
-* 16.3.1. name : validate() / boolean / public / 중복/권한 체크 선행 여부.
-* 16.3.1. name : toEntity() / ComparisonItem / public / 엔티티 변환(스냅샷 채우기).
+- **validate() : boolean / public**
+- **toEntity() : ComparisonItem / public**
 
+---
 
 ## 17. class name : CompareResultResponse
 
-### 17.1. class description :
+### 17.1. class description
 가중치/지표에 따라 계산된 비교 결과 응답 DTO. 항목별 점수와 순위를 포함.
 
 ### 17.2. attribution 구분
-* 17.2.1. name : groupId (Long) / private
-* 17.2.1. name : itemScores (List<Map<String,Object>>) / private / 항목별 {itemId, score, rank}.
-* 17.2.1. name : usedWeights (WeightsRequest) / private / 적용 가중치.
-* 17.2.1. name : computedAt (LocalDateTime) / private / 계산 시각.
+- **groupId**(Long) / private
+- **itemScores**(List<Map<String,Object>>) / private — {itemId, score, rank}
+- **usedWeights**(WeightsRequest) / private
+- **computedAt**(LocalDateTime) / private
 
 ### 17.3. Operations 구분
-* 17.3.1. name : of(...) / CompareResultResponse / public / 조립 팩토리.
-* 17.3.1. name : topN(n: int) / List<Long> / public / 상위 N개 항목 ID 반환.
+- **of(...) : CompareResultResponse / public**
+- **topN(n: int) : List<Long> / public**
 
+---
 
 ## 18. class name : RenameGroupRequest
 
-### 18.1. class description :
+### 18.1. class description
 그룹명 변경 요청 DTO.
 
 ### 18.2. attribution 구분
-* 18.2.1. name : groupId (Long) / private
-* 18.2.1. name : newName (String) / private
+- **groupId**(Long) / private
+- **newName**(String) / private
 
 ### 18.3. Operations 구분
-* 18.3.1. name : validate() / boolean / public / 길이/금칙어 체크.
+- **validate() : boolean / public**
 
+---
 
 ## 19. class name : ItemResponse
 
-### 19.1. class description :
+### 19.1. class description
 그룹 항목 요약 응답 DTO.
 
 ### 19.2. attribution 구분
-* 19.2.1. name : itemId (Long) / private
-* 19.2.1. name : propertyId (Long) / private
-* 19.2.1. name : price (Long) / private
-* 19.2.1. name : area (Double) / private
-* 19.2.1. name : locationScore (Double) / private
-* 19.2.1. name : note (String) / private
+- **itemId**(Long) / private
+- **propertyId**(Long) / private
+- **price**(Long) / private
+- **area**(Double) / private
+- **locationScore**(Double) / private
+- **note**(String) / private
 
 ### 19.3. Operations 구분
-* 19.3.1. name : from(entity: ComparisonItem) / ItemResponse / public / 매핑.
+- **from(entity: ComparisonItem) : ItemResponse / public**
 
+---
 
 ## 20. class name : WeightsRequest
 
-### 20.1. class description :
+### 20.1. class description
 비교 계산 시 사용할 가중치 입력 DTO. (예: 가격, 면적, 위치/교통 등)
 
 ### 20.2. attribution 구분
-* 20.2.1. name : priceWeight (Double) / private
-* 20.2.1. name : areaWeight (Double) / private
-* 20.2.1. name : locationWeight (Double) / private
-* 20.2.1. name : normalize (boolean) / private / 합=1 정규화 여부.
+- **priceWeight**(Double) / private
+- **areaWeight**(Double) / private
+- **locationWeight**(Double) / private
+- **normalize**(boolean) / private — 합=1 정규화 여부
 
 ### 20.3. Operations 구분
-* 20.3.1. name : validate() / boolean / public / 음수/합계 규칙.
-* 20.3.1. name : normalized() / WeightsRequest / public / 정규화된 사본 반환.
+- **validate() : boolean / public**
+- **normalized() : WeightsRequest / public**
 
+---
 
 ## 21. class name : ComparisonService
 
-### 21.1. class description :
+### 21.1. class description
 그룹/항목 CRUD, 비교 계산, 가중치 적용, 요약 응답 조립을 담당하는 도메인 서비스.
 
 ### 21.2. attribution 구분
-* 21.2.1. name : groupRepo (ComparisonGroupJpaRepository) / private
-* 21.2.1. name : itemRepo (ComparisonItemJpaRepository) / private
-* 21.2.1. name : scorer (Function or Component) / private / 점수 계산기.
+- **groupRepo**(ComparisonGroupJpaRepository) / private
+- **itemRepo**(ComparisonItemJpaRepository) / private
+- **scorer**(Function or Component) / private
 
 ### 21.3. Operations 구분
-* 21.3.1. name : createGroup(req: CreateGroupRequest, ownerUserId: Long) / GroupResponse / public
-* 21.3.1. name : renameGroup(req: RenameGroupRequest, ownerUserId: Long) / GroupResponse / public
-* 21.3.1. name : addItem(req: AddItemRequest, ownerUserId: Long) / ItemResponse / public
-* 21.3.1. name : getGroupDetail(groupId: Long, ownerUserId: Long, weights: WeightsRequest) / GroupDetailResponse / public
-* 21.3.1. name : compare(groupId: Long, weights: WeightsRequest) / CompareResultResponse / public
+- **createGroup(req: CreateGroupRequest, ownerUserId: Long) : GroupResponse / public**
+- **renameGroup(req: RenameGroupRequest, ownerUserId: Long) : GroupResponse / public**
+- **addItem(req: AddItemRequest, ownerUserId: Long) : ItemResponse / public**
+- **getGroupDetail(groupId: Long, ownerUserId: Long, weights: WeightsRequest) : GroupDetailResponse / public**
+- **compare(groupId: Long, weights: WeightsRequest) : CompareResultResponse / public**
 
+---
 
 ## 22. class name : ComparisonGroupJpaRepository
 
-### 22.1. class description :
+### 22.1. class description
 ComparisonGroup용 JPA/스프링 데이터 리포지토리 인터페이스.
 
 ### 22.2. attribution 구분
-* 22.2.1. name : (상태없음, 인터페이스)
+- (상태 없음, 인터페이스)
 
 ### 22.3. Operations 구분
-* 22.3.1. name : save(group: ComparisonGroup) / ComparisonGroup / public
-* 22.3.1. name : findById(id: Long) / Optional<ComparisonGroup> / public
-* 22.3.1. name : findAllByOwnerUserId(ownerUserId: Long) / List<ComparisonGroup> / public
-* 22.3.1. name : deleteById(id: Long) / void / public
+- **save(group: ComparisonGroup) : ComparisonGroup / public**
+- **findById(id: Long) : Optional<ComparisonGroup> / public**
+- **findAllByOwnerUserId(ownerUserId: Long) : List<ComparisonGroup> / public**
+- **deleteById(id: Long) : void / public**
 
+---
 
 ## 23. class name : ComparisonItemJpaRepository
 
-### 23.1. class description :
+### 23.1. class description
 ComparisonItem용 JPA/스프링 데이터 리포지토리 인터페이스.
 
 ### 23.2. attribution 구분
-* 23.2.1. name : (상태없음, 인터페이스)
+- (상태 없음, 인터페이스)
 
 ### 23.3. Operations 구분
-* 23.3.1. name : save(item: ComparisonItem) / ComparisonItem / public
-* 23.3.1. name : findById(id: Long) / Optional<ComparisonItem> / public
-* 23.3.1. name : findAllByGroupId(groupId: Long) / List<ComparisonItem> / public
-* 23.3.1. name : deleteById(id: Long) / void / public
+- **save(item: ComparisonItem) : ComparisonItem / public**
+- **findById(id: Long) : Optional<ComparisonItem> / public**
+- **findAllByGroupId(groupId: Long) : List<ComparisonItem> / public**
+- **deleteById(id: Long) : void / public**
 
-### 전체 구조 요약
+---
 
+# 10. 공통/유틸리티
 
-```mermaid
-classDiagram
-    OwnershipClaimController --> OwnershipClaimService
-    OwnershipClaimService --> OwnershipClaimRepository
-    OwnershipClaimService --> OwnershipDocumentRepository
-    OwnershipClaim "1" --> "many" OwnershipDocument
-    ComparisonService --> ComparisonGroupJpaRepository
-    ComparisonService --> ComparisonItemJpaRepository
-    ComparisonGroup "1" --> "many" ComparisonItem
-    OwnershipClaim --> Property : relates >
-    ComparisonItem --> Property : compares >
-```
-
-10. 공통/유틸리티
-# 1. BaseEntity 클래스
+## 1. BaseEntity 클래스
 
 ```mermaid
 classDiagram
   class BaseEntity {
-    %% 1.1. class description: 모든 엔티티가 상속받는 공통 엔티티
     -createdAt: LocalDateTime
     -updatedAt: LocalDateTime
-    
     +getCreatedAt(): LocalDateTime
     +getUpdatedAt(): LocalDateTime
   }
 ```
+### 1.1. class description
+모든 엔티티 클래스가 상속받는 공통 클래스. 생성/수정 시각 자동 관리.
 
-## 1.1. class description
-모든 엔티티 클래스가 상속받는 공통 클래스이다. 생성 날짜와 수정 날짜를 자동으로 관리한다. 이 클래스를 상속받은 엔티티들은 데이터베이스에 저장되거나 수정될 때 날짜가 자동으로 설정된다.
+### 1.2. attribution 구분
+- **createdAt** : LocalDateTime / private — 생성 시각.
+- **updatedAt** : LocalDateTime / private — 수정 시각.
 
-## 1.2. attribution 구분
+### 1.3. Operations 구분
+- **getCreatedAt() : LocalDateTime / public**
+- **getUpdatedAt() : LocalDateTime / public**
 
-### 1.2.1. createdAt
-* **name**: createdAt
-* **type**: LocalDateTime
-* **visibility**: private
-* **description**: 데이터가 생성된 날짜와 시간을 저장한다. 생성 후에는 수정할 수 없다.
+---
 
-### 1.2.2. updatedAt
-* **name**: updatedAt
-* **type**: LocalDateTime
-* **visibility**: private
-* **description**: 데이터가 마지막으로 수정된 날짜와 시간을 저장한다. 데이터가 수정될 때마다 자동으로 현재 시간으로 업데이트된다.
-
-## 1.3. Operations 구분
-
-### 1.3.1. getCreatedAt
-* **name**: getCreatedAt
-* **type**: LocalDateTime
-* **visibility**: public
-* **description**: createdAt 필드의 값을 반환하는 getter 메서드이다. Lombok의 @Getter 어노테이션에 의해 자동 생성된다.
-
-### 1.3.2. getUpdatedAt
-* **name**: getUpdatedAt
-* **type**: LocalDateTime
-* **visibility**: public
-* **description**: updatedAt 필드의 값을 반환하는 getter 메서드이다. Lombok의 @Getter 어노테이션에 의해 자동 생성된다.
-
-
-
-# 2. ResponseDTO 클래스
+## 2. ResponseDTO 클래스
 
 ```mermaid
 classDiagram
   class HttpStatus
   class ResponseDTO {
-    %% 2.1. class description: API 응답 공통 DTO
     -success: boolean
     -code: int
     -message: String
     -data: Object
     -timestamp: LocalDateTime
-    
     +success(data: Object): ResponseDTO
     +success(data: Object, message: String): ResponseDTO
     +error(code: int, message: String): ResponseDTO
@@ -5847,104 +5804,26 @@ classDiagram
     +getData(): Object
     +getTimestamp(): LocalDateTime
   }
-
-  ResponseDTO ..> HttpStatus : 사용 (Uses)
+  ResponseDTO ..> HttpStatus : Uses
 ```
+### 2.1. class description
+모든 API 응답을 일관된 형식으로 만들기 위한 공통 DTO.
 
-## 2.1. class description
-모든 API 응답을 일관된 형식으로 만들기 위한 공통 클래스이다. 성공/실패 여부, 상태 코드, 메시지, 데이터를 포함하여 프론트엔드에서 쉽게 처리할 수 있도록 한다.
+### 2.2. attribution 구분
+- **success**(boolean) / private — 성공 여부
+- **code**(int) / private — HTTP 코드
+- **message**(String) / private — 메시지
+- **data**(Object) / private — 응답 데이터
+- **timestamp**(LocalDateTime) / private — 생성 시각
 
-## 2.2. attribution 구분
+### 2.3. Operations 구분
+- **success(data)** / **success(data,message)**
+- **error(code,message)** / **error(httpStatus,message)**
+- **getters**: `getSuccess, getCode, getMessage, getData, getTimestamp`
 
-### 2.2.1. success
-* **name**: success
-* **type**: boolean
-* **visibility**: private
-* **description**: 요청이 성공했는지 실패했는지를 나타낸다. true면 성공, false면 실패이다.
+---
 
-### 2.2.2. code
-* **name**: code
-* **type**: int
-* **visibility**: private
-* **description**: HTTP 상태 코드를 저장한다. 200(성공), 400(잘못된 요청), 500(서버 오류) 등의 값을 가진다.
-
-### 2.2.3. message
-* **name**: message
-* **type**: String
-* **visibility**: private
-* **description**: 응답에 대한 설명 메시지이다. 성공 시에는 안내 메시지가, 실패 시에는 오류 원인이 포함된다.
-
-### 2.2.4. data
-* **name**: data
-* **type**: T (제네릭)
-* **visibility**: private
-* **description**: 실제 응답 데이터를 저장한다. 어떤 타입의 데이터도 담을 수 있다. 오류 응답의 경우 null일 수 있다.
-
-### 2.2.5. timestamp
-* **name**: timestamp
-* **type**: LocalDateTime
-* **visibility**: private
-* **description**: 응답이 생성된 시점의 시간을 저장한다.
-
-## 2.3. Operations 구분
-
-### 2.3.1. success
-* **name**: success
-* **type**: ResponseDTO\<T\>
-* **visibility**: public static
-* **description**: 성공 응답을 만드는 메서드이다. 데이터를 받아서 성공 응답 객체를 반환한다.
-
-### 2.3.2. success
-* **name**: success
-* **type**: ResponseDTO\<T\>
-* **visibility**: public static
-* **description**: 메시지가 포함된 성공 응답을 만드는 메서드이다. 데이터와 메시지를 받아서 성공 응답 객체를 반환한다.
-
-### 2.3.3. error
-* **name**: error
-* **type**: ResponseDTO\<void\>
-* **visibility**: public static
-* **description**: 오류 응답을 만드는 메서드이다. 상태 코드와 메시지를 받아서 오류 응답 객체를 반환한다.
-
-### 2.3.4. error
-* **name**: error
-* **type**: ResponseDTO\<void\>
-* **visibility**: public static
-* **description**: HttpStatus 객체를 이용하여 오류 응답을 만드는 메서드이다.
-
-### 2.3.5. getSuccess
-* **name**: getSuccess
-* **type**: boolean
-* **visibility**: public
-* **description**: success 필드의 값을 반환하는 메서드이다.
-
-### 2.3.6. getCode
-* **name**: getCode
-* **type**: int
-* **visibility**: public
-* **description**: code 필드의 값을 반환하는 메서드이다.
-
-### 2.3.7. getMessage
-* **name**: getMessage
-* **type**: String
-* **visibility**: public
-* **description**: message 필드의 값을 반환하는 메서드이다.
-
-### 2.3.8. getData
-* **name**: getData
-* **type**: T
-* **visibility**: public
-* **description**: data 필드의 값을 반환하는 메서드이다.
-
-### 2.3.9. getTimestamp
-* **name**: getTimestamp
-* **type**: LocalDateTime
-* **visibility**: public
-* **description**: timestamp 필드의 값을 반환하는 메서드이다.
-
-
-
-# 3. GlobalExceptionHandler 클래스
+## 3. GlobalExceptionHandler 클래스
 
 ```mermaid
 classDiagram
@@ -5955,54 +5834,29 @@ classDiagram
   class Exception
 
   class GlobalExceptionHandler {
-    %% 3.1. class description: 전역 예외 처리 핸들러
     +handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity
     +handleValidationExceptions(ex: MethodArgumentNotValidException): ResponseEntity
     +handleGenericException(e: Exception): ResponseEntity
   }
-
-  GlobalExceptionHandler ..> ResponseEntity : 반환 (Returns)
-  GlobalExceptionHandler ..> HttpStatus : 사용 (Uses)
-  GlobalExceptionHandler ..> IllegalArgumentException : 처리 (Handles)
-  GlobalExceptionHandler ..> MethodArgumentNotValidException : 처리 (Handles)
-  GlobalExceptionHandler ..> Exception : 처리 (Handles)
 ```
+### 3.1. class description
+전역 예외 처리 핸들러. 컨트롤러 예외를 잡아 표준 오류 응답 반환.
 
-## 3.1. class description
-애플리케이션에서 발생하는 모든 예외를 처리하는 클래스이다. 컨트롤러에서 발생한 예외를 잡아서 적절한 오류 메시지와 상태 코드를 반환한다.
+### 3.2. attribution 구분
+- (필드 없음)
 
-## 3.2. attribution 구분
+### 3.3. Operations 구분
+- **handleIllegalArgumentException(...) : ResponseEntity<String>**
+- **handleValidationExceptions(...) : ResponseEntity<Map<String,String>>**
+- **handleGenericException(...) : ResponseEntity<String>**
 
-* GlobalExceptionHandler 클래스는 필드나 속성을 가지지 않는다. 예외를 처리하는 메서드만 제공한다.
+---
 
-## 3.3. Operations 구분
-
-### 3.3.1. handleIllegalArgumentException
-* **name**: handleIllegalArgumentException
-* **type**: ResponseEntity\<String\>
-* **visibility**: public
-* **description**: 잘못된 인자가 전달되었을 때 발생하는 예외를 처리한다. HTTP 400 상태 코드와 함께 오류 메시지를 반환한다.
-
-### 3.3.2. handleValidationExceptions
-* **name**: handleValidationExceptions
-* **type**: ResponseEntity\<Map\<String, String\>\>
-* **visibility**: public
-* **description**: 입력값 검증 실패 시 발생하는 예외를 처리한다. 필드별 오류 메시지를 모아서 반환한다. 현재는 첫 번째 오류 메시지만 반환한다.
-
-### 3.3.3. handleGenericException
-* **name**: handleGenericException
-* **type**: ResponseEntity\<String\>
-* **visibility**: public
-* **description**: 처리되지 않은 모든 예외를 처리하는 메서드이다. HTTP 500 상태 코드와 함께 일반적인 오류 메시지를 반환한다.
-
-
-
-# 4. ValidationUtil 클래스
+## 4. ValidationUtil 클래스
 
 ```mermaid
 classDiagram
   class ValidationUtil {
-    %% 4.1. class description: 입력값 유효성 검증 유틸리티
     +isValidEmail(email: String): boolean
     +isValidPhoneNumber(phoneNumber: String): boolean
     +isValidPassword(password: String): boolean
@@ -6015,79 +5869,18 @@ classDiagram
     +validateNotNegative(value: long): boolean
   }
 ```
+### 4.1. class description
+입력값 유효성 검증 유틸리티(정규식/길이/숫자/URL/정제).
 
-## 4.1. class description
-입력값이 올바른 형식인지 검증하는 유틸리티 클래스이다. 이메일, 전화번호, 비밀번호 등의 형식을 확인하고, 입력값을 정제하는 기능도 제공한다.
+### 4.2. attribution 구분
+- (필드 없음, static 메소드 집합)
 
-## 4.2. attribution 구분
+### 4.3. Operations 구분
+- **isValidEmail / isValidPhoneNumber / isValidPassword / isValidUrl / isNotBlank / isValidLength / isValidInteger / sanitizeInput / validateNotNegative(int,long)**
 
-* ValidationUtil 클래스는 필드를 가지지 않는다. 모든 메서드가 static 메서드로 구현되어 있어서 인스턴스를 만들지 않고 사용할 수 있다.
+---
 
-## 4.3. Operations 구분
-
-### 4.3.1. isValidEmail
-* **name**: isValidEmail
-* **type**: boolean
-* **visibility**: public static
-* **description**: 이메일 주소가 올바른 형식인지 확인한다. 예: user@example.com
-
-### 4.3.2. isValidPhoneNumber
-* **name**: isValidPhoneNumber
-* **type**: boolean
-* **visibility**: public static
-* **description**: 전화번호가 올바른 형식인지 확인한다. 예: 010-1234-5678
-
-### 4.3.3. isValidPassword
-* **name**: isValidPassword
-* **type**: boolean
-* **visibility**: public static
-* **description**: 비밀번호가 강력한 비밀번호 정책을 만족하는지 확인한다. 최소 길이, 대소문자, 숫자, 특수문자 포함 여부를 체크한다.
-
-### 4.3.4. isValidUrl
-* **name**: isValidUrl
-* **type**: boolean
-* **visibility**: public static
-* **description**: URL이 올바른 형식인지 확인한다. http:// 또는 https://로 시작하는지 체크한다.
-
-### 4.3.5. isNotBlank
-* **name**: isNotBlank
-* **type**: boolean
-* **visibility**: public static
-* **description**: 문자열이 비어있지 않은지 확인한다. null이 아니고, 빈 문자열이 아니고, 공백만으로 구성되지 않았는지 체크한다.
-
-### 4.3.6. isValidLength
-* **name**: isValidLength
-* **type**: boolean
-* **visibility**: public static
-* **description**: 문자열의 길이가 지정된 최소값과 최대값 사이에 있는지 확인한다.
-
-### 4.3.7. isValidInteger
-* **name**: isValidInteger
-* **type**: boolean
-* **visibility**: public static
-* **description**: 문자열이 정수로 변환 가능한지 확인하고, 값이 지정된 범위 안에 있는지 체크한다.
-
-### 4.3.8. sanitizeInput
-* **name**: sanitizeInput
-* **type**: String
-* **visibility**: public static
-* **description**: 입력값에서 위험한 문자나 스크립트를 제거하여 안전하게 만든다. 보안을 위해 데이터베이스에 저장하기 전에 사용한다.
-
-### 4.3.9. validateNotNegative
-* **name**: validateNotNegative
-* **type**: boolean
-* **visibility**: public static
-* **description**: int 타입 정수 값이 음수가 아닌지 확인한다.
-
-### 4.3.10. validateNotNegative
-* **name**: validateNotNegative
-* **type**: boolean
-* **visibility**: public static
-* **description**: long 타입 정수 값이 음수가 아닌지 확인한다.
-
-
-
-# 5. SecurityConfig 클래스
+## 5. SecurityConfig 클래스
 
 ```mermaid
 classDiagram
@@ -6099,133 +5892,56 @@ classDiagram
   class WebSecurityCustomizer
 
   class SecurityConfig {
-    %% 5.1. class description: Spring Security 설정 클래스
     -jwtFilter: JwtAuthenticationFilter
-    
     +filterChain(http: HttpSecurity): SecurityFilterChain
     +corsConfigurationSource(): CorsConfigurationSource
     +passwordEncoder(): PasswordEncoder
     +webSecurityCustomizer(): WebSecurityCustomizer
   }
-
-  SecurityConfig "1" -- "1" JwtAuthenticationFilter : 의존 (Depends on)
-  SecurityConfig ..> HttpSecurity : 사용 (Uses)
-  SecurityConfig ..> SecurityFilterChain : 반환 (Returns)
-  SecurityConfig ..> CorsConfigurationSource : 반환 (Returns)
-  SecurityConfig ..> PasswordEncoder : 반환 (Returns)
 ```
+### 5.1. class description
+Spring Security 설정(JWT, CORS, PasswordEncoder, 정적 리소스 무시).
 
-## 5.1. class description
-Spring Security의 보안 설정을 담당하는 클래스이다. JWT 인증, CORS 설정, 비밀번호 암호화, 접근 권한 관리 등을 설정한다.
+### 5.2. attribution 구분
+- **jwtFilter**(JwtAuthenticationFilter) / private
 
-## 5.2. attribution 구분
+### 5.3. Operations 구분
+- **filterChain(...) : SecurityFilterChain**
+- **corsConfigurationSource() : CorsConfigurationSource**
+- **passwordEncoder() : PasswordEncoder**
+- **webSecurityCustomizer() : WebSecurityCustomizer**
 
-### 5.2.1. jwtFilter
-* **name**: jwtFilter
-* **type**: JwtAuthenticationFilter
-* **visibility**: private
-* **description**: JWT 토큰을 검증하는 필터 객체이다. 생성자 주입으로 주입되며, 요청마다 토큰을 검증한다.
+---
 
-## 5.3. Operations 구분
-
-### 5.3.1. filterChain
-* **name**: filterChain
-* **type**: SecurityFilterChain
-* **visibility**: public
-* **description**: 보안 필터 체인을 설정하는 메서드이다. 어떤 경로는 인증 없이 접근 가능하고, 어떤 경로는 인증이 필요하도록 설정한다. JWT 인증 필터를 추가하여 토큰 검증을 수행한다.
-
-### 5.3.2. corsConfigurationSource
-* **name**: corsConfigurationSource
-* **type**: CorsConfigurationSource
-* **visibility**: public
-* **description**: CORS 설정을 구성하는 메서드이다. 프론트엔드 개발 서버의 요청을 허용하고, 허용할 HTTP 메서드와 헤더를 설정한다.
-
-### 5.3.3. passwordEncoder
-* **name**: passwordEncoder
-* **type**: PasswordEncoder
-* **visibility**: public
-* **description**: 비밀번호를 암호화하는 인코더를 만드는 메서드이다. BCrypt 알고리즘을 사용한다.
-
-### 5.3.4. webSecurityCustomizer
-* **name**: webSecurityCustomizer
-* **type**: WebSecurityCustomizer
-* **visibility**: public
-* **description**: CSS, JavaScript 같은 정적 파일에 대해서는 보안 검사를 하지 않도록 설정하는 메서드이다.
-
-
-
-# 6. JwtTokenProvider 클래스
+## 6. JwtTokenProvider 클래스
 
 ```mermaid
 classDiagram
   class User
   class Authentication
-  class AuthUser
   class Jws
 
   class JwtTokenProvider {
-    %% 6.1. class description: JWT 토큰 생성 및 검증 프로바이더
     -secret: String
     -accessExp: long
-    
     +createAccessToken(user: User): String
     +parse(token: String): Jws
     +validate(token: String): boolean
     +getAuthentication(token: String): Authentication
     +getUserId(token: String): Long
   }
-
-  JwtTokenProvider ..> User : 사용 (Uses)
-  JwtTokenProvider ..> Authentication : 반환 (Returns)
-  JwtTokenProvider ..> AuthUser : 생성 (Creates)
-  JwtTokenProvider ..> Jws : 반환 (Returns)
 ```
+### 6.1. class description
+JWT 토큰 생성·검증·파싱·인증 추출 유틸리티.
 
-## 6.1. class description
-JWT 토큰을 만들고 검증하는 클래스이다. 사용자 정보를 토큰으로 만들고, 요청 시 토큰을 검증하여 사용자 정보를 추출한다.
+### 6.2. attribution 구분
+- **secret**(String) / private — 서명 키
+- **accessExp**(long) / private — 만료(초)
 
-## 6.2. attribution 구분
+### 6.3. Operations 구분
+- **createAccessToken(User) : String**
+- **parse(String) : Jws<Claims>**
+- **validate(String) : boolean**
+- **getAuthentication(String) : Authentication**
+- **getUserId(String) : Long**
 
-### 6.2.1. secret
-* **name**: secret
-* **type**: String
-* **visibility**: private
-* **description**: 토큰을 서명하는 데 사용하는 비밀 키이다. application.yml에서 가져온다. 외부에 노출되면 안 된다.
-
-### 6.2.2. accessExp
-* **name**: accessExp
-* **type**: long
-* **visibility**: private
-* **description**: 토큰이 유효한 시간을 초 단위로 저장한다. 기본값은 3600초(1시간)이다. application.yml에서 설정할 수 있다.
-
-## 6.3. Operations 구분
-
-### 6.3.1. createAccessToken
-* **name**: createAccessToken
-* **type**: String
-* **visibility**: public
-* **description**: 사용자 정보를 이용해서 JWT 토큰을 만드는 메서드이다. 사용자 ID, 이메일, 역할을 포함한다. 로그인 성공 시 호출된다.
-
-### 6.3.2. parse
-* **name**: parse
-* **type**: Jws\<Claims\>
-* **visibility**: public
-* **description**: 토큰 문자열을 읽어서 검증하는 메서드이다. 서명이 유효하고 만료되지 않았는지 확인한다.
-
-### 6.3.3. validate
-* **name**: validate
-* **type**: boolean
-* **visibility**: public
-* **description**: 토큰이 유효한지 확인하는 메서드이다. 유효하면 true, 아니면 false를 반환한다.
-
-### 6.3.4. getAuthentication
-* **name**: getAuthentication
-* **type**: Authentication
-* **visibility**: public
-* **description**: 토큰에서 사용자 정보를 추출해서 Spring Security의 인증 객체를 만드는 메서드이다.
-
-### 6.3.5. getUserId
-* **name**: getUserId
-* **type**: Long
-* **visibility**: public
-* **description**: 토큰에서 사용자 ID만 추출하는 메서드이다.
