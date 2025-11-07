@@ -1,4 +1,4 @@
-<img width="546" height="2493" alt="image" src="https://github.com/user-attachments/assets/afaccc34-d6ee-4232-964a-b603a9254d75" />
+<img width="737" height="886" alt="image" src="https://github.com/user-attachments/assets/5a45f9cd-94d3-4039-900b-d93d3329fd9c" />
 
 이 Use Case Diagram은 부동산 통합 플랫폼(Real Estate Hub System)의 주요 기능과 외부 액터 간 상호작용을 시각화한 것이다.
 본 시스템은 일반 사용자(User), 매물 소유자(Owner), 브로커(Broker), 관리자(Admin), 시스템/엔진(System), 지도 서비스(Map Service)의 여섯 주체가 상호 연계되어 작동한다.
