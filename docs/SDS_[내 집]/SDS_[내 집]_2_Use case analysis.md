@@ -2323,7 +2323,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Due Date**<br>
 * * *
 
-# Use case 34. 추천 매물
+# Use case 31. 추천 매물
 **GENERAL CHARACTERISTICS**
 * * *
 **Summary**
@@ -2394,7 +2394,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 
-# Use case 35. 중개인 목록 표시
+# Use case 32. 중개인 목록 표시
 **GENERAL CHARACTERISTICS**
 * * *
 **Summary**
@@ -2464,7 +2464,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Due Date**<br>
 * * *
 
-# Use case 38. 전세가율 계산기
+# Use case 33. 전세가율 계산기
 **GENERAL CHARACTERISTICS**
 * * *
 **Summary**
