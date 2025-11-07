@@ -5121,6 +5121,7 @@ classDiagram
     +requestMoreDocs(reason: String): void
     +isTerminal(): boolean
   }
+
   class OwnershipDocument {
     -id: Long
     -claimId: Long
@@ -5131,6 +5132,7 @@ classDiagram
     +markVerified(): void
     +isImageLike(): boolean
   }
+
   class OwnershipClaimCreateRequest {
     -userId: Long
     -propertyId: Long
@@ -5139,6 +5141,7 @@ classDiagram
     +validate(): boolean
     +toEntity(): OwnershipClaim
   }
+
   class OwnershipClaimRequest {
     -claimId: Long
     -action: String
@@ -5147,6 +5150,7 @@ classDiagram
     +validate(): boolean
     +toUpdateInstruction(): Map~String,Object~
   }
+
   class OwnershipClaimResponse {
     -claimId: Long
     -userId: Long
@@ -5159,17 +5163,20 @@ classDiagram
     +from(entity: OwnershipClaim, docs: List~OwnershipDocument~): OwnershipClaimResponse
     +summarize(): String
   }
+
   class OwnershipClaimRepository {
     +save(entity: OwnershipClaim): OwnershipClaim
     +findById(id: Long): Optional~OwnershipClaim~
     +findAllByUserId(userId: Long): List~OwnershipClaim~
     +existsByPropertyIdAndUserId(propertyId: Long, userId: Long): boolean
   }
+
   class OwnershipDocumentRepository {
     +save(doc: OwnershipDocument): OwnershipDocument
     +findAllByClaimId(claimId: Long): List~OwnershipDocument~
     +deleteById(id: Long): void
   }
+
   class OwnershipClaimService {
     -claimRepository: OwnershipClaimRepository
     -documentRepository: OwnershipDocumentRepository
@@ -5180,6 +5187,7 @@ classDiagram
     +listByUser(userId: Long): List~OwnershipClaimResponse~
     +attachDocuments(id: Long, urls: List~String~): OwnershipClaimResponse
   }
+
   class OwnershipClaimController {
     -service: OwnershipClaimService
     -mapper: Object
@@ -5188,176 +5196,319 @@ classDiagram
     +GET /ownership-claims/{id}: OwnershipClaimResponse
     +GET /ownership-claims?userId=: List~OwnershipClaimResponse~
   }
-
-  OwnershipClaim "1" --> "*" OwnershipDocument : has
-  OwnershipClaimController --> OwnershipClaimService : uses
-  OwnershipClaimService --> OwnershipClaimRepository : accesses
-  OwnershipClaimService --> OwnershipDocumentRepository : accesses
-  OwnershipClaimRequest --> OwnershipClaim : converts
-  OwnershipClaimResponse --> OwnershipClaim : maps
-  OwnershipClaimResponse --> OwnershipDocument : includes
 ```
 
 ## OwnershipClaim 클래스
 
 ### 1.1 class description
-부동산에 대한 소유권 주장을 표현하는 엔티티. 사용자와 매물 간의 소유권 검증 절차의 핵심 레코드를 담고, 상태 전이(PENDING→APPROVED/REJECTED/NEED_MORE_DOCS), 생성/검토 시점을 추적한다.
+부동산에 대한 소유권 주장을 표현하는 엔티티로, 사용자와 매물 간의 검증 절차를 관리한다.  
+상태 전이(PENDING → APPROVED / REJECTED / NEED_MORE_DOCS)와 생성·검토 시점을 추적한다.
 
 ### 1.2 attribution 구분
-- **id** : Long / private — PK. 소유권 주장 고유 식별자.
-- **userId** : Long / private — 주장을 제기한 사용자 ID. User와 연계 조회.
-- **propertyId** : Long / private — 대상 매물 ID. Property와 연계.
-- **claimStatus** : String / private — 처리 상태(PENDING/APPROVED/REJECTED/NEED_MORE_DOCS).
-- **reason** : String / private — 거절/보류 사유 또는 비고.
-- **createdAt** : LocalDateTime / private — 생성 시각.
-- **updatedAt** : LocalDateTime / private — 갱신 시각.
+
+#### 1.2.1. id
+* **name**: id  
+* **type**: Long  
+* **visibility**: private  
+* **description**: 소유권 주장 고유 식별자(PK).
+
+#### 1.2.2. userId
+* **name**: userId  
+* **type**: Long  
+* **visibility**: private  
+* **description**: 주장을 제기한 사용자(User)의 ID.
+
+#### 1.2.3. propertyId
+* **name**: propertyId  
+* **type**: Long  
+* **visibility**: private  
+* **description**: 대상 매물(Property)의 ID.
+
+#### 1.2.4. claimStatus
+* **name**: claimStatus  
+* **type**: String  
+* **visibility**: private  
+* **description**: 처리 상태 (PENDING / APPROVED / REJECTED / NEED_MORE_DOCS).
+
+#### 1.2.5. reason
+* **name**: reason  
+* **type**: String  
+* **visibility**: private  
+* **description**: 거절·보류 사유 또는 비고.
+
+#### 1.2.6. createdAt
+* **name**: createdAt  
+* **type**: LocalDateTime  
+* **visibility**: private  
+* **description**: 생성 시각.
+
+#### 1.2.7. updatedAt
+* **name**: updatedAt  
+* **type**: LocalDateTime  
+* **visibility**: private  
+* **description**: 갱신 시각.
 
 ### 1.3 Operations 구분
-- **approve() : void / public** — 상태를 APPROVED로, `updatedAt` 갱신.
-- **reject(reason: String) : void / public** — 상태를 REJECTED로, 사유 기록.
-- **requestMoreDocs(reason: String) : void / public** — 상태를 NEED_MORE_DOCS로 전환.
-- **isTerminal() : boolean / public** — APPROVED/REJECTED 여부.
+
+#### 1.3.1. approve
+* **type**: void / public  
+* **description**: 상태를 APPROVED로 변경하고 `updatedAt`을 갱신한다.
+
+#### 1.3.2. reject
+* **type**: void / public  
+* **description**: 상태를 REJECTED로 변경하고 사유를 기록한다.
+
+#### 1.3.3. requestMoreDocs
+* **type**: void / public  
+* **description**: 추가 서류 요청 상태로 전환한다.
+
+#### 1.3.4. isTerminal
+* **type**: boolean / public  
+* **description**: 현재 상태가 APPROVED 또는 REJECTED인지 여부를 반환한다.
 
 ---
 
 ## OwnershipDocument 클래스
 
 ### 2.1 class description
-소유권 주장에 첨부되는 증빙 문서(등기부등본, 세금영수증, 매매계약서 등). 스토리지 URL 및 문서 유형/검증 상태 포함.
+소유권 주장에 첨부되는 증빙 문서를 나타낸다. (등기부등본, 세금영수증, 매매계약서 등)
 
 ### 2.2 attribution 구분
-- **id** : Long / private — PK.
-- **claimId** : Long / private — OwnershipClaim FK.
-- **documentType** : String / private — 문서 유형(DEED/TAX/BILL/ETC).
-- **documentUrl** : String / private — 저장소 URL(절대/서명).
-- **verified** : boolean / private — 검토 완료 여부.
-- **uploadedAt** : LocalDateTime / private — 업로드 시각.
+
+#### 2.2.1. id
+* **type**: Long / private — 문서 고유 식별자(PK).
+
+#### 2.2.2. claimId
+* **type**: Long / private — 연관된 OwnershipClaim의 ID(FK).
+
+#### 2.2.3. documentType
+* **type**: String / private — 문서 유형(DEED, TAX, BILL 등).
+
+#### 2.2.4. documentUrl
+* **type**: String / private — 스토리지에 저장된 문서 URL.
+
+#### 2.2.5. verified
+* **type**: boolean / private — 검토 완료 여부.
+
+#### 2.2.6. uploadedAt
+* **type**: LocalDateTime / private — 업로드 시각.
 
 ### 2.3 Operations 구분
-- **markVerified() : void / public** — `verified=true`로 설정.
-- **isImageLike() : boolean / public** — 확장자 기반 이미지형 판단.
+
+#### 2.3.1. markVerified
+* **type**: void / public — 문서를 검증 완료 상태로 변경한다.
+
+#### 2.3.2. isImageLike
+* **type**: boolean / public — 이미지 또는 PDF형 문서인지 판별한다.
 
 ---
 
-## OwnershipClaimCreateRequest 클래스스
+## OwnershipClaimCreateRequest 클래스
 
 ### 3.1 class description
-소유권 주장 최초 생성 요청 DTO. 사용자/매물/초기 메시지/문서 목록 포함.
+소유권 주장을 최초로 생성할 때 사용하는 요청 DTO이다.
 
 ### 3.2 attribution 구분
-- **userId**(Long) / private — 주장자 ID.
-- **propertyId**(Long) / private — 대상 매물 ID.
-- **message**(String) / private — 검토자 참고 메시지.
-- **documentUrls**(List<String>) / private — 업로드 문서 URL 목록.
+
+#### 3.2.1. userId
+* **type**: Long / private — 주장자 ID.
+
+#### 3.2.2. propertyId
+* **type**: Long / private — 대상 부동산 ID.
+
+#### 3.2.3. message
+* **type**: String / private — 검토 참고 메시지.
+
+#### 3.2.4. documentUrls
+* **type**: List<String> / private — 첨부 문서 URL 목록.
 
 ### 3.3 Operations 구분
-- **validate() : boolean / public** — 필수 필드 검증.
-- **toEntity() : OwnershipClaim / public** — 엔티티 변환(초기 상태 PENDING).
+
+#### 3.3.1. validate
+* **type**: boolean / public — 필수 입력(userId, propertyId 등) 검증.
+
+#### 3.3.2. toEntity
+* **type**: OwnershipClaim / public — 초기 상태 PENDING으로 엔티티 변환.
 
 ---
 
 ## OwnershipClaimRequest 클래스
 
 ### 4.1 class description
-소유권 주장 일반 갱신/추가 제출 요청 DTO. 상태 변경 및 추가 문서 첨부 입력.
+소유권 주장 갱신·보완 요청 DTO로, 상태 변경 및 추가 문서 첨부 시 사용된다.
 
 ### 4.2 attribution 구분
-- **claimId**(Long) / private — 대상 주장 ID.
-- **action**(String) / private — APPROVE/REJECT/NEED_MORE_DOCS 등.
-- **reason**(String) / private — 거절/보류 사유.
-- **additionalDocumentUrls**(List<String>) / private — 추가 문서 URL 목록.
+
+#### 4.2.1. claimId
+* **type**: Long / private — 대상 주장 ID.
+
+#### 4.2.2. action
+* **type**: String / private — 수행 동작(APPROVE, REJECT, NEED_MORE_DOCS 등).
+
+#### 4.2.3. reason
+* **type**: String / private — 사유 설명.
+
+#### 4.2.4. additionalDocumentUrls
+* **type**: List<String> / private — 추가 제출 문서 목록.
 
 ### 4.3 Operations 구분
-- **validate() : boolean / public** — 상태 전이 규칙 검증.
-- **toUpdateInstruction() : Map<String,Object> / public** — 서비스 계층용 변경 명세 생성.
+
+#### 4.3.1. validate
+* **type**: boolean / public — 상태 전이 규칙 검증.
+
+#### 4.3.2. toUpdateInstruction
+* **type**: Map<String,Object> / public — 서비스 계층용 변경 명세 생성.
 
 ---
 
 ## OwnershipClaimResponse 클래스
 
 ### 5.1 class description
-소유권 주장 상세/목록 응답 DTO. 엔티티/문서/상태/사유/타임스탬프를 클라이언트에 전달.
+소유권 주장 정보를 클라이언트로 반환하기 위한 응답 DTO이다.
 
 ### 5.2 attribution 구분
-- **claimId**(Long) / private
-- **userId**(Long) / private
-- **propertyId**(Long) / private
-- **status**(String) / private
-- **reason**(String) / private
-- **documents**(List<OwnershipDocumentSummary>) / private
-- **createdAt**(LocalDateTime) / private
-- **updatedAt**(LocalDateTime) / private
+
+#### 5.2.1. claimId
+* **type**: Long / private — 주장 ID.
+
+#### 5.2.2. userId
+* **type**: Long / private — 사용자 ID.
+
+#### 5.2.3. propertyId
+* **type**: Long / private — 부동산 ID.
+
+#### 5.2.4. status
+* **type**: String / private — 처리 상태.
+
+#### 5.2.5. reason
+* **type**: String / private — 상태 사유.
+
+#### 5.2.6. documents
+* **type**: List<OwnershipDocumentSummary> / private — 첨부 문서 목록.
+
+#### 5.2.7. createdAt
+* **type**: LocalDateTime / private — 생성 시각.
+
+#### 5.2.8. updatedAt
+* **type**: LocalDateTime / private — 최종 수정 시각.
 
 ### 5.3 Operations 구분
-- **from(entity: OwnershipClaim, docs: List<OwnershipDocument>) : OwnershipClaimResponse / public** — 매핑 팩토리.
-- **summarize() : String / public** — 상태+문서수 요약 텍스트.
+
+#### 5.3.1. from
+* **type**: OwnershipClaimResponse / public — 엔티티와 문서 목록을 매핑.
+
+#### 5.3.2. summarize
+* **type**: String / public — 요약 텍스트 생성(예: “승인 대기 - 문서 2개”).
 
 ---
 
 ## OwnershipClaimService 클래스
 
 ### 6.1 class description
-소유권 주장 생성/수정/승인/거절/문서 첨부/조회 로직을 제공하는 서비스.
+소유권 주장 생성·갱신·문서 첨부·상태 변경 로직을 담당하는 서비스 계층 클래스.
 
 ### 6.2 attribution 구분
-- **claimRepository**(OwnershipClaimRepository) / private
-- **documentRepository**(OwnershipDocumentRepository) / private
-- **clock**(Clock) / private — 테스트 편의용 시간 주입.
+
+#### 6.2.1. claimRepository
+* **type**: OwnershipClaimRepository / private — 주장 데이터 접근 계층.
+
+#### 6.2.2. documentRepository
+* **type**: OwnershipDocumentRepository / private — 문서 데이터 접근 계층.
+
+#### 6.2.3. clock
+* **type**: Clock / private — 시간 주입용.
 
 ### 6.3 Operations 구분
-- **create(req: OwnershipClaimCreateRequest) : OwnershipClaimResponse / public**
-- **update(req: OwnershipClaimRequest) : OwnershipClaimResponse / public**
-- **getDetail(id: Long) : OwnershipClaimResponse / public**
-- **listByUser(userId: Long) : List<OwnershipClaimResponse> / public**
-- **attachDocuments(id: Long, urls: List<String>) : OwnershipClaimResponse / public**
+
+#### 6.3.1. create
+* **type**: OwnershipClaimResponse / public — 주장 생성.
+
+#### 6.3.2. update
+* **type**: OwnershipClaimResponse / public — 상태 업데이트.
+
+#### 6.3.3. getDetail
+* **type**: OwnershipClaimResponse / public — 단일 조회.
+
+#### 6.3.4. listByUser
+* **type**: List<OwnershipClaimResponse> / public — 사용자별 목록.
+
+#### 6.3.5. attachDocuments
+* **type**: OwnershipClaimResponse / public — 문서 첨부.
 
 ---
 
 ## OwnershipClaimController 클래스
 
 ### 7.1 class description
-소유권 주장 REST 컨트롤러. 생성/갱신/조회 HTTP 엔드포인트 제공.
+소유권 주장과 관련된 REST API를 제공하는 컨트롤러.
 
 ### 7.2 attribution 구분
-- **service**(OwnershipClaimService) / private — 도메인 서비스.
-- **mapper**(ObjectMapper or Mapper) / private — DTO 매핑 보조.
+
+#### 7.2.1. service
+* **type**: OwnershipClaimService / private — 비즈니스 로직.
+
+#### 7.2.2. mapper
+* **type**: Object / private — DTO 매핑 보조.
 
 ### 7.3 Operations 구분
-- **POST /ownership-claims : OwnershipClaimResponse / public** — 주장 생성.
-- **PATCH /ownership-claims/{id} : OwnershipClaimResponse / public** — 상태 갱신/문서 추가.
-- **GET /ownership-claims/{id} : OwnershipClaimResponse / public** — 상세 조회.
-- **GET /ownership-claims?userId= : List<OwnershipClaimResponse> / public** — 사용자별 목록.
+
+#### 7.3.1. POST /ownership-claims
+* **type**: OwnershipClaimResponse / public — 주장 생성.
+
+#### 7.3.2. PATCH /ownership-claims/{id}
+* **type**: OwnershipClaimResponse / public — 상태 변경 및 문서 첨부.
+
+#### 7.3.3. GET /ownership-claims/{id}
+* **type**: OwnershipClaimResponse / public — 단건 상세 조회.
+
+#### 7.3.4. GET /ownership-claims?userId=
+* **type**: List<OwnershipClaimResponse> / public — 사용자별 목록 조회.
 
 ---
 
-## OwnershipClaimRepository 클래스스
+## OwnershipClaimRepository 클래스
 
 ### 8.1 class description
-OwnershipClaim용 JPA/스프링 데이터 리포지토리 인터페이스.
+소유권 주장 엔티티용 JPA 리포지토리 인터페이스.
 
 ### 8.2 attribution 구분
 - (상태 없음, 인터페이스)
 
 ### 8.3 Operations 구분
-- **save(entity: OwnershipClaim) : OwnershipClaim / public**
-- **findById(id: Long) : Optional<OwnershipClaim> / public**
-- **findAllByUserId(userId: Long) : List<OwnershipClaim> / public**
-- **existsByPropertyIdAndUserId(propertyId: Long, userId: Long) : boolean / public**
+
+#### 8.3.1. save
+* **type**: OwnershipClaim / public — 엔티티 저장.
+
+#### 8.3.2. findById
+* **type**: Optional<OwnershipClaim> / public — ID 기반 조회.
+
+#### 8.3.3. findAllByUserId
+* **type**: List<OwnershipClaim> / public — 사용자 ID로 조회.
+
+#### 8.3.4. existsByPropertyIdAndUserId
+* **type**: boolean / public — 동일 매물 중복 주장 여부 확인.
 
 ---
 
 ## OwnershipDocumentRepository 클래스
 
 ### 9.1 class description
-OwnershipDocument 리포지토리 인터페이스. 문서 CRUD 및 주장 ID별 조회 제공.
+소유권 증빙 문서용 리포지토리 인터페이스.
 
 ### 9.2 attribution 구분
 - (상태 없음, 인터페이스)
 
 ### 9.3 Operations 구분
-- **save(doc: OwnershipDocument) : OwnershipDocument / public**
-- **findAllByClaimId(claimId: Long) : List<OwnershipDocument> / public**
-- **deleteById(id: Long) : void / public**
+
+#### 9.3.1. save
+* **type**: OwnershipDocument / public — 문서 저장.
+
+#### 9.3.2. findAllByClaimId
+* **type**: List<OwnershipDocument> / public — 주장 ID별 조회.
+
+#### 9.3.3. deleteById
+* **type**: void / public — 문서 삭제.
+
 
 ---
 
