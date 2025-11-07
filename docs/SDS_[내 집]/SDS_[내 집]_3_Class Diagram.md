@@ -611,7 +611,7 @@ classDiagram
 
 # 2. 브로커 프로필 관련
 
-# 1. BrokerProfile 클래스
+# BrokerProfile 클래스
 
 ```mermaid
 classDiagram
@@ -814,7 +814,7 @@ classDiagram
 
 
 
-# 2. BrokerReview 클래스
+# BrokerReview 클래스
 
 ```mermaid
 classDiagram
@@ -1015,7 +1015,7 @@ classDiagram
 
 
 
-# 3. BrokerRating 클래스
+# BrokerRating 클래스
 
 ```mermaid
 classDiagram
@@ -1210,7 +1210,7 @@ classDiagram
 
 # 3. 매물 관련
 
-# 1. PropertyController
+# PropertyController 클래스
 
 ```mermaid
 classDiagram
@@ -1260,7 +1260,7 @@ classDiagram
 * **description**: 전세가율을 계산하여 반환한다.
 
 
-# 2. PropertyFavoriteController
+# PropertyFavoriteController 클래스
 
 ```mermaid
 classDiagram
@@ -1289,7 +1289,7 @@ classDiagram
 * **description**: 로그인 사용자의 찜 목록을 조회한다.
 
 
-# 3. PropertyFavoriteToggleController
+# PropertyFavoriteToggleController 클래스
 
 ```mermaid
 classDiagram
@@ -1346,7 +1346,7 @@ classDiagram
 * **description**: 해당 매물의 총 찜 수를 반환한다.
 
 
-# 4. PropertyOfferController
+# PropertyOfferController 클래스
 
 ```mermaid
 classDiagram
@@ -1389,7 +1389,7 @@ classDiagram
 * **description**: 정책 검증 후 오퍼를 삭제한다.
 
 
-# 5. PropertyQueryController
+# PropertyQueryController 클래스
 
 ```mermaid
 classDiagram
@@ -1439,7 +1439,7 @@ classDiagram
 * **description**: 단건 상세(오퍼 포함)를 조회한다.
 
 
-# 6. PropertySearchController
+# PropertySearchController 클래스
 
 ```mermaid
 classDiagram
@@ -1468,7 +1468,7 @@ classDiagram
 * **description**: SearchRequest 바디를 받아 조건 검색을 수행한다.
 
 
-# 7. CompleteDealRequest
+# CompleteDealRequest 클래스
 
 ```mermaid
 classDiagram
@@ -1505,7 +1505,7 @@ classDiagram
 * **description**: 직렬화/역직렬화를 위해 접근자를 제공한다.
 
 
-# 8. JeonseRatioResponse
+# JeonseRatioResponse 클래스
 
 ```mermaid
 classDiagram
@@ -1548,7 +1548,7 @@ classDiagram
 * **description**: 전달된 값으로 응답 객체를 생성한다.
 
 
-# 9. PropertyDetailDto
+# PropertyDetailDto 클래스
 
 ```mermaid
 classDiagram
@@ -1654,7 +1654,7 @@ classDiagram
 * **description**: 엔티티와 연관 데이터로 DTO를 생성한다.
 
 
-# 10. PropertyFavoriteDto
+# PropertyFavoriteDto 클래스
 
 ```mermaid
 classDiagram
@@ -1718,7 +1718,7 @@ classDiagram
 * **description**: 네이티브/템플릿 결과에서 DTO를 생성한다.
 
 
-# 11. PropertyFilterDto
+# PropertyFilterDto 클래스
 
 ```mermaid
 classDiagram
@@ -1789,7 +1789,7 @@ classDiagram
 * **description**: 경계 뒤집힘을 보정한 새 필터를 반환한다.
 
 
-# 12. PropertyMarkerDto
+# PropertyMarkerDto 클래스
 
 ```mermaid
 classDiagram
@@ -1846,7 +1846,7 @@ classDiagram
 * **description**: 엔티티로부터 DTO를 생성한다.
 
 
-# 13. PropertyOfferCreateRequest
+# PropertyOfferCreateRequest 클래스
 
 ```mermaid
 classDiagram
@@ -1938,7 +1938,7 @@ classDiagram
 * **description**: 유효성 검증 후 엔티티로 변환한다.
 
 
-# 14. PropertyOfferDto
+# PropertyOfferDto 클래스
 
 ```mermaid
 classDiagram
@@ -2016,7 +2016,7 @@ classDiagram
 * **description**: 오퍼 엔티티를 DTO로 변환한다.
 
 
-# 15. PropertyOfferResponse
+# PropertyOfferResponse 클래스
 
 ```mermaid
 classDiagram
@@ -2052,7 +2052,7 @@ classDiagram
 * **description**: 편의 생성기를 제공한다.
 
 
-# 16. PropertyResponse
+# PropertyResponse 클래스
 
 ```mermaid
 classDiagram
@@ -2130,7 +2130,7 @@ classDiagram
 * **description**: 엔티티/조인 결과에서 DTO로 변환한다.
 
 
-# 17. PropertyWithOffersDto
+# PropertyWithOffersDto 클래스
 
 ```mermaid
 classDiagram
@@ -2166,7 +2166,7 @@ classDiagram
 * **description**: 편의 생성기를 제공한다.
 
 
-# 18. UpdateOfferRequest
+# UpdateOfferRequest 클래스
 
 ```mermaid
 classDiagram
@@ -2244,7 +2244,7 @@ classDiagram
 * **description**: 전달된 엔티티에 변경 사항을 반영한다.
 
 
-# 19. SearchRequest
+# SearchRequest 클래스
 
 ```mermaid
 classDiagram
@@ -2362,7 +2362,7 @@ classDiagram
 * **description**: 검색 레포지토리에 전달할 파라미터 맵으로 변환한다.
 
 
-# 20. FavoriteJpaRepository
+# FavoriteJpaRepository 클래스
 
 ```mermaid
 classDiagram
@@ -2412,7 +2412,7 @@ classDiagram
 * **description**: 해당 매물을 찜한 사용자 ID 목록을 반환한다.
 
 
-# 21. PropertyFavoriteRepository
+# PropertyFavoriteRepository 클래스
 
 ```mermaid
 classDiagram
@@ -2441,7 +2441,7 @@ classDiagram
 * **description**: 썸네일 1장을 포함하여 내 찜 목록을 조회한다.
 
 
-# 22. PropertyOfferRepository
+# PropertyOfferRepository 클래스
 
 ```mermaid
 classDiagram
@@ -2477,7 +2477,7 @@ classDiagram
 * **description**: 활성 전세 오퍼 최신 1건을 조회한다.
 
 
-# 23. PropertyRepository
+# PropertyRepository 클래스
 
 ```mermaid
 classDiagram
@@ -2513,7 +2513,7 @@ classDiagram
 * **description**: 브로커 권한/상태 조건을 만족할 때 거래 완료로 업데이트한다.
 
 
-# 24. PropertySearchRepository
+# PropertySearchRepository 클래스
 
 ```mermaid
 classDiagram
@@ -2542,7 +2542,7 @@ NamedParameterJdbcTemplate로 복합 검색을 수행하는 클래스이다.
 * **description**: SearchRequest를 해석해 필터링/페이징된 결과를 반환한다.
 
 
-# 25. PropertywoRepository
+# PropertywoRepository 클래스
 
 ```mermaid
 classDiagram
@@ -2578,7 +2578,7 @@ classDiagram
 * **description**: 내 매물만 페이지네이션으로 조회한다.
 
 
-# 26. JeonseRatioService
+# JeonseRatioService 클래스
 
 ```mermaid
 classDiagram
@@ -2614,7 +2614,7 @@ classDiagram
 * **description**: 보증금/매매가로 전세가율을 계산한다(소수 둘째 자리 반올림).
 
 
-# 27. PropertyFavoriteService
+# PropertyFavoriteService 클래스
 
 ```mermaid
 classDiagram
@@ -2678,7 +2678,7 @@ classDiagram
 * **description**: 해당 매물의 찜 수를 반환한다.
 
 
-# 28. PropertyOfferService
+# PropertyOfferService 클래스
 
 ```mermaid
 classDiagram
@@ -2721,7 +2721,7 @@ classDiagram
 * **description**: 삭제 정책을 검증한 뒤 오퍼를 삭제한다.
 
 
-# 29. PropertyQueryService
+# PropertyQueryService 클래스
 
 ```mermaid
 classDiagram
@@ -2778,7 +2778,7 @@ classDiagram
 * **description**: 단건 상세와 오퍼 리스트를 함께 반환한다.
 
 
-# 30. propertyservice
+# propertyservice 클래스
 
 ```mermaid
 classDiagram
@@ -2828,7 +2828,7 @@ classDiagram
 * **description**: 브로커 권한 검증 후 거래 완료를 반영하고 이벤트를 발행한다.
 
 
-# 31. Favorite
+# Favorite 클래스
 
 ```mermaid
 classDiagram
@@ -2882,7 +2882,7 @@ classDiagram
 * **description**: 저장 시 생성일을 기록한다.
 
 
-# 32. PriceAnomaly
+# PriceAnomaly 클래스
 
 ```mermaid
 classDiagram
@@ -2943,7 +2943,7 @@ classDiagram
 * **description**: 저장 시 생성일을 기록한다.
 
 
-# 33. Property
+# Property 클래스
 
 ```mermaid
 classDiagram
@@ -3081,7 +3081,7 @@ classDiagram
 * **description**: 수정 시 갱신일을 기록한다.
 
 
-# 34. PropertyImage
+# PropertyImage 클래스
 
 ```mermaid
 classDiagram
@@ -3142,7 +3142,7 @@ classDiagram
 * **description**: 저장 시 생성일을 기록한다.
 
 
-# 35. PropertyOffer
+# PropertyOffer 클래스
 
 ```mermaid
 classDiagram
@@ -3273,7 +3273,7 @@ classDiagram
 * **description**: 수정 시 갱신일을 기록한다.
 
 
-# 36. PropertyReview
+# PropertyReview 클래스
 
 ```mermaid
 classDiagram
@@ -4493,29 +4493,11 @@ classDiagram
 - **visibility**: private
 - **description**: 알림의 읽음 여부를 나타낸다. 기본값은 false이며, 사용자가 알림을 확인하면 true로 변경된다. null 값을 허용하지 않는 필수 필드이다.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+---
 
 # 7. 중개 위임 관련
 
-# 1. Delegation 클래스
+# Delegation 클래스
 
 ```mermaid
 classDiagram
@@ -4776,7 +4758,7 @@ classDiagram
 
 
 
-# 2. DelegationStatus 클래스
+# DelegationStatus 클래스
 
 ```mermaid
 classDiagram
@@ -4928,7 +4910,7 @@ classDiagram
 
 
 
-# 3. DelegationRequest 클래스
+# DelegationRequest 클래스
 
 ```mermaid
 classDiagram
