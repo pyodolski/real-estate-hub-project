@@ -611,7 +611,7 @@ classDiagram
 
 # 2. 브로커 프로필 관련
 
-# 1. BrokerProfile 클래스
+# BrokerProfile 클래스
 
 ```mermaid
 classDiagram
@@ -814,7 +814,7 @@ classDiagram
 
 
 
-# 2. BrokerReview 클래스
+# BrokerReview 클래스
 
 ```mermaid
 classDiagram
@@ -1015,7 +1015,7 @@ classDiagram
 
 
 
-# 3. BrokerRating 클래스
+# BrokerRating 클래스
 
 ```mermaid
 classDiagram
@@ -1210,7 +1210,7 @@ classDiagram
 
 # 3. 매물 관련
 
-# 1. PropertyController
+# PropertyController 클래스
 
 ```mermaid
 classDiagram
@@ -1260,7 +1260,7 @@ classDiagram
 * **description**: 전세가율을 계산하여 반환한다.
 
 
-# 2. PropertyFavoriteController
+# 2. PropertyFavoriteController 클래스
 
 ```mermaid
 classDiagram
@@ -1289,7 +1289,7 @@ classDiagram
 * **description**: 로그인 사용자의 찜 목록을 조회한다.
 
 
-# 3. PropertyFavoriteToggleController
+# PropertyFavoriteToggleController 클래스스
 
 ```mermaid
 classDiagram
@@ -1346,7 +1346,7 @@ classDiagram
 * **description**: 해당 매물의 총 찜 수를 반환한다.
 
 
-# 4. PropertyOfferController
+# PropertyOfferController 클래스
 
 ```mermaid
 classDiagram
@@ -1389,7 +1389,7 @@ classDiagram
 * **description**: 정책 검증 후 오퍼를 삭제한다.
 
 
-# 5. PropertyQueryController
+# PropertyQueryController 클래스
 
 ```mermaid
 classDiagram
@@ -1439,7 +1439,7 @@ classDiagram
 * **description**: 단건 상세(오퍼 포함)를 조회한다.
 
 
-# 6. PropertySearchController
+# PropertySearchController 클래스
 
 ```mermaid
 classDiagram
@@ -1468,7 +1468,7 @@ classDiagram
 * **description**: SearchRequest 바디를 받아 조건 검색을 수행한다.
 
 
-# 7. CompleteDealRequest
+# CompleteDealRequest 클래스
 
 ```mermaid
 classDiagram
@@ -1505,7 +1505,7 @@ classDiagram
 * **description**: 직렬화/역직렬화를 위해 접근자를 제공한다.
 
 
-# 8. JeonseRatioResponse
+# JeonseRatioResponse 클래스
 
 ```mermaid
 classDiagram
@@ -1548,7 +1548,7 @@ classDiagram
 * **description**: 전달된 값으로 응답 객체를 생성한다.
 
 
-# 9. PropertyDetailDto
+# PropertyDetailDto 클래스
 
 ```mermaid
 classDiagram
