@@ -1,4 +1,4 @@
-## 6. User Interface Prototype
+# 6. User Interface Prototype
 
 ![첫 로그인 화면](<./img/1) 첫 로그인.png>)<br>
 접속하면 처음 보이는 로그인 화면이다. 여기서는 일반 사용자/중개인/관리자 3가지의 게정으로 접속이 가능하다.
