@@ -14,7 +14,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 
 
 # Use case 1. 매물 등록 신청
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 매물 소유권 증명을 위한 신청서를 상세정보와 필수 서류와 함께 제출하는 기능
@@ -123,7 +123,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 2. 매물 신청 현황 조회
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 신청한 매물들의 상태를 확인한다.
@@ -228,7 +228,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 3. 매물 관리 현황 요약
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 전체 매물 관리 상황을 한눈에 파악할 수 있도록 요약 정보를 제공한다.
@@ -309,7 +309,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 4. 지도 위치 설정 기능
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 지도를 통해 정확한 매물 위치를 설정하도록 한다.
@@ -856,7 +856,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 9. 채팅방 접속 및 생성
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 매물 상세 페이지에서 채팅방에 접속하거나, 없을 경우 새로운 채팅방을 생성한다.
@@ -866,7 +866,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * user level
 
 **Author**
-* 김도림
+
 
 **Last Update**<br>
 **Status**
@@ -940,7 +940,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * user level
 
 **Author**
-* 김도림
+
 
 **Last Update**<br>
 **Status**
@@ -1013,7 +1013,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * user level
 
 **Author**
-* 김도림
+
 
 **Last Update**<br>
 **Status**
@@ -1087,7 +1087,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * user level
 
 **Author**
-* 김도림
+
 
 **Last Update**<br>
 **Status**
@@ -1159,8 +1159,8 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Level**
 * user level
 
-**Author**
-* 김도림
+**Author**<br>
+
 
 **Last Update**<br>
 **Status**
@@ -1256,7 +1256,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 14. 회원가입
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자는 이메일, 비밀번호, 역할 등을 입력하여 계정을 생성한다.
@@ -1320,7 +1320,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 15. 로그인 / 토큰 관리
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 시스템의 기능을 이용하기 위해 로그인을 하고 시스템은 이를 토큰 관리를 통해 유지 및 차단하는 기능.
@@ -1384,7 +1384,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 
 
 # Use case 16. 로그아웃
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 로그아웃을 요청하는 기능.
@@ -1441,7 +1441,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 17. 비밀번호 재설정
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 비밀번호 분실 시 재설정 하는 기능.
@@ -1496,7 +1496,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 18. 사용자 프로필 관리
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자가 자신의 프로필 정보를 조회하고 수정하는 기능.
@@ -1567,8 +1567,8 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Level**
 * user level
 
-**Author**
-* 김도림
+**Author**<br>
+
 
 **Last Update**<br>
 **Status**
@@ -1637,8 +1637,8 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Level**
 * user level
 
-**Author**
-* 김도림
+**Author**<br>
+
 
 **Last Update**<br>
 **Status**
@@ -1708,8 +1708,8 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Level**
 * user level
 
-**Author**
-* 김도림
+**Author**<br>
+
 
 **Last Update**<br>
 **Status**
@@ -1778,8 +1778,8 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Level**
 * user level
 
-**Author**
-* 김도림
+**Author**<br>
+
 
 **Last Update**<br>
 **Status**
@@ -1838,7 +1838,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 23. 위임 관리
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 매물 소유자가 브로커에게 판매 위임을 요청하고, 브로커가 이를 승인·거절·취소·삭제할 수 있는 기능.
@@ -1917,7 +1917,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 24. 알림 기능
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 시스템 이벤트 발생 시 사용자에게 알림을 전송하고, 사용자가 알림함을 확인 및 관리하는 기능.
@@ -1988,7 +1988,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 26. 지도 매물 시각화
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자의 지도 화면에 매물 위치를 아이콘으로 표시한다.
@@ -2064,7 +2064,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 27. 사용자 위치 표시
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 사용자의 현재 위치를 지도에 표시한다.
@@ -2072,8 +2072,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Scope**<br>
 **Level**
 * user level
-
-**Author**
+**Author**<br>
 **Last Update**
 
 **Status**
@@ -2140,7 +2139,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 28. 지도 매물 즐겨찾기
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 즐겨찾기 등록/조회/삭제 기능을 통해 사용자가 관심 매물을 관리한다.
@@ -2224,7 +2223,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 ---
 
 # Use case 29. 매물 상세정보 표시
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 마커 클릭 시 매물의 상세종보를 사이드 바로 표시한다.
@@ -2289,7 +2288,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 30. 필터
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 매물을 필터링 한다.
@@ -2360,7 +2359,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 34. 추천 매물
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 알고리즘을 통한 사요자의 관심사와 선호도를 분석하여 개인화된 매물을 추천한다.
@@ -2431,7 +2430,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 
 
 # Use case 35. 중개인 목록 표시
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 등록된 중개인 목록과 상세 정보를 조회하고, 상세에서 연락/위임 의뢰로 연결하는 기능.
@@ -2501,7 +2500,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * * *
 
 # Use case 38. 전세가율 계산기
-    **GENERAL CHARACTERISTICS**
+**GENERAL CHARACTERISTICS**
 * * *
 **Summary**
 * 매물의 전세가율(전세가/매매가×100)을 계산하고, 주변 평균 및 AI 예측을 활용해 표시하는 기능.
