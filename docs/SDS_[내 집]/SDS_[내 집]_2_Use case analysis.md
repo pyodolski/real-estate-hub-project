@@ -1,4 +1,4 @@
-<img width="546" height="2493" alt="image" src="https://github.com/user-attachments/assets/afaccc34-d6ee-4232-964a-b603a9254d75" />
+<img width="546" height="2493" alt="image" src="https://github.com/user*attachments/assets/afaccc34*d6ee*4232*964a*b603a9254d75" />
 
  이 Use Case Diagram은 부동산 통합 플랫폼(Real Estate Hub System)의 주요 기능과 외부 액터 간 상호작용을 시각화한 것이다.
 본 시스템은 일반 사용자(User), 매물 소유자(Owner), 브로커(Broker), 관리자(Admin), 시스템/엔진(System), 지도 서비스(Map Service)의 여섯 주체가 상호 연계되어 작동한다.
@@ -163,14 +163,14 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Step** | **Action**<br>
 **S** | 사용자가 내 신청 내역 페이지에 접근한다.<br>
 **1** | 시스템이 JWT 토큰을 검증한다.<br>
-**2** | 시스템이 현재 사용자 ID로 ownership_claims 테이블을 조회한다 (`GET /api/ownership/my-claims`).<br>
+**2** | 시스템이 현재 사용자 ID로 ownership_claims 테이블을 조회한다 (`GET /api/ownership/my*claims`).<br>
 **3** | 시스템이 각 신청의 상태를 확인한다 (PENDING/APPROVED/REJECTED).<br>
 **4** | 시스템이 신청 목록을 반환한다 (신청 ID, 주소, 상태, 신청일, 마감일 등).<br>
 **5** | 사용자가 특정 신청을 클릭하여 상세 정보를 조회한다.<br>
 **6** | 시스템이 해당 신청의 상세 정보를 조회한다 (`GET /api/ownership/claims/{claimId}`).<br>
 **7** | 시스템이 신청자 정보, 매물 정보, 첨부 서류 목록을 반환한다.<br>
 **8** | 상태가 'APPROVED'인 경우 '승인됨'으로 표시한다.<br>
-**9** | 상태가 'PENDING'인 경우 '심사중'으로 표시하고 남은 일수를 계산하여 표시한다 (마감일 - 현재일).<br>
+**9** | 상태가 'PENDING'인 경우 '심사중'으로 표시하고 남은 일수를 계산하여 표시한다 (마감일 * 현재일).<br>
 **10** | 상태가 'REJECTED'인 경우 '거절됨'으로 표시하고 거절 사유를 함께 표시한다.<br>
 **11** | 사용자가 첨부 서류의 다운로드 버튼을 클릭한다.<br>
 **12** | 시스템이 문서 정보를 조회한다 (`GET /api/ownership/documents/{documentId}/download`).<br>
@@ -214,7 +214,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * ≤ 1 second (상세 조회)
 * 파일 다운로드 시간은 파일 크기에 따라 다름
 * 마감일 계산: 수정일(updated_at) + 7일
-* 한글 파일명 인코딩 처리 (UTF-8)
+* 한글 파일명 인코딩 처리 (UTF*8)
 
 **Frequency**
 * 사용자가 내 신청 내역 페이지 접근 시마다
@@ -266,7 +266,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Step** | **Action**<br>
 **S** | 사용자가 매물 관리 대시보드에 접근한다.<br>
 **1** | 시스템이 JWT 토큰을 검증한다.<br>
-**2** | 시스템이 현재 사용자 ID로 ownership_claims 테이블을 조회한다 (`GET /api/ownership/my-claims`).<br>
+**2** | 시스템이 현재 사용자 ID로 ownership_claims 테이블을 조회한다 (`GET /api/ownership/my*claims`).<br>
 **3** | 시스템이 조회된 신청 목록을 반환한다.<br>
 **4** | 시스템이 각 신청의 상태(PENDING/APPROVED/REJECTED)를 확인한다.<br>
 **5** | 시스템이 상태별 건수를 계산한다.<br>
@@ -390,7 +390,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **\***
 * \*a. 주변 건물 검색 기능 사용
     * \*a1. 사용자가 주변 건물 검색 버튼을 클릭한다.
-    * \*a2. 시스템이 현재 위치 기준 반경 500m 내 건물을 조회한다 (`GET /api/ownership/map/nearby-buildings`).
+    * \*a2. 시스템이 현재 위치 기준 반경 500m 내 건물을 조회한다 (`GET /api/ownership/map/nearby*buildings`).
     * \*a3. 시스템이 건물 목록을 표시한다 (건물명, 카테고리, 주소, 거리).
     * \*a4. 사용자가 건물을 선택하면 해당 위치로 이동한다.
 ****
@@ -455,7 +455,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **MAIN SUCCESS SCENARIO**<br>
 **Step** | **Action**<br>
 **S** | 사용자가 매물 등록 신청 폼에서 서류 업로드 섹션을 연다.<br>
-**1** | 시스템이 서류 타입 목록을 조회한다 (`GET /api/ownership/document-types`).<br>
+**1** | 시스템이 서류 타입 목록을 조회한다 (`GET /api/ownership/document*types`).<br>
 **2** | 시스템이 드롭다운에 서류 타입을 표시한다 (등기부등본, 신분증, 주민등록등본, 납세증명서, 기타).<br>
 **3** | 사용자가 드롭다운에서 서류 타입을 선택한다.<br>
 **4** | 사용자가 파일 선택 버튼을 클릭하여 파일을 선택한다.<br>
@@ -841,7 +841,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **Performance**
 * ≤ 1 second
 * 제목 중복 체크를 위한 데이터베이스 조회
-* 중복 시 반복 조회 (일반적으로 1-2회)
+* 중복 시 반복 조회 (일반적으로 1*2회)
 
 **Frequency**
 * 신청 승인 시마다 자동 실행
@@ -1217,42 +1217,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 * 읽기 위주 시나리오로 DB 락 이슈 없음. 포인터 갱신은 단조 증가로 경쟁 상태 방지.
 
 **Due Date**<br>
-* * *
 
-# Use case 
-**GENERAL CHARACTERISTICS**<br>
-* * *
-**Summary**<br>
-
-**Scope**<br>
-**Level** User<br>
-**Author**<br>
-**Last Update**<br>
-**Status**<br>
-**Primary Actor** User<br>
-**Preconditions**<br>
-**Trigger**<br>
-**Success Post Conditions**<br>
-**Failed Post Conditions**<br>
-* * *
-**MAIN SUCCESS SCENARIO**<br>
-**Step** Action<br>
-**S**<br>
-**1**<br>
-**2**<br>
-**3**<br>
-**4**<br>
-**5**<br>
-* * *
-**EXTENSION SCENARIOS**<br>
-**Step** Branching Action<br>
-****
-* * *
-**RELATED IMFORMATION**<br>
-**Performance**<br>
-**Frequency**<br>
-**<Concurrency>**<br>
-**Due Date**<br>
 * * *
 
 # Use case 14. 회원가입
@@ -2004,20 +1969,20 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 
 **Primary Actor**
 
-- 로그인한 사용자(구직/중개/소유자 등 공통)
+* 로그인한 사용자(구직/중개/소유자 등 공통)
 
 **Preconditions**
 
-- 로그인을 한 상태여야 한다.
+* 로그인을 한 상태여야 한다.
 
 **Trigger**
 
-- 지도 화면 최초 진입, 또는 줌/팬 등 뷰포트 변경 이벤트 발생.
+* 지도 화면 최초 진입, 또는 줌/팬 등 뷰포트 변경 이벤트 발생.
 
 **Success Post Conditions**
 
-- 지도에 현재 뷰포트 내 매물이 상태별 컬러 마커로 표시된다.
-- 매물 선택 시 요약 패널/시트에 상세 정보가 로드된다.
+* 지도에 현재 뷰포트 내 매물이 상태별 컬러 마커로 표시된다.
+* 매물 선택 시 요약 패널/시트에 상세 정보가 로드된다.
 
 **Failure Post Conditions**
 * 지도에 매물 띄우기를 실패한다
@@ -2077,30 +2042,30 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 
 **Status**
 
-- Analysis
+* Analysis
 
 **Primary Actor**
 
-- 로그인한 사용자(구직/중개/소유자 등 공통)
+* 로그인한 사용자(구직/중개/소유자 등 공통)
 
 **Preconditions**
 
-- 사용자가 위치 권한을 허용한 상태여야 한다.
+* 사용자가 위치 권한을 허용한 상태여야 한다.
 
 **Trigger**
 
-- 지도 화면이 처음 호출되거나 ‘현재 위치’ 버튼을 클릭했을 때.
+* 지도 화면이 처음 호출되거나 ‘현재 위치’ 버튼을 클릭했을 때.
 
 **Success Post Conditions**
 
-- 사용자의 현재 위치를 지도 중심으로 표시한다.
-- 위치 정보 획득이 실패하면 기본 위치(시청)를 중심으로 설정한다.
+* 사용자의 현재 위치를 지도 중심으로 표시한다.
+* 위치 정보 획득이 실패하면 기본 위치(시청)를 중심으로 설정한다.
 
 **Failure Post Conditions**
 
-- GPS 신호 또는 권한 획득 실패 시 기본 중심(시청)으로 설정된다.
+* GPS 신호 또는 권한 획득 실패 시 기본 중심(시청)으로 설정된다.
 
----
+***
 
 **MAIN SUCCESS SCENARIO**
 
@@ -2178,49 +2143,49 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **3** | 지도에 즐겨찾기 매물들을 하트 표시된 상태로 표시한다.<br>
 **4** | 사용자가 즐겨찾기 매물 클릭 시 지도 중심을 해당 매물 좌표로 이동시키고 상세정보 패널을 표시한다.<br>
 
----
+***
 
 **EXTENSION SCENARIOS**
 **Step** | Branching Action<br>
 **1**
 
-- 1a. 즐겨 찾기 추가
-  - 1a1. 매물의 하트 버튼 클릭 시 현재 로그인된 사용자 토큰으로 favorites 테이블에 데이터 추가한다.
-  - 1a2. 추가 후 하트 버튼이 빨간색으로 변한다.
+* 1a. 즐겨 찾기 추가
+  * 1a1. 매물의 하트 버튼 클릭 시 현재 로그인된 사용자 토큰으로 favorites 테이블에 데이터 추가한다.
+  * 1a2. 추가 후 하트 버튼이 빨간색으로 변한다.
 
 **1**
 
-- 1b. 즐겨 찾기 제거.
+* 1b. 즐겨 찾기 제거.
 
-  - 1b1. 빨간색 하트 클릭 시 favorites 테이블에서 해당 데이터를 삭제한다.
-  - 1b2. 버튼 색상이 회색으로 변한다.
+  * 1b1. 빨간색 하트 클릭 시 favorites 테이블에서 해당 데이터를 삭제한다.
+  * 1b2. 버튼 색상이 회색으로 변한다.
 
   **3**
 
-- 3a. 정보 확인 실패
-  - 3a1. 조회 실패 시 실패 원인을 상단 알림창에 표시한다.
-  - 3a2. 재시도 버튼 제공
+* 3a. 정보 확인 실패
+  * 3a1. 조회 실패 시 실패 원인을 상단 알림창에 표시한다.
+  * 3a2. 재시도 버튼 제공
 
----
+***
 
 **RELATED IMFORMATION**
 **Performance**
 
-- ≤ 1 second
+* ≤ 1 second
 
 **Frequency**
 
-- 즐겨찾기 탭 또는 버튼 클릭 시
+* 즐겨찾기 탭 또는 버튼 클릭 시
 
 **Concurrency**
 
-- 제한없음
+* 제한없음
 
 **Due Date**
 
----
+***
 
----
+***
 
 # Use case 29. 매물 상세정보 표시
 **GENERAL CHARACTERISTICS**
@@ -2395,7 +2360,7 @@ Map Service (지도 서비스)	외부 지도 API (예: Naver Map, Kakao Map)로�
 **1** | 사용자가 열람한 매물 수를 확인한다.<br>
 **2** | 매물 클릭 시 DB에 사용한 !D, 매물 !D 속성 정보를 저상한다.<br>
 **3** | 열람 매물 수가 기준 이상이 되거나 이전에 저장해놓은 선호도가 있다면 추천 계산 트리거가 발생한다.<br>
-**4** | 수집 데이터의 유효성 검증 → 원-핫 인코딩/정규화 처리 → 벡터화 수행.<br>
+**4** | 수집 데이터의 유효성 검증 → 원*핫 인코딩/정규화 처리 → 벡터화 수행.<br>
 **5** | 전체 매물 베터와 사용자 벡터 간 유사도를 계산한다.<br>
 **7** | 유사도 순으로 정렬 후 추천매물 섹션에 표시한다.<br>
 **9** | 새 매물 클릭 시 재계산 및 재정렬 수행.<br>
