@@ -5516,7 +5516,6 @@ classDiagram
 
 ```mermaid
 classDiagram
-    %% ===== 엔티티 =====
     class ComparisonGroup {
         -id: Long
         -ownerUserId: Long
@@ -5540,7 +5539,6 @@ classDiagram
         +applyNote(note: String): void
     }
 
-    %% ===== DTO =====
     class CreateGroupRequest {
         -name: String
         -description: String
@@ -5615,7 +5613,6 @@ classDiagram
         +normalized(): WeightsRequest
     }
 
-    %% ===== Service, Repository =====
     class ComparisonService {
         -groupRepo: ComparisonGroupJpaRepository
         -itemRepo: ComparisonItemJpaRepository
@@ -5640,57 +5637,78 @@ classDiagram
         +findAllByGroupId(groupId: Long): List~ComparisonItem~
         +deleteById(id: Long): void
     }
-
-    %% ===== Relationships =====
-    ComparisonGroup "1" --> "many" ComparisonItem : contains >
-    ComparisonService --> ComparisonGroupJpaRepository : accesses >
-    ComparisonService --> ComparisonItemJpaRepository : accesses >
-    ComparisonService --> CreateGroupRequest : uses >
-    ComparisonService --> AddItemRequest : uses >
-    ComparisonService --> CompareResultResponse : returns >
-    ComparisonService --> GroupResponse : returns >
-    GroupDetailResponse --> ComparisonGroup : maps >
-    GroupDetailResponse --> ItemResponse : includes >
-    AddItemRequest --> ComparisonItem : converts >
-    WeightsRequest --> CompareResultResponse : influences >
 ```
 
 ## ComparisonGroup 클래스
 
 ### 1.1 class description
-사용자별 매물 비교 그룹 엔티티. 여러 매물을 하나의 그룹으로 묶어 비교/공유/이름 변경/가중치 적용을 지원한다.
+사용자별 매물 비교 그룹 엔티티. 여러 매물을 하나의 그룹으로 묶어 비교·공유·가중치 적용을 지원한다.
 
 ### 1.2 attribution 구분
-- **id**(Long) / private / PK
-- **ownerUserId**(Long) / private / 그룹 소유 사용자
-- **name**(String) / private / 그룹명
-- **description**(String) / private / 설명
-- **createdAt**(LocalDateTime) / private / 생성 시각
-- **updatedAt**(LocalDateTime) / private / 수정 시각
+
+#### 1.2.1. id
+* **type**: Long / private — 그룹 고유 ID(PK).
+
+#### 1.2.2. ownerUserId
+* **type**: Long / private — 그룹 소유 사용자 ID.
+
+#### 1.2.3. name
+* **type**: String / private — 그룹명.
+
+#### 1.2.4. description
+* **type**: String / private — 그룹 설명.
+
+#### 1.2.5. createdAt
+* **type**: LocalDateTime / private — 생성 시각.
+
+#### 1.2.6. updatedAt
+* **type**: LocalDateTime / private — 수정 시각.
 
 ### 1.3 Operations 구분
-- **rename(newName: String) : void / public**
-- **changeDescription(desc: String) : void / public**
+
+#### 1.3.1. rename
+* **type**: void / public — 그룹명을 변경한다.
+
+#### 1.3.2. changeDescription
+* **type**: void / public — 그룹 설명을 수정한다.
 
 ---
 
 ## ComparisonItem 클래스
 
 ### 2.1 class description
-비교 그룹에 포함된 개별 매물 항목 엔티티. 비교용 지표(가격/면적/위치 등) 스냅샷 보관.
+비교 그룹에 포함된 개별 매물 항목 엔티티. 가격/면적/위치 점수 스냅샷을 저장한다.
 
 ### 2.2 attribution 구분
-- **id**(Long) / private / PK
-- **groupId**(Long) / private / ComparisonGroup FK
-- **propertyId**(Long) / private / 원본 매물 ID
-- **capturedPrice**(Long) / private / 비교 시점 가격
-- **capturedArea**(Double) / private / 면적
-- **capturedLocationScore**(Double) / private / 위치 점수
-- **note**(String) / private / 비고
+
+#### 2.2.1. id
+* **type**: Long / private — 항목 고유 ID(PK).
+
+#### 2.2.2. groupId
+* **type**: Long / private — 소속 그룹 ID.
+
+#### 2.2.3. propertyId
+* **type**: Long / private — 원본 매물 ID.
+
+#### 2.2.4. capturedPrice
+* **type**: Long / private — 저장된 시점의 가격.
+
+#### 2.2.5. capturedArea
+* **type**: Double / private — 저장된 시점의 면적.
+
+#### 2.2.6. capturedLocationScore
+* **type**: Double / private — 위치 점수.
+
+#### 2.2.7. note
+* **type**: String / private — 항목 메모.
 
 ### 2.3 Operations 구분
-- **updateSnapshot(price: Long, area: Double) : void / public**
-- **applyNote(note: String) : void / public**
+
+#### 2.3.1. updateSnapshot
+* **type**: void / public — 가격·면적 스냅샷을 갱신.
+
+#### 2.3.2. applyNote
+* **type**: void / public — 메모를 추가 또는 변경.
 
 ---
 
@@ -5700,194 +5718,321 @@ classDiagram
 비교 그룹 생성 요청 DTO.
 
 ### 3.2 attribution 구분
-- **name**(String) / private — 그룹명
-- **description**(String) / private — 설명(선택)
+
+#### 3.2.1. name
+* **type**: String / private — 그룹명.
+
+#### 3.2.2. description
+* **type**: String / private — 설명.
 
 ### 3.3 Operations 구분
-- **validate() : boolean / public**
-- **toEntity(ownerUserId: Long) : ComparisonGroup / public**
+
+#### 3.3.1. validate
+* **type**: boolean / public — 필수 입력값 검증.
+
+#### 3.3.2. toEntity
+* **type**: ComparisonGroup / public — 그룹 엔티티 변환.
 
 ---
 
 ## GroupDetailResponse 클래스
 
 ### 4.1 class description
-그룹 상세 응답 DTO. 그룹 메타 + 항목 목록 + 집계 지표.
+그룹 상세 응답 DTO. 그룹 정보·항목·가중치·평가 점수 포함.
 
 ### 4.2 attribution 구분
-- **group**(GroupResponse) / private
-- **items**(List(ItemResponse)) / private
-- **weights**(WeightsRequest) / private
-- **computedScore**(Double) / private
+
+#### 4.2.1. group
+* **type**: GroupResponse / private — 그룹 요약 정보.
+
+#### 4.2.2. items
+* **type**: List<ItemResponse> / private — 포함된 항목 목록.
+
+#### 4.2.3. weights
+* **type**: WeightsRequest / private — 적용된 가중치.
+
+#### 4.2.4. computedScore
+* **type**: Double / private — 계산된 점수.
 
 ### 4.3 Operations 구분
-- **of(...) : GroupDetailResponse / public**
-- **summaryText() : String / public**
+
+#### 4.3.1. of
+* **type**: GroupDetailResponse / public — 팩토리 메서드.
+
+#### 4.3.2. summaryText
+* **type**: String / public — 요약 텍스트 생성.
 
 ---
 
 ## GroupResponse 클래스
 
 ### 5.1 class description
-그룹 단건 응답 DTO(요약).
+그룹 단건 요약 응답 DTO.
 
 ### 5.2 attribution 구분
-- **id**(Long) / private
-- **name**(String) / private
-- **description**(String) / private
-- **itemCount**(int) / private
-- **createdAt**(LocalDateTime) / private
+
+#### 5.2.1. id
+* **type**: Long / private — 그룹 ID.
+
+#### 5.2.2. name
+* **type**: String / private — 그룹명.
+
+#### 5.2.3. description
+* **type**: String / private — 설명.
+
+#### 5.2.4. itemCount
+* **type**: int / private — 포함 항목 수.
+
+#### 5.2.5. createdAt
+* **type**: LocalDateTime / private — 생성 시각.
 
 ### 5.3 Operations 구분
-- **from(entity: ComparisonGroup, itemCount: int) : GroupResponse / public**
+
+#### 5.3.1. from
+* **type**: GroupResponse / public — 엔티티 변환.
 
 ---
 
-## GroupSummaryResponse 클래스스
+## GroupSummaryResponse 클래스
 
 ### 6.1 class description
 여러 그룹의 요약 목록 응답 DTO.
 
 ### 6.2 attribution 구분
-- **groups**(List(GroupResponse)) / private
-- **totalCount**(long) / private
+
+#### 6.2.1. groups
+* **type**: List<GroupResponse> / private — 그룹 목록.
+
+#### 6.2.2. totalCount
+* **type**: long / private — 전체 그룹 개수.
 
 ### 6.3 Operations 구분
-- **of(list: List(GroupResponse), total: long) : GroupSummaryResponse / public**
-- **hasMore(offset: int, limit: int) : boolean / public**
+
+#### 6.3.1. of
+* **type**: GroupSummaryResponse / public — 팩토리 생성자.
+
+#### 6.3.2. hasMore
+* **type**: boolean / public — 추가 페이지 존재 여부 확인.
 
 ---
 
 ## AddItemRequest 클래스
 
 ### 7.1 class description
-그룹에 항목(매물)을 추가하는 요청 DTO.
+비교 그룹에 매물 항목을 추가하는 요청 DTO.
 
 ### 7.2 attribution 구분
-- **groupId**(Long) / private
-- **propertyId**(Long) / private
-- **note**(String) / private
+
+#### 7.2.1. groupId
+* **type**: Long / private — 대상 그룹 ID.
+
+#### 7.2.2. propertyId
+* **type**: Long / private — 추가할 매물 ID.
+
+#### 7.2.3. note
+* **type**: String / private — 항목 비고.
 
 ### 7.3 Operations 구분
-- **validate() : boolean / public**
-- **toEntity() : ComparisonItem / public**
+
+#### 7.3.1. validate
+* **type**: boolean / public — 필수 입력값 검증.
+
+#### 7.3.2. toEntity
+* **type**: ComparisonItem / public — ComparisonItem 변환.
 
 ---
 
 ## CompareResultResponse 클래스
 
 ### 8.1 class description
-가중치/지표에 따라 계산된 비교 결과 응답 DTO. 항목별 점수와 순위를 포함.
+가중치 기반 비교 결과 응답 DTO.
 
 ### 8.2 attribution 구분
-- **groupId**(Long) / private
-- **itemScores**(List(Map(String,Object))) / private — {itemId, score, rank}
-- **usedWeights**(WeightsRequest) / private
-- **computedAt**(LocalDateTime) / private
+
+#### 8.2.1. groupId
+* **type**: Long / private — 그룹 ID.
+
+#### 8.2.2. itemScores
+* **type**: List<Map<String,Object>> / private — 항목 점수 목록.
+
+#### 8.2.3. usedWeights
+* **type**: WeightsRequest / private — 사용된 가중치.
+
+#### 8.2.4. computedAt
+* **type**: LocalDateTime / private — 계산 시각.
 
 ### 8.3 Operations 구분
-- **of(...) : CompareResultResponse / public**
-- **topN(n: int) : List(Long) / public**
+
+#### 8.3.1. of
+* **type**: CompareResultResponse / public — 팩토리 생성자.
+
+#### 8.3.2. topN
+* **type**: List<Long> / public — 상위 N개 항목 ID 반환.
 
 ---
 
-## RenameGroupRequest 클래스스
+## RenameGroupRequest 클래스
 
 ### 9.1 class description
 그룹명 변경 요청 DTO.
 
 ### 9.2 attribution 구분
-- **groupId**(Long) / private
-- **newName**(String) / private
+
+#### 9.2.1. groupId
+* **type**: Long / private — 대상 그룹 ID.
+
+#### 9.2.2. newName
+* **type**: String / private — 새 이름.
 
 ### 9.3 Operations 구분
-- **validate() : boolean / public**
+
+#### 9.3.1. validate
+* **type**: boolean / public — 유효성 검사.
 
 ---
 
 ## ItemResponse 클래스
 
 ### 10.1 class description
-그룹 항목 요약 응답 DTO.
+그룹 내 매물 항목 요약 응답 DTO.
 
 ### 10.2 attribution 구분
-- **itemId**(Long) / private
-- **propertyId**(Long) / private
-- **price**(Long) / private
-- **area**(Double) / private
-- **locationScore**(Double) / private
-- **note**(String) / private
+
+#### 10.2.1. itemId
+* **type**: Long / private — 항목 ID.
+
+#### 10.2.2. propertyId
+* **type**: Long / private — 매물 ID.
+
+#### 10.2.3. price
+* **type**: Long / private — 가격.
+
+#### 10.2.4. area
+* **type**: Double / private — 면적.
+
+#### 10.2.5. locationScore
+* **type**: Double / private — 위치 점수.
+
+#### 10.2.6. note
+* **type**: String / private — 비고.
 
 ### 10.3 Operations 구분
-- **from(entity: ComparisonItem) : ItemResponse / public**
+
+#### 10.3.1. from
+* **type**: ItemResponse / public — 엔티티 변환.
 
 ---
 
-## WeightsRequest 클래스스
+## WeightsRequest 클래스
 
 ### 11.1 class description
-비교 계산 시 사용할 가중치 입력 DTO. (예: 가격, 면적, 위치/교통 등)
+비교 시 사용될 가중치 설정 DTO.
 
 ### 11.2 attribution 구분
-- **priceWeight**(Double) / private
-- **areaWeight**(Double) / private
-- **locationWeight**(Double) / private
-- **normalize**(boolean) / private — 합=1 정규화 여부
+
+#### 11.2.1. priceWeight
+* **type**: Double / private — 가격 가중치.
+
+#### 11.2.2. areaWeight
+* **type**: Double / private — 면적 가중치.
+
+#### 11.2.3. locationWeight
+* **type**: Double / private — 위치 가중치.
+
+#### 11.2.4. normalize
+* **type**: boolean / private — 합계 1 정규화 여부.
 
 ### 11.3 Operations 구분
-- **validate() : boolean / public**
-- **normalized() : WeightsRequest / public**
+
+#### 11.3.1. validate
+* **type**: boolean / public — 값 유효성 검증.
+
+#### 11.3.2. normalized
+* **type**: WeightsRequest / public — 정규화된 가중치 반환.
 
 ---
 
 ## ComparisonService 클래스
 
 ### 12.1 class description
-그룹/항목 CRUD, 비교 계산, 가중치 적용, 요약 응답 조립을 담당하는 도메인 서비스.
+비교 그룹·항목 CRUD 및 점수 계산을 담당하는 서비스 계층 클래스.
 
 ### 12.2 attribution 구분
-- **groupRepo**(ComparisonGroupJpaRepository) / private
-- **itemRepo**(ComparisonItemJpaRepository) / private
-- **scorer**(Function or Component) / private
+
+#### 12.2.1. groupRepo
+* **type**: ComparisonGroupJpaRepository / private — 그룹 저장소.
+
+#### 12.2.2. itemRepo
+* **type**: ComparisonItemJpaRepository / private — 항목 저장소.
+
+#### 12.2.3. scorer
+* **type**: Object / private — 점수 계산 컴포넌트.
 
 ### 12.3 Operations 구분
-- **createGroup(req: CreateGroupRequest, ownerUserId: Long) : GroupResponse / public**
-- **renameGroup(req: RenameGroupRequest, ownerUserId: Long) : GroupResponse / public**
-- **addItem(req: AddItemRequest, ownerUserId: Long) : ItemResponse / public**
-- **getGroupDetail(groupId: Long, ownerUserId: Long, weights: WeightsRequest) : GroupDetailResponse / public**
-- **compare(groupId: Long, weights: WeightsRequest) : CompareResultResponse / public**
+
+#### 12.3.1. createGroup
+* **type**: GroupResponse / public — 그룹 생성.
+
+#### 12.3.2. renameGroup
+* **type**: GroupResponse / public — 그룹명 변경.
+
+#### 12.3.3. addItem
+* **type**: ItemResponse / public — 항목 추가.
+
+#### 12.3.4. getGroupDetail
+* **type**: GroupDetailResponse / public — 그룹 상세 조회.
+
+#### 12.3.5. compare
+* **type**: CompareResultResponse / public — 비교 실행.
 
 ---
 
 ## ComparisonGroupJpaRepository 클래스
 
 ### 13.1 class description
-ComparisonGroup용 JPA/스프링 데이터 리포지토리 인터페이스.
+ComparisonGroup 엔티티용 JPA 리포지토리 인터페이스.
 
 ### 13.2 attribution 구분
 - (상태 없음, 인터페이스)
 
 ### 13.3 Operations 구분
-- **save(group: ComparisonGroup) : ComparisonGroup / public**
-- **findById(id: Long) : Optional<ComparisonGroup> / public**
-- **findAllByOwnerUserId(ownerUserId: Long) : List<ComparisonGroup> / public**
-- **deleteById(id: Long) : void / public**
+
+#### 13.3.1. save
+* **type**: ComparisonGroup / public — 저장.
+
+#### 13.3.2. findById
+* **type**: Optional<ComparisonGroup> / public — ID 기반 조회.
+
+#### 13.3.3. findAllByOwnerUserId
+* **type**: List<ComparisonGroup> / public — 사용자별 조회.
+
+#### 13.3.4. deleteById
+* **type**: void / public — 삭제.
 
 ---
 
 ## ComparisonItemJpaRepository 클래스
 
 ### 14.1 class description
-ComparisonItem용 JPA/스프링 데이터 리포지토리 인터페이스.
+ComparisonItem 엔티티용 JPA 리포지토리 인터페이스.
 
 ### 14.2 attribution 구분
 - (상태 없음, 인터페이스)
 
 ### 14.3 Operations 구분
-- **save(item: ComparisonItem) : ComparisonItem / public**
-- **findById(id: Long) : Optional<ComparisonItem> / public**
-- **findAllByGroupId(groupId: Long) : List<ComparisonItem> / public**
-- **deleteById(id: Long) : void / public**
+
+#### 14.3.1. save
+* **type**: ComparisonItem / public — 저장.
+
+#### 14.3.2. findById
+* **type**: Optional<ComparisonItem> / public — ID 기반 조회.
+
+#### 14.3.3. findAllByGroupId
+* **type**: List<ComparisonItem> / public — 그룹 ID별 조회.
+
+#### 14.3.4. deleteById
+* **type**: void / public — 삭제.
+
 
 ---
 
@@ -5904,16 +6049,25 @@ classDiagram
     +getUpdatedAt(): LocalDateTime
   }
 ```
+
 ### 1.1 class description
 모든 엔티티 클래스가 상속받는 공통 클래스. 생성/수정 시각 자동 관리.
 
 ### 1.2 attribution 구분
-- **createdAt** : LocalDateTime / private — 생성 시각.
-- **updatedAt** : LocalDateTime / private — 수정 시각.
+
+#### 1.2.1. createdAt
+* **type**: LocalDateTime / private — 생성 시각.
+
+#### 1.2.2. updatedAt
+* **type**: LocalDateTime / private — 수정 시각.
 
 ### 1.3 Operations 구분
-- **getCreatedAt() : LocalDateTime / public**
-- **getUpdatedAt() : LocalDateTime / public**
+
+#### 1.3.1. getCreatedAt
+* **type**: LocalDateTime / public — 생성 시각 반환.
+
+#### 1.3.2. getUpdatedAt
+* **type**: LocalDateTime / public — 수정 시각 반환.
 
 ---
 
@@ -5940,20 +6094,37 @@ classDiagram
   }
   ResponseDTO ..> HttpStatus : Uses
 ```
+
 ### 2.1 class description
-모든 API 응답을 일관된 형식으로 만들기 위한 공통 DTO.
+모든 API 응답을 일관된 형식으로 제공하기 위한 공통 DTO.
 
 ### 2.2 attribution 구분
-- **success**(boolean) / private — 성공 여부
-- **code**(int) / private — HTTP 코드
-- **message**(String) / private — 메시지
-- **data**(Object) / private — 응답 데이터
-- **timestamp**(LocalDateTime) / private — 생성 시각
+
+#### 2.2.1. success
+* **type**: boolean / private — 요청 성공 여부.
+
+#### 2.2.2. code
+* **type**: int / private — HTTP 상태 코드.
+
+#### 2.2.3. message
+* **type**: String / private — 응답 메시지.
+
+#### 2.2.4. data
+* **type**: Object / private — 반환 데이터.
+
+#### 2.2.5. timestamp
+* **type**: LocalDateTime / private — 응답 생성 시각.
 
 ### 2.3 Operations 구분
-- **success(data)** / **success(data,message)**
-- **error(code,message)** / **error(httpStatus,message)**
-- **getters**: `getSuccess, getCode, getMessage, getData, getTimestamp`
+
+#### 2.3.1. success
+* **type**: ResponseDTO / public — 성공 응답 생성.
+
+#### 2.3.2. error
+* **type**: ResponseDTO / public — 오류 응답 생성.
+
+#### 2.3.3. getters
+* **type**: public — 각 필드의 getter 메소드(getSuccess, getCode 등).
 
 ---
 
@@ -5973,16 +6144,23 @@ classDiagram
     +handleGenericException(e: Exception): ResponseEntity
   }
 ```
+
 ### 3.1 class description
-전역 예외 처리 핸들러. 컨트롤러 예외를 잡아 표준 오류 응답 반환.
+전역 예외 처리 핸들러. 모든 컨트롤러 예외를 잡아 ResponseEntity 형태로 표준 오류 응답을 반환한다.
 
 ### 3.2 attribution 구분
 - (필드 없음)
 
 ### 3.3 Operations 구분
-- **handleIllegalArgumentException(...) : ResponseEntity<String>**
-- **handleValidationExceptions(...) : ResponseEntity<Map<String,String>>**
-- **handleGenericException(...) : ResponseEntity<String>**
+
+#### 3.3.1. handleIllegalArgumentException
+* **type**: ResponseEntity<String> / public — 잘못된 인자 예외 처리.
+
+#### 3.3.2. handleValidationExceptions
+* **type**: ResponseEntity<Map<String,String>> / public — 유효성 검증 실패 처리.
+
+#### 3.3.3. handleGenericException
+* **type**: ResponseEntity<String> / public — 일반 예외 처리.
 
 ---
 
@@ -6003,14 +6181,44 @@ classDiagram
     +validateNotNegative(value: long): boolean
   }
 ```
+
 ### 4.1 class description
-입력값 유효성 검증 유틸리티(정규식/길이/숫자/URL/정제).
+입력값 유효성 검증 유틸리티. 정규식, 길이, 숫자, URL, 공백 검증 등 다양한 검증 로직을 포함한다.
 
 ### 4.2 attribution 구분
-- (필드 없음, static 메소드 집합)
+- (필드 없음, static 메서드 집합)
 
 ### 4.3 Operations 구분
-- **isValidEmail / isValidPhoneNumber / isValidPassword / isValidUrl / isNotBlank / isValidLength / isValidInteger / sanitizeInput / validateNotNegative(int,long)**
+
+#### 4.3.1. isValidEmail
+* **type**: boolean / public — 이메일 형식 검증.
+
+#### 4.3.2. isValidPhoneNumber
+* **type**: boolean / public — 휴대폰 번호 검증.
+
+#### 4.3.3. isValidPassword
+* **type**: boolean / public — 비밀번호 복잡도 검증.
+
+#### 4.3.4. isValidUrl
+* **type**: boolean / public — URL 형식 검증.
+
+#### 4.3.5. isNotBlank
+* **type**: boolean / public — 공백이 아닌지 확인.
+
+#### 4.3.6. isValidLength
+* **type**: boolean / public — 문자열 길이 범위 검증.
+
+#### 4.3.7. isValidInteger
+* **type**: boolean / public — 정수값 범위 검증.
+
+#### 4.3.8. sanitizeInput
+* **type**: String / public — 입력 문자열 정제(XSS 방지).
+
+#### 4.3.9. validateNotNegative(int)
+* **type**: boolean / public — 음수가 아닌지 확인(int).
+
+#### 4.3.10. validateNotNegative(long)
+* **type**: boolean / public — 음수가 아닌지 확인(long).
 
 ---
 
@@ -6033,17 +6241,28 @@ classDiagram
     +webSecurityCustomizer(): WebSecurityCustomizer
   }
 ```
+
 ### 5.1 class description
-Spring Security 설정(JWT, CORS, PasswordEncoder, 정적 리소스 무시).
+Spring Security의 전역 설정을 담당하는 클래스. JWT 필터 등록, CORS 설정, PasswordEncoder 및 WebSecurityCustomizer 설정 포함.
 
 ### 5.2 attribution 구분
-- **jwtFilter**(JwtAuthenticationFilter) / private
+
+#### 5.2.1. jwtFilter
+* **type**: JwtAuthenticationFilter / private — JWT 인증 필터.
 
 ### 5.3 Operations 구분
-- **filterChain(...) : SecurityFilterChain**
-- **corsConfigurationSource() : CorsConfigurationSource**
-- **passwordEncoder() : PasswordEncoder**
-- **webSecurityCustomizer() : WebSecurityCustomizer**
+
+#### 5.3.1. filterChain
+* **type**: SecurityFilterChain / public — HTTP 보안 필터 체인 구성.
+
+#### 5.3.2. corsConfigurationSource
+* **type**: CorsConfigurationSource / public — CORS 설정 정의.
+
+#### 5.3.3. passwordEncoder
+* **type**: PasswordEncoder / public — 비밀번호 인코더 설정.
+
+#### 5.3.4. webSecurityCustomizer
+* **type**: WebSecurityCustomizer / public — 정적 리소스 보안 제외.
 
 ---
 
@@ -6065,16 +6284,31 @@ classDiagram
     +getUserId(token: String): Long
   }
 ```
+
 ### 6.1 class description
-JWT 토큰 생성·검증·파싱·인증 추출 유틸리티.
+JWT 토큰 생성, 검증, 파싱, 인증 정보 추출을 담당하는 유틸리티 클래스.
 
 ### 6.2 attribution 구분
-- **secret**(String) / private — 서명 키
-- **accessExp**(long) / private — 만료(초)
+
+#### 6.2.1. secret
+* **type**: String / private — 서명 비밀키.
+
+#### 6.2.2. accessExp
+* **type**: long / private — 액세스 토큰 만료 시간(초).
 
 ### 6.3 Operations 구분
-- **createAccessToken(User) : String**
-- **parse(String) : Jws<Claims>**
-- **validate(String) : boolean**
-- **getAuthentication(String) : Authentication**
-- **getUserId(String) : Long**
+
+#### 6.3.1. createAccessToken
+* **type**: String / public — User 객체로부터 JWT 토큰 생성.
+
+#### 6.3.2. parse
+* **type**: Jws<Claims> / public — 토큰 파싱 및 서명 검증.
+
+#### 6.3.3. validate
+* **type**: boolean / public — 토큰의 유효성 검사.
+
+#### 6.3.4. getAuthentication
+* **type**: Authentication / public — 토큰 기반 Authentication 객체 생성.
+
+#### 6.3.5. getUserId
+* **type**: Long / public — 토큰에서 사용자 ID 추출.
