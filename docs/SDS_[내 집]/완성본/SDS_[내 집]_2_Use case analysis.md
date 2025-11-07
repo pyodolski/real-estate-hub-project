@@ -1,4 +1,4 @@
-<img width="737" height="886" alt="image" src="https://github.com/user-attachments/assets/5a45f9cd-94d3-4039-900b-d93d3329fd9c" />
+![첫 로그인 화면](<./img/use case diagram.png>)<br>
 
 이 Use Case Diagram은 부동산 통합 플랫폼(Real Estate Hub System)의 주요 기능과 외부 액터 간 상호작용을 시각화한 것이다.
 본 시스템은 일반 사용자(User), 매물 소유자(Owner), 브로커(Broker), 관리자(Admin), 시스템/엔진(System), 지도 서비스(Map Service)의 여섯 주체가 상호 연계되어 작동한다.
@@ -35,11 +35,11 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자가 로그인되어 있어야 함 (JWT 토큰 보유)
 - `/api/ownership/**` 엔드포인트는 인증된 사용자만 접근 가능
 
-1.1.9 Trigger
+  1.1.9 Trigger
 
 - 사용자가 매물 소유권 신청 폼에서 "신청하기" 버튼을 클릭했을 때
 
-1.1.10 Success Post Conditions
+  1.1.10 Success Post Conditions
 
 - 매물 소유권 신청이 데이터베이스에 저장됨 (Status: PENDING)
 - 업로드된 서류 파일들이 서버 저장소(`uploads/ownership/`)에 저장됨
@@ -47,7 +47,7 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 신청 ID가 포함된 응답 반환
 - 관리자에게 검토 대기 상태로 전달됨
 
-1.1.11 Failure Post Conditions
+  1.1.11 Failure Post Conditions
 
 - 신청 데이터가 저장되지 않음
 - 업로드된 파일들이 저장되지 않음
@@ -93,9 +93,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자당 신청 빈도 제한 없음
 - 중복 신청 방지 로직 존재
 
-1.4.3 Concurrency : 제한없음
+  1.4.3 Concurrency : 제한없음
 
-1.4.4 Due Date : None
+  1.4.4 Due Date : None
 
 # Use case 2. 매물 신청 현황 조회
 
@@ -120,11 +120,11 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자가 로그인되어 있어야 함 (JWT 토큰 보유)
 - `/api/ownership/**` 엔드포인트는 인증된 사용자만 접근 가능
 
-2.1.9 Trigger
+  2.1.9 Trigger
 
 - 사용자가 내 신청 내역 페이지에 접근하거나 특정 신청 상세를 조회할 때
 
-2.1.10 Success Post Conditions
+  2.1.10 Success Post Conditions
 
 - 사용자의 모든 신청 내역이 목록으로 표시됨
 - 각 신청의 상태(심사중/승인됨/거절됨)가 표시됨
@@ -132,7 +132,7 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 거절된 경우 거절 사유가 표시됨
 - 첨부된 서류를 원본 파일명으로 다운로드 가능
 
-2.1.11 Failure Post Conditions
+  2.1.11 Failure Post Conditions
 
 - 신청 내역 조회 실패 시 오류 메시지 출력
 - 권한이 없는 신청 접근 시 오류 메시지 출력
@@ -178,9 +178,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 특정 신청 상세 조회 시마다
 - 서류 다운로드 시마다
 
-2.4.3 Concurrency : 제한없음
+  2.4.3 Concurrency : 제한없음
 
-2.4.4 Due Date : None
+  2.4.4 Due Date : None
 
 # Use case 3. 매물 관리 현황 요약
 
@@ -205,18 +205,18 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자가 로그인되어 있어야 함 (JWT 토큰 보유)
 - `/api/ownership/**` 엔드포인트는 인증된 사용자만 접근 가능
 
-3.1.9 Trigger
+  3.1.9 Trigger
 
 - 사용자가 매물 관리 대시보드 또는 내 신청 내역 페이지에 접근할 때
 
-3.1.10 Success Post Conditions
+  3.1.10 Success Post Conditions
 
 - 각 상태별(심사중/승인됨/거절됨) 매물 건수가 표시됨
 - 매물 목록이 제목, 주소, 상태, 신청자 정보와 함께 표시됨
 - 상태별로 색상과 라벨이 구분되어 직관적으로 확인 가능
 - 매물이 없는 경우 안내 문구 표시
 
-3.1.11 Failure Post Conditions
+  3.1.11 Failure Post Conditions
 
 - 매물 목록 조회 실패 시 오류 메시지 출력
 
@@ -253,9 +253,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 매물 관리 대시보드 접근 시마다
 
-3.4.3 Concurrency : 제한없음
+  3.4.3 Concurrency : 제한없음
 
-3.4.4 Due Date : None
+  3.4.4 Due Date : None
 
 # Use case 4. 지도 위치 설정 기능
 
@@ -281,18 +281,18 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 매물 등록 신청 폼이 열려 있어야 함
 - 지도 API 서비스가 정상 작동해야 함
 
-4.1.9 Trigger
+  4.1.9 Trigger
 
 - 사용자가 매물 등록 신청 시 지도에서 위치를 선택하거나 주소를 입력할 때
 
-4.1.10 Success Post Conditions
+  4.1.10 Success Post Conditions
 
 - 선택한 위치의 좌표(latitude, longitude)가 저장됨
 - 좌표에 해당하는 주소 정보가 자동으로 조회되어 표시됨
 - 주소 필드에 도로명주소, 지번주소, 건물명, 우편번호가 자동 완성됨
 - 매물 신청 시 위치 정보가 함께 저장됨
 
-4.1.11 Failure Post Conditions
+  4.1.11 Failure Post Conditions
 
 - 지도 API 호출 실패 시 오류 메시지 출력
 - 위치 정보가 저장되지 않음
@@ -334,9 +334,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 지도에서 위치 변경 시마다
 - 주소 입력 시마다
 
-4.4.3 Concurrency : 제한없음, 동시 API 호출 지원, 지도 API 응답 시간에 따라 성능 변동 가능
+  4.4.3 Concurrency : 제한없음, 동시 API 호출 지원, 지도 API 응답 시간에 따라 성능 변동 가능
 
-4.4.4 Due Date : None
+  4.4.4 Due Date : None
 
 # Use case 5. 소유권 증명 서류 업로드
 
@@ -361,18 +361,18 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자가 로그인되어 있어야 함 (JWT 토큰 보유)
 - 매물 등록 신청 폼이 열려 있어야 함
 
-5.1.9 Trigger
+  5.1.9 Trigger
 
 - 사용자가 매물 등록 신청 시 서류 업로드 버튼을 클릭할 때
 
-5.1.10 Success Post Conditions
+  5.1.10 Success Post Conditions
 
 - 업로드된 파일이 서버 저장소에 저장됨 (`uploads/ownership/`)
 - 파일 정보가 ownership_documents 테이블에 저장됨
 - 원본 파일명, 저장 파일명, 파일 크기, 업로드 시간이 기록됨
 - 관리자가 추후 확인 가능
 
-5.1.11 Failure Post Conditions
+  5.1.11 Failure Post Conditions
 
 - 파일 업로드 실패 시 오류 메시지 출력
 - 파일이 저장되지 않음
@@ -416,9 +416,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 매물 등록 신청 시마다
 - 매물 수정 시마다
 
-5.4.3 Concurrency : 제한없음, 동시 업로드 지원, 파일명 충돌 방지 - 타임스탬프 + UUID 조합
+  5.4.3 Concurrency : 제한없음, 동시 업로드 지원, 파일명 충돌 방지 - 타임스탬프 + UUID 조합
 
-5.4.4 Due Date : None
+  5.4.4 Due Date : None
 
 # Use case 6. 심사 중 매물 신청 수정
 
@@ -444,18 +444,18 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 수정하려는 신청이 존재해야 함
 - 신청 상태가 PENDING(심사중)이어야 함
 
-6.1.9 Trigger
+  6.1.9 Trigger
 
 - 사용자가 심사중인 신청의 수정 버튼을 클릭할 때
 
-6.1.10 Success Post Conditions
+  6.1.10 Success Post Conditions
 
 - 신청 정보가 수정됨
 - 수정된 정보가 데이터베이스에 저장됨
 - 감사 로그에 수정 이력이 기록됨
 - updatedAt 필드가 현재 시간으로 갱신됨
 
-6.1.11 Failure Post Conditions
+  6.1.11 Failure Post Conditions
 
 - 신청 정보가 수정되지 않음
 - 오류 메시지 출력
@@ -502,9 +502,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자가 신청 수정 시마다
 - PENDING 상태인 신청만 수정 가능
 
-6.4.3 Concurrency : 제한없음, 트랜잭션 관리로 데이터 일관성 보장, PreUpdate로 updatedAt 자동 갱신
+  6.4.3 Concurrency : 제한없음, 트랜잭션 관리로 데이터 일관성 보장, PreUpdate로 updatedAt 자동 갱신
 
-6.4.4 Due Date : None
+  6.4.4 Due Date : None
 
 # Use case 7. 관리자 매물 신청 검토 및 처리
 
@@ -529,11 +529,11 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 관리자 권한으로 로그인되어 있어야 함
 - 검토할 신청이 존재해야 함
 
-7.1.9 Trigger
+  7.1.9 Trigger
 
 - 관리자가 신청 목록에 접근하거나 특정 신청을 검토할 때
 
-7.1.10 Success Post Conditions
+  7.1.10 Success Post Conditions
 
 - 신청 상태가 APPROVED 또는 REJECTED로 변경됨
 - 승인 시 Property 엔티티가 자동 생성됨
@@ -542,7 +542,7 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 감사 로그에 검토 이력이 기록됨
 - 사용자에게 알림이 전송됨
 
-7.1.11 Failure Post Conditions
+  7.1.11 Failure Post Conditions
 
 - 신청 상태가 변경되지 않음
 - 오류 메시지 출력
@@ -591,9 +591,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 관리자가 신청 검토 시마다
 - 승인/거절 처리 시마다
 
-7.4.3 Concurrency : 제한없음, 트랜잭션 관리로 데이터 일관성 보장, 감사 로그로 모든 검토 이력 추적 가능, 알림 시스템으로 사용자에게 실시간 전달
+  7.4.3 Concurrency : 제한없음, 트랜잭션 관리로 데이터 일관성 보장, 감사 로그로 모든 검토 이력 추적 가능, 알림 시스템으로 사용자에게 실시간 전달
 
-7.4.4 Due Date : None
+  7.4.4 Due Date : None
 
 # Use case 8. 매물 자동 생성
 
@@ -619,11 +619,11 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 관리자가 신청을 승인해야 함
 - 신청 상태가 APPROVED로 변경되어야 함
 
-8.1.9 Trigger
+  8.1.9 Trigger
 
 - 관리자가 신청 승인 버튼을 클릭하여 승인 처리가 완료될 때
 
-8.1.10 Success Post Conditions
+  8.1.10 Success Post Conditions
 
 - Property 엔티티가 데이터베이스에 생성됨
 - 신청(OwnershipClaim)과 매물(Property)이 서로 참조됨 (양방향 관계)
@@ -632,7 +632,7 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 지도 좌표가 Property 엔티티에 저장됨
 - 매물 상태가 AVAILABLE로 설정됨
 
-8.1.11 Failure Post Conditions
+  8.1.11 Failure Post Conditions
 
 - Property 엔티티가 생성되지 않음
 - 신청과 매물 간 참조 관계가 설정되지 않음
@@ -684,9 +684,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 신청 승인 시마다 자동 실행
 - 승인 프로세스의 일부로 실행
 
-8.4.3 Concurrency : 제한없음, 트랜잭션 내에서 실행되어 데이터 일관성 보장, 제목 중복 체크로 동시성 문제 방지
+  8.4.3 Concurrency : 제한없음, 트랜잭션 내에서 실행되어 데이터 일관성 보장, 제목 중복 체크로 동시성 문제 방지
 
-8.4.4 Due Date : None
+  8.4.4 Due Date : None
 
 # Use case 9. 채팅방 접속 및 생성
 
@@ -710,16 +710,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인이 되어 있어야 한다
 
-9.1.9 Trigger
+  9.1.9 Trigger
 
 - 채팅 버튼을 누른다
 
-9.1.10 Success Post Conditions
+  9.1.10 Success Post Conditions
 
 - 기존 채팅방이 존재하면 입장하고, 없을 경우 새로운 채팅방이 생성된다
 - 채팅방에는 참여자 정보와 생성 시각이 기록된다
 
-9.1.11 Failure Post Conditions
+  9.1.11 Failure Post Conditions
 
 - 채팅방 생성 또는 접속에 실패하면 오류 메시지가 출력된다
 
@@ -751,9 +751,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 매물 상세 화면에서 채팅 기능을 사용할 때마다
 
-9.4.3 Concurrency : 동일 매물에 대해 여러 사용자가 동시에 시도할 수 있으나, 시스템은 중복 채팅방 생성을 방지한다.
+  9.4.3 Concurrency : 동일 매물에 대해 여러 사용자가 동시에 시도할 수 있으나, 시스템은 중복 채팅방 생성을 방지한다.
 
-9.4.4 Due Date : None
+  9.4.4 Due Date : None
 
 # Use case 10. 메시지 송수신
 
@@ -777,17 +777,17 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인 상태이며, 유효한 채팅방(room_id)에 입장한 상태여야 한다.
 
-10.1.9 Trigger
+  10.1.9 Trigger
 
 - 사용자가 채팅 입력창에 메시지를 작성하고 전송 버튼을 누른다.
 
-10.1.10 Success Post Conditions
+  10.1.10 Success Post Conditions
 
 - 메시지가 Supabase 데이터베이스의 chat_message 테이블에 저장된다.
 - 주기적 조회(또는 실시간 구독) 로직을 통해 새로운 메시지가 화면에 표시된다.
 - 각 메시지에는 발신자, 발신 시각, 읽음 여부가 함께 기록된다.
 
-10.1.11 Failure Post Conditions
+  10.1.11 Failure Post Conditions
 
 - 메시지가 비어 있거나 DB 쓰기 실패 시 전송되지 않으며 오류 메시지가 표시된다.
 
@@ -817,9 +817,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 채팅 세션 중 메시지 입력 시마다 발생
 
-10.4.3 Concurrency : 다수의 사용자가 동시에 메시지를 저장할 수 있으며, DB는 created_at 기준으로 순서가 보장된다.
+  10.4.3 Concurrency : 다수의 사용자가 동시에 메시지를 저장할 수 있으며, DB는 created_at 기준으로 순서가 보장된다.
 
-10.4.4 Due Date : None
+  10.4.4 Due Date : None
 
 # Use case 11. 기존 내역 불러오기
 
@@ -844,16 +844,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 로그인 상태이며, 유효한 채팅방(room_id)에 입장한 상태여야 한다.
 - chat_message 테이블에 해당 채팅방의 메시지 데이터가 존재해야 한다.
 
-11.1.9 Trigger
+  11.1.9 Trigger
 
 - 사용자가 채팅방에 재입장하거나 스크롤을 올려 과거 메시지를 요청한다.
 
-11.1.10 Success Post Conditions
+  11.1.10 Success Post Conditions
 
 - 최근 메시지부터 일정 개수의 메시지가 화면에 표시된다.
 - 사용자가 스크롤 또는 추가 요청 시, 더 오래된 메시지가 순차적으로 로드된다.
 
-11.1.11 Failure Post Conditions
+  11.1.11 Failure Post Conditions
 
 - 네트워크 또는 DB 조회 오류로 인해 메시지를 불러오지 못하면 오류 안내가 표시된다.
 
@@ -884,12 +884,12 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 채팅방 입장 시 1회 자동 호출 + 사용자 요청 시 추가 호출
 
-11.4.3 Concurrency
+  11.4.3 Concurrency
 
 - 여러 사용자가 동시에 조회하더라도 읽기 전용 쿼리이므로 DB 락 없음.
 - 메시지는 created_at 및 message_id 기준으로 정렬 일관성 유지.
 
-11.4.4 Due Date : None
+  11.4.4 Due Date : None
 
 # Use case 12. 읽음 처리
 
@@ -914,17 +914,17 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 로그인 상태이며, 유효한 채팅방(room_id)에 입장한 상태여야 한다.
 - chat_message 테이블에 해당 채팅방의 메시지 데이터가 존재해야 한다.
 
-12.1.9 Trigger
+  12.1.9 Trigger
 
 - 사용자가 채팅방에서 메시지를 열람하거나 "모두 읽음"을 실행한다.
 
-12.1.10 Success Post Conditions
+  12.1.10 Success Post Conditions
 
 - 열람한 메시지가 읽음 상태로 표시된다.
 - 상대방(들)도 해당 메시지의 읽음 여부를 확인할 수 있다.
 - 채팅방 목록/알림에서 미확인 메시지 개수가 갱신된다.
 
-12.1.11 Failure Post Conditions
+  12.1.11 Failure Post Conditions
 
 - 읽음 상태 갱신 실패 시 UI에 실패 안내가 표시되고, 다음 동기화 시 재시도한다.
 
@@ -955,9 +955,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 화면 진입/스크롤 시 수시 발생, "모두 읽음"은 사용자 액션 시 발생
 
-12.4.3 Concurrency : 동일 사용자의 다중 세션 동시 갱신 가능 — 서버는 단조 증가 규칙으로 정합성 보장
+  12.4.3 Concurrency : 동일 사용자의 다중 세션 동시 갱신 가능 — 서버는 단조 증가 규칙으로 정합성 보장
 
-12.4.4 Due Date : None
+  12.4.4 Due Date : None
 
 # Use case 13. 재접속 시 이어보기
 
@@ -982,16 +982,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 로그인 상태이며, 유효한 채팅방(room_id)에 입장한 상태여야 한다.
 - 사용자별 마지막 읽음 플래그가 서버에 저장되어 있어야 한다.
 
-13.1.9 Trigger
+  13.1.9 Trigger
 
 - 사용자가 채팅방에 재입장한다.
 
-13.1.10 Success Post Conditions
+  13.1.10 Success Post Conditions
 
 - 마지막으로 읽은 메시지 이후의 새로운 메시지만 우선 표시된다.
 - 불필요한 과거 내역 재조회 없이 효율적으로 대화를 이어볼 수 있다.
 
-13.1.11 Failure Post Conditions
+  13.1.11 Failure Post Conditions
 
 - 마지막 읽음 포인터 조회 실패 시 기본(최근 N개) 로딩으로 대체하고 안내 메시지를 표시한다.
 
@@ -1021,9 +1021,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 채팅방 재입장 시마다 1회 + 추가 과거 조회 시 반복
 
-13.4.3 Concurrency : 읽기 위주 시나리오로 DB 락 이슈 없음. 포인터 갱신은 단조 증가로 경쟁 상태 방지.
+  13.4.3 Concurrency : 읽기 위주 시나리오로 DB 락 이슈 없음. 포인터 갱신은 단조 증가로 경쟁 상태 방지.
 
-13.4.4 Due Date : None
+  13.4.4 Due Date : None
 
 # Use case 14. 회원가입
 
@@ -1047,16 +1047,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 로그인하지 않은 상태여야 한다.
 
-14.1.9 Trigger
+  14.1.9 Trigger
 
 - 로그인 화면에서 회원가입 버튼을 누를 때.
 
-14.1.10 Success Post Conditions
+  14.1.10 Success Post Conditions
 
 - 로그인 페이지로 이동한다.
 - 사용자는 로그인을 할 수 있다.
 
-14.1.11 Failure Post Conditions
+  14.1.11 Failure Post Conditions
 
 - 사용자는 로그인을 할 수 없다.
 - 사용자는 시스템을 이용할 수 없다.
@@ -1088,9 +1088,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자당 최초 1번
 
-14.4.3 Concurrency : 제한 없음
+  14.4.3 Concurrency : 제한 없음
 
-14.4.4 Due Date : None
+  14.4.4 Due Date : None
 
 # Use case 15. 로그인 / 토큰 관리
 
@@ -1114,16 +1114,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 회원가입이 이미 완료된 상태여야 한다.
 
-15.1.9 Trigger
+  15.1.9 Trigger
 
 - 사용자가 로그인 페이지에서 이메일과 비밀번호를 입력한 후 로그인 버튼을 누를 때.
 
-15.1.10 Success Post Conditions
+  15.1.10 Success Post Conditions
 
 - 사용자는 시스템의 기능들을 사용 가능하다
 - AccessToken(JWT)와 RefreshToken이 발급된다.
 
-15.1.11 Failure Post Conditions
+  15.1.11 Failure Post Conditions
 
 - 사용자는 로그인 페이지에 머물러 있다.
 - 오류 메시지가 표시된다.
@@ -1155,9 +1155,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 로그인할 때마다
 
-15.4.3 Concurrency : 제한 없음
+  15.4.3 Concurrency : 제한 없음
 
-15.4.4 Due Date : None
+  15.4.4 Due Date : None
 
 # Use case 16. 로그아웃
 
@@ -1182,17 +1182,17 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 사용자는 로그인 상태여야 한다.
 - 시스템에 토큰이 저장되어 있어야 한다.
 
-16.1.9 Trigger
+  16.1.9 Trigger
 
 - 사용자가 로그아웃 버튼을 눌렀을 때.
 
-16.1.10 Success Post Conditions
+  16.1.10 Success Post Conditions
 
 - 로그인 페이지로 이동한다.
 - 시스템에서 토큰을 삭제한다.
 - 사용자는 재인증 없이는 API요청이 불가능하다.
 
-16.1.11 Failure Post Conditions
+  16.1.11 Failure Post Conditions
 
 - 현 페이지 그대로 유지된다.
 - 오류 메시지가 표시된다.
@@ -1220,9 +1220,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 로그아웃할 때마다
 
-16.4.3 Concurrency : 제한 없음
+  16.4.3 Concurrency : 제한 없음
 
-16.4.4 Due Date : None
+  16.4.4 Due Date : None
 
 # Use case 17. 비밀번호 재설정
 
@@ -1246,16 +1246,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 회원가입이 완료된 상태여야 한다.
 
-17.1.9 Trigger
+  17.1.9 Trigger
 
 - 로그인 페이지에서 비밀번호 찾기를 누를 때.
 
-17.1.10 Success Post Conditions
+  17.1.10 Success Post Conditions
 
 - 로그인 페이지로 이동되며 재설정된 비밀번호로 로그인이 가능하다.
 - 기존 PasswordResetToken은 만료 처리된다.
 
-17.1.11 Failure Post Conditions
+  17.1.11 Failure Post Conditions
 
 - 사용자는 비밀번호 재설정 화면에 머물러 있다.
 - 오류 메시지가 표시된다.
@@ -1288,9 +1288,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 비밀번호를 잊었을 때
 
-17.4.3 Concurrency : 제한 없음
+  17.4.3 Concurrency : 제한 없음
 
-17.4.4 Due Date : None
+  17.4.4 Due Date : None
 
 # Use case 18. 사용자 프로필 관리
 
@@ -1315,16 +1315,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 로그인 상태여야 한다.
 - 회원 가입 시에 프로필 정보를 입력한 상태여야 한다.
 
-18.1.9 Trigger
+  18.1.9 Trigger
 
 - 프로필 버튼을 눌러 프로필 패널을 띄울 때.
 
-18.1.10 Success Post Conditions
+  18.1.10 Success Post Conditions
 
 - 프로필 패널에 사용자 프로필 정보가 나타난다.
 - 프로필 수정 시 변경사항이 데이터베이스에 저장된다.
 
-18.1.11 Failure Post Conditions
+  18.1.11 Failure Post Conditions
 
 - 프로필 패널이 열리지 않거나 정보가 나타나지 않는다.
 - 오류 메시지가 표시된다.
@@ -1351,9 +1351,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 프로필을 조회하거나 수정할 때마다
 
-18.4.3 Concurrency : 제한 없음
+  18.4.3 Concurrency : 제한 없음
 
-18.4.4 Due Date : None
+  18.4.4 Due Date : None
 
 # Use case 19. 매물 목록 조회 (전체)
 
@@ -1377,16 +1377,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자는 로그인 상태여야 한다.
 
-19.1.9 Trigger
+  19.1.9 Trigger
 
 - 사용자가 "전체 매물 보기" 메뉴를 선택한다.
 
-19.1.10 Success Post Conditions
+  19.1.10 Success Post Conditions
 
 - 전체 매물 목록이 페이지 단위로 표시된다.
 - 기본 정렬은 최신순이며, 상태·유형·가격·지역 기준으로 필터링이 가능하다.
 
-19.1.11 Failure Post Conditions
+  19.1.11 Failure Post Conditions
 
 - 서버 또는 네트워크 오류로 조회 실패 시 오류 메시지가 표시된다.
 
@@ -1416,9 +1416,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자 탐색 시마다 발생
 
-19.4.3 Concurrency : 다수의 사용자가 동시에 조회 가능
+  19.4.3 Concurrency : 다수의 사용자가 동시에 조회 가능
 
-19.4.4 Due Date : None
+  19.4.4 Due Date : None
 
 # Use case 20. 내 매물 관리
 
@@ -1442,16 +1442,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인 상태이며, 사용자 ID와 매물의 등록자 ID가 일치해야 한다.
 
-20.1.9 Trigger
+  20.1.9 Trigger
 
 - 사용자가 "내 매물" 메뉴를 선택한다.
 
-20.1.10 Success Post Conditions
+  20.1.10 Success Post Conditions
 
 - 본인 등록 매물 목록이 표시된다.
 - 매물 상태 변경 또는 정보 수정이 가능하다.
 
-20.1.11 Failure Post Conditions
+  20.1.11 Failure Post Conditions
 
 - 서버 오류 또는 권한 불일치 시 수정/조회 실패.
 - 오류 메시지가 표시된다.
@@ -1483,9 +1483,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 자신의 매물을 확인할 때마다
 
-20.4.3 Concurrency : 동일 사용자의 다중 요청 발생 가능
+  20.4.3 Concurrency : 동일 사용자의 다중 요청 발생 가능
 
-20.4.4 Due Date : None
+  20.4.4 Due Date : None
 
 # Use case 21. 타인 매물 조회
 
@@ -1509,16 +1509,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인 상태이며, property.owner_id ≠ user_id 조건이 적용되어야 한다.
 
-21.1.9 Trigger
+  21.1.9 Trigger
 
 - 사용자가 "다른 소유자 매물 보기" 메뉴를 선택한다.
 
-21.1.10 Success Post Conditions
+  21.1.10 Success Post Conditions
 
 - 자신이 등록하지 않은 매물 목록이 표시된다.
 - 매물의 기본 정보와 거래 조건을 열람할 수 있다.
 
-21.1.11 Failure Post Conditions
+  21.1.11 Failure Post Conditions
 
 - 조회 실패 시 오류 메시지가 표시된다.
 
@@ -1547,9 +1547,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 다른 소유자의 매물을 확인할 때마다
 
-21.4.3 Concurrency : 다수의 사용자가 동시에 조회 가능
+  21.4.3 Concurrency : 다수의 사용자가 동시에 조회 가능
 
-21.4.4 Due Date : None
+  21.4.4 Due Date : None
 
 # Use case 22. 매물 상세 조회
 
@@ -1573,16 +1573,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인 상태이며, 매물이 유효한 property_id를 가지고 있어야 한다.
 
-22.1.9 Trigger
+  22.1.9 Trigger
 
 - 사용자가 매물 목록에서 특정 매물을 선택한다.
 
-22.1.10 Success Post Conditions
+  22.1.10 Success Post Conditions
 
 - 매물의 세부 정보(제목, 주소, 가격, 면적, 건축년도, 상태 등)가 표시된다.
 - 거래 조건(매매/전세/월세, 보증금, 관리비 등)과 이미지가 함께 표시된다.
 
-22.1.11 Failure Post Conditions
+  22.1.11 Failure Post Conditions
 
 - 매물 정보 조회 실패 시 오류 안내가 표시된다.
 
@@ -1612,9 +1612,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 매물 상세 페이지 진입 시마다 1회
 
-22.4.3 Concurrency : 다수의 사용자가 동시에 조회 가능
+  22.4.3 Concurrency : 다수의 사용자가 동시에 조회 가능
 
-22.4.4 Due Date : None
+  22.4.4 Due Date : None
 
 # Use case 23. 위임 관리
 
@@ -1641,15 +1641,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 - 소유자는 로그인 상태이며 본인 소유 매물이 존재해야 한다.
 - 브로커는 실제 프로필이 등록되어 있어야 한다.
 
-23.1.10 Trigger
+  23.1.10 Trigger
 
 - 소유자가 위임 요청을 생성하거나 브로커가 요청을 처리할 때.
 
-23.1.11 Success Post Conditions
+  23.1.11 Success Post Conditions
 
 - 위임 요청이 생성·승인·거절·취소·삭제되고 매물 상태가 일관되게 반영된다.
 
-23.1.12 Failure Post Conditions
+  23.1.12 Failure Post Conditions
 
 - 요청 또는 상태 변경이 반영되지 않는다.
 - 오류 메시지가 표시된다.
@@ -1685,9 +1685,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 제한 없음
 
-23.4.3 Concurrency : 제한 없음
+  23.4.3 Concurrency : 제한 없음
 
-23.4.4 Due Date : None
+  23.4.4 Due Date : None
 
 # Use case 24. 알림 기능
 
@@ -1713,15 +1713,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자는 로그인 상태이며 알림 수신이 허용되어 있어야 한다.
 
-24.1.10 Trigger
+  24.1.10 Trigger
 
 - 거래 완료, 가격 하락, 추천 매물 등록, 예산 도달, 계약서 승인 등 이벤트 발생 시.
 
-24.1.11 Success Post Conditions
+  24.1.11 Success Post Conditions
 
 - 알림이 생성·전송되어 알림함에 표시되고, 읽음/삭제 상태로 관리된다.
 
-24.1.12 Failure Post Conditions
+  24.1.12 Failure Post Conditions
 
 - 알림이 생성되지 않거나 동기화에 실패한다.
 - 오류 메시지가 표시된다.
@@ -1754,9 +1754,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 제한 없음
 
-24.4.3 Concurrency : 제한 없음
+  24.4.3 Concurrency : 제한 없음
 
-24.4.4 Due Date : None
+  24.4.4 Due Date : None
 
 # Use case 25. 지도 매물 시각화
 
@@ -1780,16 +1780,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인을 한 상태여야 한다.
 
-25.1.9 Trigger
+  25.1.9 Trigger
 
 - 지도 화면 최초 진입, 또는 줌/팬 등 뷰포트 변경 이벤트 발생.
 
-25.1.10 Success Post Conditions
+  25.1.10 Success Post Conditions
 
 - 지도에 현재 뷰포트 내 매물이 상태별 컬러 마커로 표시된다.
 - 매물 선택 시 요약 패널/시트에 상세 정보가 로드된다.
 
-25.1.11 Failure Post Conditions
+  25.1.11 Failure Post Conditions
 
 - 지도에 매물 띄우기를 실패한다.
 - 오류 메시지가 표시된다.
@@ -1822,9 +1822,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 지도를 호출할 때마다
 
-25.4.3 Concurrency : 제한 없음
+  25.4.3 Concurrency : 제한 없음
 
-25.4.4 Due Date : None
+  25.4.4 Due Date : None
 
 # Use case 26. 사용자 위치 표시
 
@@ -1848,16 +1848,16 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자가 위치 권한을 허용한 상태여야 한다.
 
-26.1.9 Trigger
+  26.1.9 Trigger
 
 - 지도 화면이 처음 호출되거나 '현재 위치' 버튼을 클릭했을 때.
 
-26.1.10 Success Post Conditions
+  26.1.10 Success Post Conditions
 
 - 사용자의 현재 위치를 지도 중심으로 표시한다.
 - 위치 정보 획득이 실패하면 기본 위치(시청)를 중심으로 설정한다.
 
-26.1.11 Failure Post Conditions
+  26.1.11 Failure Post Conditions
 
 - GPS 신호 또는 권한 획득 실패 시 기본 중심(시청)으로 설정된다.
 
@@ -1886,9 +1886,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 지도 진입 또는 '현재 위치' 버튼 클릭 시마다
 
-26.4.3 Concurrency : 제한 없음
+  26.4.3 Concurrency : 제한 없음
 
-26.4.4 Due Date : None
+  26.4.4 Due Date : None
 
 # Use case 27. 지도 매물 즐겨찾기
 
@@ -1912,15 +1912,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인되어 있어야 하며 토큰이 유효해야 한다.
 
-27.1.9 Trigger
+  27.1.9 Trigger
 
 - 즐겨찾기 탭 클릭 또는 매물 카드의 하트 버튼 클릭 시.
 
-27.1.10 Success Post Conditions
+  27.1.10 Success Post Conditions
 
 - 즐겨찾기 목록을 정상 조회하거나 등록/삭제 동작을 완료한다.
 
-27.1.11 Failure Post Conditions
+  27.1.11 Failure Post Conditions
 
 - 네트워크 또는 인증 오류시 즐겨찾기 목록/등록이 실패한다.
 - 오류 메시지가 표시된다.
@@ -1951,9 +1951,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 즐겨찾기 탭 또는 버튼 클릭 시
 
-27.4.3 Concurrency : 제한 없음
+  27.4.3 Concurrency : 제한 없음
 
-27.4.4 Due Date : None
+  27.4.4 Due Date : None
 
 # Use case 28. 매물 상세정보 표시
 
@@ -1977,15 +1977,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 지도에 매물 마커가 표시되어 있어야 한다.
 
-28.1.9 Trigger
+  28.1.9 Trigger
 
 - 사용자가 마커를 클릭했을 때.
 
-28.1.10 Success Post Conditions
+  28.1.10 Success Post Conditions
 
 - 매물 정보 패널이 열리고 상세 정보가 표시된다.
 
-28.1.11 Failure Post Conditions
+  28.1.11 Failure Post Conditions
 
 - 매물 정보 조회 또는 표시 실패 시 오류 메시지를 출력한다.
 
@@ -2013,9 +2013,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 마커 클릭 시마다
 
-28.4.3 Concurrency : 제한 없음
+  28.4.3 Concurrency : 제한 없음
 
-28.4.4 Due Date : None
+  28.4.4 Due Date : None
 
 # Use case 29. 필터
 
@@ -2039,17 +2039,17 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 지도 화면과 매물 정보가 활성화되어 있어야 한다.
 
-29.1.9 Trigger
+  29.1.9 Trigger
 
 - 사용자가 개별 또는 종합 필터를 지정하고 적용 버튼을 클릭할 때.
 - 검색창에 위치를 입력하고 확인을 누를 때.
 
-29.1.10 Success Post Conditions
+  29.1.10 Success Post Conditions
 
 - 필터 조건에 맞는 매물만 지도에 표시된다.
 - 지도가 위치에 맞게 이동된다.
 
-29.1.11 Failure Post Conditions
+  29.1.11 Failure Post Conditions
 
 - 필터 적용 및 이동 실패 시 오류 메시지 출력 및 필터 해제.
 
@@ -2078,9 +2078,9 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 필터 지정 시마다
 
-29.4.3 Concurrency : 제한 없음
+  29.4.3 Concurrency : 제한 없음
 
-29.4.4 Due Date : None
+  29.4.4 Due Date : None
 
 # Use case 30. 추천 매물
 
@@ -2104,15 +2104,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 로그인한 상태여야 하면 이전에 선호도를 등록해놓은 상태여야 한다.
 
-30.1.9 Trigger
+  30.1.9 Trigger
 
 - 사용자가 로그인 하거나 추천매물 섹션에 접근할 때.
 
-30.1.10 Success Post Conditions
+  30.1.10 Success Post Conditions
 
 - 개인화된 매물 리스트가 추천 섹션에 표시된다.
 
-30.1.11 Failure Post Conditions
+  30.1.11 Failure Post Conditions
 
 - 데이터 부족 또는 알고리즘 오류 시 추천이 표시되지 않는다.
 
@@ -2145,7 +2145,7 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 지도 진입 또는 '현재 위치' 버튼 클릭 시마다
 
-30.4.3 Concurrency : 제한없음
+  30.4.3 Concurrency : 제한없음
 
 # Use case 31. 중개인 목록 표시
 
@@ -2169,15 +2169,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자는 로그인 상태이며 중개인 목록 조회 권한이 있어야 한다.
 
-31.1.9 Trigger
+  31.1.9 Trigger
 
 - 사용자가 중개인 목록 아이콘을 클릭하거나 검색을 수행할 때.
 
-31.1.10 Success Post Conditions
+  31.1.10 Success Post Conditions
 
 - 중개인 목록과 상세 정보가 표시되고, 연락 및 위임 의뢰가 가능하다.
 
-31.1.11 Failure Post Conditions
+  31.1.11 Failure Post Conditions
 
 - 목록 또는 상세 정보를 불러오지 못한다.
 
@@ -2208,7 +2208,7 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 제한 없음
 
-31.4.3 Concurrency : 제한 없음
+  31.4.3 Concurrency : 제한 없음
 
 # Use case 32. 전세가율 계산기
 
@@ -2232,15 +2232,15 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 사용자는 매물 상세 페이지에 접근할 수 있어야 하며, DB에서 전세가와 매매가 또는 예측값을 조회할 수 있어야 한다.
 
-32.1.9 Trigger
+  32.1.9 Trigger
 
 - 사용자가 매물 상세 페이지에 진입하거나 '전세가율 보기'를 선택할 때.
 
-32.1.10 Success Post Conditions
+  32.1.10 Success Post Conditions
 
 - 전세가율이 계산되어 소수점 둘째 자리로 표시되고, 주변 평균 대비 높음/낮음 여부가 함께 표시된다.
 
-32.1.11 Failure Post Conditions
+  32.1.11 Failure Post Conditions
 
 - 전세가율 계산 또는 표시가 실패한다.
 
@@ -2271,4 +2271,4 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
 - 제한 없음
 
-32.4.3 Concurrency : 제한 없음
+  32.4.3 Concurrency : 제한 없음
