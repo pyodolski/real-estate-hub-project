@@ -62,7 +62,9 @@ public class Notification {
         PROPERTY_SUBMITTED("매물 신청"),
         SYSTEM_UPDATE("시스템 업데이트"),
         CHAT_MESSAGE("새 메시지"),
-        PRICE_ALERT("가격 알림");
+        PRICE_ALERT("가격 알림"),
+        PROPERTY_SOLD("찜한 매물 거래 완료"),
+        PURCHASE_COMPLETED("구매 완료");
 
         private final String displayName;
 
