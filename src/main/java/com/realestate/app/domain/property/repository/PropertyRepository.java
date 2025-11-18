@@ -13,8 +13,15 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     @Query("""
         select p from Property p
+        inner join p.claim oc
         where p.locationY between :swLat and :neLat
           and p.locationX between :swLng and :neLng
+          and oc.status = com.realestate.app.domain.ownership.OwnershipClaim$Status.APPROVED
+          and exists (
+            select 1 from PropertyOffer po
+            where po.property.id = p.id
+            and po.isActive = true
+          )
           and (:status   is null or p.status = :status)
           and (:minPrice is null or p.price >= :minPrice)
           and (:maxPrice is null or p.price <= :maxPrice)
