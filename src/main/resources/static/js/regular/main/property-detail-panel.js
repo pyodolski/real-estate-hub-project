@@ -218,16 +218,47 @@
         }
     }
 
-    function findPropertyById(id){
+    async function findPropertyById(id){
         try{
-            const list = getProperties();
-            if(Array.isArray(list)){
-                const idx = Number(id);
-                // properties에 id 필드가 없을 수 있어 index 기준으로도 대응
-                return list[idx] || list.find(p => p.id === id || p.id === idx) || null;
+            // 실제 API에서 매물 상세 정보 가져오기
+            const response = await fetch(`/api/properties/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
+                }
+            });
+
+            if (!response.ok) {
+                console.error(`매물 상세 정보 로드 실패: ${id}`);
+                return null;
             }
-        }catch(_e){}
-        return null;
+
+            const data = await response.json();
+            console.log(`✅ 매물 상세 정보 로드 성공: ${id}`, data);
+
+            // PropertyWithOffersDto를 property-detail-panel이 기대하는 형식으로 변환
+            return {
+                id: data.id,
+                title: data.title || data.address,
+                location: data.address,
+                address: data.address,
+                price: data.price,
+                priceText: data.price ? `${(data.price / 10000).toFixed(0)}억` : '가격 문의',
+                details: data.title,
+                areaM2: data.areaM2,
+                buildingYear: data.buildingYear,
+                status: data.status,
+                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800',
+                options: data.offers?.map(o => o.type) || ['판매등록완료'],
+                description: data.title,
+                brokerName: data.brokerName || data.ownerName || '',
+                brokerPhone: '',
+                // 원본 데이터 보관
+                _raw: data
+            };
+        }catch(error){
+            console.error('매물 상세 정보 로드 중 오류:', error);
+            return null;
+        }
     }
 
     // 좌측 패널 버튼 위치/투명도 제어 및 검색바 위치 조정
@@ -542,7 +573,7 @@
         updatePanelButtonsForDetail(true);
     }
 
-    function openPropertyDetail(id, data){
+    async function openPropertyDetail(id, data){
         // 같은 매물을 다시 클릭한 경우 (토글 동작) - f311d46 로직
         // data가 있으면 data.id로 비교, 없으면 id로 비교
         const compareId = data?.id ?? id;
@@ -551,7 +582,7 @@
             return;
         }
 
-        const raw = data || findPropertyById(id) || {};
+        const raw = data || await findPropertyById(id) || {};
         const incoming = normalizeProperty(raw);
         const nextBuf = currentBuffer === 'a' ? 'b' : 'a';
         const curElems = getElems(currentBuffer);
