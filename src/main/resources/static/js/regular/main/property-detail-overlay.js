@@ -147,6 +147,13 @@ const PropertyDetailOverlay = {
                 class="text-gray-700 leading-relaxed"
               ></p>
             </div>
+            <div class="mb-6">
+              <div
+                id="detail-map-placeholder-${suffix}"
+                class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 overflow-hidden"
+              >
+              </div>
+            </div>
             <!-- 평면도/지도/중개사 -->
             <div
               id="detail-floorplan-wrapper-${suffix}"
@@ -158,14 +165,6 @@ const PropertyDetailOverlay = {
                 class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500"
               >
                 평면도 영역 (임시)
-              </div>
-            </div>
-            <div class="mb-6">
-              <div
-                id="detail-map-placeholder-${suffix}"
-                class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500"
-              >
-                지도 영역 (임시)
               </div>
             </div>
             <div
