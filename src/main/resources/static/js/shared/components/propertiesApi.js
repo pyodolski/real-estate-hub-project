@@ -20,13 +20,12 @@ export async function fetchPropertiesInBounds({ swLat, swLng, neLat, neLng, filt
     size: 500           // 지도용은 넉넉히
   };
 
-  const res = await fetch(`${API}/api/properties/search`, {
-    method: 'POST',
+  const res = await fetch(`${API}/api/properties/full`, {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
     },
-    body: JSON.stringify(payload),
   });
 
   if (res.status === 401) throw new Error('Unauthorized');

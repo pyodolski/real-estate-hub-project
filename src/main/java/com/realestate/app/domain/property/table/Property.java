@@ -7,6 +7,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 
 @Entity
 @Table(name = "properties")
@@ -87,6 +92,13 @@ public class Property {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    // 🔹 여기 추가해야 DTO에서 p.getOffers(), p.getImages()가 동작함
+    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY)
+    private Set<PropertyOffer> offers = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY)
+    private Set<PropertyImage> images = new LinkedHashSet<>();
 
     // 거래 상태 Enum
     public enum Status {
