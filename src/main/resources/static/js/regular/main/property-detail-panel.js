@@ -553,13 +553,17 @@
                 };
             }
 
-            // 전체화면에서 닫기 버튼 위치 조정 (상세 패널을 완전히 닫는 기능 유지)
+            // 확장 버튼과 닫기 버튼 숨기기 (전체화면에서는 별도의 축소 버튼 사용)
+            const expandBtn = document.getElementById('expand-panel-button');
             const closeBtn = document.getElementById('close-panel-button');
+
+            if (expandBtn) {
+                expandBtn.style.opacity = '0';
+                expandBtn.style.pointerEvents = 'none';
+            }
             if (closeBtn) {
-                closeBtn.style.left = '16px'; // 전체화면에서는 화면 왼쪽에 위치
-                closeBtn.style.zIndex = '55'; // 전체화면 패널보다 높은 z-index
-                closeBtn.title = '상세 정보 닫기';
-                // 기능은 이미 상세 패널 닫기로 설정되어 있음
+                closeBtn.style.opacity = '0';
+                closeBtn.style.pointerEvents = 'none';
             }
 
             // X 버튼을 << 버튼으로 변경
@@ -608,6 +612,10 @@
             const mainContent = document.querySelector("main");
 
             const elementsToShow = [sidePanel, rightSidePanel, rightToggleButton, mainContent];
+            const rightInstantHide = [rightSidePanel, rightToggleButton];
+            const rightCardPanelIds = [
+                'chat-panel', 'profile-panel', 'notification-panel', 'favorite-panel', 'compare-panel', 'my-property-panel', 'broker-list-panel'
+            ];
 
             // 먼저 요소들을 표시하되 투명하게 시작
             elementsToShow.forEach(el => {
@@ -636,13 +644,22 @@
                 });
             }, 300); // 애니메이션 시간과 동일하게 설정
 
-            // 닫기 버튼을 상세 패널 위치로 부드럽게 이동
+            // 닫기 버튼과 확장 버튼 복원
             const closeBtn = document.getElementById('close-panel-button');
+            const expandBtn = document.getElementById('expand-panel-button');
+
             if (closeBtn) {
                 const detailRightEdge = DETAIL_RIGHT;
-                closeBtn.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                closeBtn.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-in';
                 closeBtn.style.left = `${detailRightEdge}px`;
                 closeBtn.style.zIndex = '15';
+                closeBtn.style.opacity = '1';
+                closeBtn.style.pointerEvents = 'auto';
+            }
+
+            if (expandBtn) {
+                expandBtn.style.opacity = '1';
+                expandBtn.style.pointerEvents = 'auto';
             }
 
             // 다음 프레임에서 페이드인 시작
