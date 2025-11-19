@@ -122,7 +122,8 @@
             moveInDate,
             brokerName,
             brokerPhone,
-            isApartment
+            isApartment,
+            floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`
         };
     }
 
@@ -254,11 +255,18 @@
             }, 100);
         }
 
-        // 평면도(임시) 노출: 아파트인 경우만 보이기
-        const isApartment = d.isApartment || (d.details && d.details.includes('아파트'));
+        // 평면도 노출: 모든 매물에 대해 표시
+        const floorPlan = d.floorPlan;
         const floorplanWrapper = qs(`#detail-floorplan-wrapper-${suffix}`);
+
         if (floorplanWrapper) {
-            floorplanWrapper.style.display = isApartment ? 'block' : 'none';
+            floorplanWrapper.style.display = 'block';
+            const placeholder = qs(`#detail-floorplan-placeholder-${suffix}`);
+            if (placeholder && floorPlan) {
+                placeholder.innerHTML = `<img src="${floorPlan}" alt="평면도" class="w-full h-full object-contain rounded-lg">`;
+                placeholder.classList.remove('bg-gray-50', 'border', 'border-gray-200');
+                placeholder.classList.add('bg-white');
+            }
         }
 
         // 기타 상세 항목들
