@@ -163,9 +163,8 @@ const PropertyDetailOverlay = {
             <div class="mb-6">
               <div
                 id="detail-map-placeholder-${suffix}"
-                class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500"
+                class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 overflow-hidden"
               >
-                지도 영역 (임시)
               </div>
             </div>
             <div
