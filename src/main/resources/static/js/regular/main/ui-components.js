@@ -119,7 +119,7 @@ function createCompareCard(item) {
 }
 
 // --- 메인 매물 카드 생성 함수 ---
-function createPropertyCard(property) {
+function createPropertyCard(property, index) {
     const tagsHTML = (property.tags || [])
         .map((tag) => {
             let colorClass = "bg-blue-100 text-blue-800";
@@ -129,11 +129,14 @@ function createPropertyCard(property) {
         })
         .join("");
 
+    // data-property-id 속성 추가하여 클릭 시 올바른 매물 데이터를 찾을 수 있도록 함
+    const propertyId = property.id || index || 0;
+
     return `
-            <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02] cursor-pointer" data-property-id="${propertyId}">
                 <div class="relative">
                     <img src="${property.image}" alt="매물 사진" class="w-full h-40 object-cover">
-                    <button class="absolute top-2 right-2 bg-white/70 p-1.5 rounded-full hover:bg-white">
+                    <button class="absolute top-2 right-2 bg-white/70 p-1.5 rounded-full hover:bg-white" onclick="event.stopPropagation();">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
                     </button>
                 </div>
