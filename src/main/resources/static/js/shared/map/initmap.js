@@ -65,6 +65,9 @@ export function initMap(app) {
 
       // ✅ 2) 마커만 갱신
       renderMarkers(app, arr, onMarkerClick);
+
+      // ✅ 3) 목록 갱신을 위한 이벤트 발행
+      window.dispatchEvent(new CustomEvent('properties:loaded', { detail: arr }));
     } catch (e) {
       console.error('목록 조회 실패:', e);
       if (String(e?.message).includes('Unauthorized')) {
