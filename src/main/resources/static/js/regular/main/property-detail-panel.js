@@ -202,7 +202,7 @@
         }
 
         if (el.price) el.price.textContent = d.price || d.priceText || '';
-        if (el.details) el.details.textContent = d.details || '';
+        //if (el.details) el.details.textContent = d.details || '';
 
         // buildingYear
         const buildYearEl = qs(`#detail-building-year-${suffix}`);
@@ -731,6 +731,11 @@
 
         renderInto(nextBuf, incoming);
 
+        // 탭 초기화 (상세정보 탭으로)
+        if (typeof window.switchDetailTab === 'function') {
+            window.switchDetailTab(nextBuf, 'detail');
+        }
+
         // 다음에 열릴 패널의 초기 상태를 강제 세팅하여
         // 확장/복귀 시 남아있을 수 있는 inline 스타일 영향을 제거
         if (nextElems.overlay) {
@@ -797,17 +802,51 @@
             setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
         }
         updatePanelButtonsForDetail(false);
-
-        // 리사이즈 핸들러 해제
-        const onResize = curElems.overlay && curElems.overlay.__detailOnResize;
-        if (onResize) { window.removeEventListener('resize', onResize); curElems.overlay.__detailOnResize = null; }
         isOpen = false;
         window.isDetailOpen = false;
         currentId = null;
-        if (typeof window.adjustAllFilterDropdownPosition === 'function') {
-            setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
-        }
     }
+
+    // 탭 전환 함수 (전역 노출)
+    window.switchDetailTab = function (suffix, tabName) {
+        const tabs = ['detail', 'prediction', 'calculator'];
+
+        tabs.forEach(t => {
+            const tabBtn = document.getElementById(`tab-${t}-${suffix}`);
+            const contentDiv = document.getElementById(`content-${t}-${suffix}`);
+
+            if (tabBtn && contentDiv) {
+                if (t === tabName) {
+                    // 활성 탭 스타일
+                    tabBtn.classList.remove('text-gray-500', 'hover:text-gray-700', 'border-transparent');
+                    tabBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+
+                    // 컨텐츠 표시
+                    contentDiv.classList.remove('hidden');
+
+                    // 동적 컨텐츠 로드
+                    if (t === 'prediction') {
+                        if (typeof PredictionPanel !== 'undefined' && contentDiv.children.length === 0) {
+                            contentDiv.appendChild(PredictionPanel.getElement());
+                        }
+                    } else if (t === 'calculator') {
+                        if (typeof CalculatorPanel !== 'undefined' && contentDiv.children.length === 0) {
+                            contentDiv.appendChild(CalculatorPanel.getElement());
+                        }
+                    }
+                } else {
+                    // 비활성 탭 스타일
+                    tabBtn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                    tabBtn.classList.add('text-gray-500', 'hover:text-gray-700', 'border-transparent');
+
+                    // 컨텐츠 숨김
+                    contentDiv.classList.add('hidden');
+                }
+            }
+        });
+    };
+
+
 
     // 모든 매물 상세 페이지 닫기 - f311d46 로직
     function closeAllPropertyDetails() {

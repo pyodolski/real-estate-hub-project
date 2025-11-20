@@ -40,7 +40,7 @@ const PropertyDetailOverlay = {
             </svg>
           </button>
         </div>
-        <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <div class="flex-1 overflow-y-scroll custom-scrollbar">
           <div class="relative">
             <img
               id="detail-property-image-${suffix}"
@@ -56,6 +56,7 @@ const PropertyDetailOverlay = {
             </div>
           </div>
           <div class="p-6 space-y-6">
+            <!-- 고정 헤더 영역 -->
             <div>
               <div class="flex items-center justify-between mb-2">
                 <h3
@@ -94,106 +95,124 @@ const PropertyDetailOverlay = {
               ></p>
               <p id="detail-property-details-${suffix}" class="text-gray-700"></p>
             </div>
-            <!-- 추가 정보 그리드 -->
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">준공년도</h4>
-                <p id="detail-building-year-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">면적</h4>
-                <p id="detail-property-area-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">방수/욕실수</h4>
-                <p id="detail-room-bath-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">방향</h4>
-                <p id="detail-direction-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">방구조</h4>
-                <p id="detail-room-structure-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">복층</h4>
-                <p id="detail-duplex-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">주차대수</h4>
-                <p id="detail-parking-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-800 mb-2">입주가능일</h4>
-                <p id="detail-move-in-date-${suffix}" class="text-gray-600"></p>
-              </div>
-              <div class="bg-gray-50 p-4 rounded-lg col-span-2">
-                <h4 class="font-semibold text-gray-800 mb-2">관리비</h4>
-                <p id="detail-maintenance-fee-${suffix}" class="text-gray-600"></p>
-              </div>
+
+            <!-- 탭 네비게이션 -->
+            <div class="flex border-b border-gray-200 mb-4">
+                <button id="tab-detail-${suffix}" class="flex-1 py-2 text-blue-600 border-b-2 border-blue-600 font-medium transition-colors" onclick="window.switchDetailTab('${suffix}', 'detail')">상세정보</button>
+                <button id="tab-prediction-${suffix}" class="flex-1 py-2 text-gray-500 hover:text-gray-700 font-medium transition-colors" onclick="window.switchDetailTab('${suffix}', 'prediction')">시세예측</button>
+                <button id="tab-calculator-${suffix}" class="flex-1 py-2 text-gray-500 hover:text-gray-700 font-medium transition-colors" onclick="window.switchDetailTab('${suffix}', 'calculator')">계산기</button>
             </div>
-            <div>
-              <h4 class="font-semibold text-gray-800 mb-3">옵션</h4>
-              <div
-                id="detail-property-options-${suffix}"
-                class="flex flex-wrap gap-2"
-              ></div>
-            </div>
-            <div>
-              <h4 class="font-semibold text-gray-800 mb-3">매물 설명</h4>
-              <p
-                id="detail-property-description-${suffix}"
-                class="text-gray-700 leading-relaxed"
-              ></p>
-            </div>
-            <div class="mb-6">
-              <div
-                id="detail-map-placeholder-${suffix}"
-                class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 overflow-hidden"
-              >
-              </div>
-            </div>
-            <!-- 평면도/지도/중개사 -->
-            <div
-              id="detail-floorplan-wrapper-${suffix}"
-              class="mb-6"
-              style="display: none"
-            >
-              <div
-                id="detail-floorplan-placeholder-${suffix}"
-                class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500"
-              >
-                평면도 영역 (임시)
-              </div>
-            </div>
-            <div
-              class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between"
-            >
-              <div>
-                <p
-                  id="detail-broker-name-${suffix}"
-                  class="font-medium text-gray-800"
-                ></p>
-                <p id="detail-broker-phone-${suffix}" class="text-gray-600 text-sm"></p>
-              </div>
-              <button
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                연락하기
-              </button>
-            </div>
-            <div class="flex gap-4 pt-2">
-              <button
-                class="flex-1 h-11 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700"
-              >
-                관심매물 등록
-              </button>
-              <button
-                class="flex-1 h-11 rounded-md bg-gray-100 text-gray-700 font-medium hover:bg-gray-200"
-              >
-                매물 비교
-              </button>
+
+            <!-- 동적 컨텐츠 영역 -->
+            <div id="panel-content-area-${suffix}">
+                <!-- 상세정보 컨텐츠 (기본) -->
+                <div id="content-detail-${suffix}" class="space-y-6">
+                    <!-- 추가 정보 그리드 -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">준공년도</h4>
+                        <p id="detail-building-year-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">면적</h4>
+                        <p id="detail-property-area-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">방수/욕실수</h4>
+                        <p id="detail-room-bath-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">방향</h4>
+                        <p id="detail-direction-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">방구조</h4>
+                        <p id="detail-room-structure-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">복층</h4>
+                        <p id="detail-duplex-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">주차대수</h4>
+                        <p id="detail-parking-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">입주가능일</h4>
+                        <p id="detail-move-in-date-${suffix}" class="text-gray-600"></p>
+                      </div>
+                      <div class="bg-gray-50 p-4 rounded-lg col-span-2">
+                        <h4 class="font-semibold text-gray-800 mb-2">관리비</h4>
+                        <p id="detail-maintenance-fee-${suffix}" class="text-gray-600"></p>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800 mb-3">옵션</h4>
+                      <div
+                        id="detail-property-options-${suffix}"
+                        class="flex flex-wrap gap-2"
+                      ></div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800 mb-3">매물 설명</h4>
+                      <p
+                        id="detail-property-description-${suffix}"
+                        class="text-gray-700 leading-relaxed"
+                      ></p>
+                    </div>
+                    <div class="mb-6">
+                      <div
+                        id="detail-map-placeholder-${suffix}"
+                        class="w-full h-72 rounded-lg border border-gray-200 bg-gray-100 overflow-hidden"
+                      >
+                      </div>
+                    </div>
+                    <!-- 평면도/지도/중개사 -->
+                    <div
+                      id="detail-floorplan-wrapper-${suffix}"
+                      class="mb-6"
+                      style="display: none"
+                    >
+                      <div
+                        id="detail-floorplan-placeholder-${suffix}"
+                        class="w-full h-64 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500"
+                      >
+                        평면도 영역 (임시)
+                      </div>
+                    </div>
+                    <div
+                      class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between"
+                    >
+                      <div>
+                        <p
+                          id="detail-broker-name-${suffix}"
+                          class="font-medium text-gray-800"
+                        ></p>
+                        <p id="detail-broker-phone-${suffix}" class="text-gray-600 text-sm"></p>
+                      </div>
+                      <button
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        연락하기
+                      </button>
+                    </div>
+                    <div class="flex gap-4 pt-2">
+                      <button
+                        class="flex-1 h-11 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700"
+                      >
+                        관심매물 등록
+                      </button>
+                      <button
+                        class="flex-1 h-11 rounded-md bg-gray-100 text-gray-700 font-medium hover:bg-gray-200"
+                      >
+                        매물 비교
+                      </button>
+                    </div>
+                </div>
+                <!-- 예측 컨텐츠 (동적 로드) -->
+                <div id="content-prediction-${suffix}" class="hidden h-full"></div>
+                <!-- 계산기 컨텐츠 (동적 로드) -->
+                <div id="content-calculator-${suffix}" class="hidden h-full"></div>
             </div>
           </div>
         </div>
