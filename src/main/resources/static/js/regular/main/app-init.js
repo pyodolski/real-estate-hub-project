@@ -195,107 +195,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- 초기 렌더링 ---
-  async function initialRender() {
-    // 지도가 준비될 때까지 대기
-    if (!window.__naverMap) {
-      await new Promise(resolve => {
-        window.addEventListener('map:ready', resolve, { once: true });
-      });
+  // --- 초기 렌더링 및 지도 연동 ---
+  // initmap.js에서 발행하는 properties:loaded 이벤트를 수신하여 목록 갱신
+  window.addEventListener('properties:loaded', (e) => {
+    const apiProperties = e.detail || [];
+    console.log(`[AppInit] properties:loaded received with ${apiProperties.length} items`);
+
+    // API 데이터를 UI 컴포넌트가 기대하는 형식으로 변환
+    const loadedProperties = apiProperties.map(prop => ({
+      id: prop.id,
+      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400', // 임시 이미지
+      price: prop.price ? `${(prop.price / 10000).toFixed(0)}억` : '가격 문의',
+      priceText: prop.price ? `${(prop.price / 10000).toFixed(0)}억` : '가격 문의',
+      location: prop.address || '위치 정보 없음',
+      address: prop.address,
+      title: prop.title || prop.address,
+      details: prop.title || '상세 정보 없음',
+      tags: ['판매등록완료', ...(prop.status === 'AVAILABLE' ? ['거래가능'] : [])],
+      options: ['판매등록완료', ...(prop.status === 'AVAILABLE' ? ['거래가능'] : [])],
+      isRecommended: false, // 추후 추천 로직 추가 가능
+      status: prop.status || 'AVAILABLE',
+      areaM2: prop.areaM2,
+      buildingYear: prop.buildingYear,
+      description: prop.title || '상세 정보 없음',
+      brokerName: prop.brokerName || prop.ownerName || '',
+      brokerPhone: '',
+      // 원본 데이터도 보관
+      _raw: prop
+    }));
+
+    // 전역 properties 배열 업데이트 (property-detail-panel.js에서 사용)
+    if (typeof properties !== 'undefined') {
+      properties.length = 0;
+      properties.push(...loadedProperties);
+    } else {
+      window.properties = loadedProperties;
     }
 
-    // 실제 API에서 매물 목록 가져오기
-    try {
-      const map = window.__naverMap;
-      const bounds = map.getBounds();
-      const sw = bounds.getSW();
-      const ne = bounds.getNE();
+    // 매물 목록 렌더링
+    if (propertyList && recommendedList && typeof createPropertyCard === "function") {
+      propertyList.innerHTML = '';
+      recommendedList.innerHTML = '';
 
-      // propertiesApi.js의 fetchPropertiesInBounds 사용
-      const response = await fetch('/api/properties?' + new URLSearchParams({
-        swLat: sw.y,
-        swLng: sw.x,
-        neLat: ne.y,
-        neLng: ne.x,
-        status: 'AVAILABLE'
-      }), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
+      loadedProperties.forEach((prop, index) => {
+        const cardHTML = createPropertyCard(prop, index);
+        if (prop.isRecommended) {
+          recommendedList.innerHTML += cardHTML;
+        } else {
+          propertyList.innerHTML += cardHTML;
         }
       });
 
-      if (!response.ok) throw new Error('Failed to fetch properties');
-
-      const apiProperties = await response.json();
-
-      // API 데이터를 UI 컴포넌트가 기대하는 형식으로 변환
-      const loadedProperties = apiProperties.map(prop => ({
-        id: prop.id,
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400', // 임시 이미지
-        price: prop.price ? `${(prop.price / 10000).toFixed(0)}억` : '가격 문의',
-        priceText: prop.price ? `${(prop.price / 10000).toFixed(0)}억` : '가격 문의',
-        location: prop.address || '위치 정보 없음',
-        address: prop.address,
-        title: prop.title || prop.address,
-        details: prop.title || '상세 정보 없음',
-        tags: ['판매등록완료', ...(prop.status === 'AVAILABLE' ? ['거래가능'] : [])],
-        options: ['판매등록완료', ...(prop.status === 'AVAILABLE' ? ['거래가능'] : [])],
-        isRecommended: false, // 추후 추천 로직 추가 가능
-        status: prop.status || 'AVAILABLE',
-        areaM2: prop.areaM2,
-        buildingYear: prop.buildingYear,
-        description: prop.title || '상세 정보 없음',
-        brokerName: prop.brokerName || prop.ownerName || '',
-        brokerPhone: '',
-        // 원본 데이터도 보관
-        _raw: prop
-      }));
-
-      // 전역 properties 배열 업데이트 (property-detail-panel.js에서 사용)
-      if (typeof properties !== 'undefined') {
-        properties.length = 0;
-        properties.push(...loadedProperties);
-      } else {
-        window.properties = loadedProperties;
-      }
-
-      // 매물 목록 렌더링
-      if (propertyList && recommendedList && typeof createPropertyCard === "function") {
-        propertyList.innerHTML = '';
-        recommendedList.innerHTML = '';
-
-        loadedProperties.forEach((prop, index) => {
-          const cardHTML = createPropertyCard(prop, index);
-          if (prop.isRecommended) {
-            recommendedList.innerHTML += cardHTML;
-          } else {
-            propertyList.innerHTML += cardHTML;
-          }
-        });
-
-        console.log(`✅ ${loadedProperties.length}개의 판매 등록 완료 매물을 표시했습니다.`);
-        console.log('조건: 소유권 승인(APPROVED) + 판매 매물 등록(isActive=true)');
-      }
-    } catch (error) {
-      console.error('매물 목록 로드 실패:', error);
-      // 에러 시 더미 데이터 폴백
-      if (
-        propertyList &&
-        recommendedList &&
-        typeof properties !== "undefined" &&
-        typeof createPropertyCard === "function"
-      ) {
-        properties.forEach((prop, index) => {
-          const cardHTML = createPropertyCard(prop, index);
-          if (prop.isRecommended) {
-            recommendedList.innerHTML += cardHTML;
-          } else {
-            propertyList.innerHTML += cardHTML;
-          }
-        });
-      }
+      console.log(`✅ ${loadedProperties.length}개의 판매 등록 완료 매물을 표시했습니다.`);
     }
-  }
-
-  initialRender();
+  });
 });
