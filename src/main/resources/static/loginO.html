@@ -1,248 +1,430 @@
 <!DOCTYPE html>
 <html lang="ko">
+  <head>
+    <script type="module" src="./js/main.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>부동산 매물 찾기</title>
+    <!-- Token Validator - 페이지 로드 시 토큰 유효성 검증 -->
+    <script src="js/utils/token-validator.js"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
 
-<head>
-  <script type="module" src="./js/main.js"></script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>부동산 매물 찾기</title>
-  <!-- Token Validator - 페이지 로드 시 토큰 유효성 검증 -->
-  <script src="js/utils/token-validator.js"></script>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts (Inter) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
-    rel="stylesheet" />
+    <link rel="stylesheet" href="./css/map.css" />
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g&submodules=coord,geocoder"></script>
+    <!-- 커스텀 스타일은 style-loader.js에서 동적으로 로드됩니다 -->
+  </head>
 
-  <link rel="stylesheet" href="./css/map.css" />
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g&submodules=coord,geocoder"></script>
-  <!-- 커스텀 스타일은 style-loader.js에서 동적으로 로드됩니다 -->
-</head>
+  <body class="bg-gray-100 h-screen overflow-hidden">
+    <div class="relative w-full h-full">
+      <!-- 지도 및 필터 패널은 map-filter-panel.js에서 동적으로 렌더링됩니다 -->
 
-<body class="bg-gray-100 h-screen overflow-hidden">
-  <div class="relative w-full h-full">
-    <!-- 지도 및 필터 패널은 map-filter-panel.js에서 동적으로 렌더링됩니다 -->
+      <!-- =================================================================== -->
+      <!-- 왼쪽 매물 정보 패널 (슬라이드 기능 추가)                              -->
+      <!-- =================================================================== -->
+      <aside
+        id="side-panel"
+        class="absolute top-0 left-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform transition-all duration-300 ease-in-out"
+      >
+        <!-- 전체화면에서 돌아오는 버튼 -->
+        <button
+          id="collapse-fullscreen-button"
+          class="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-200 transition-colors hidden z-50"
+          title="패널 축소"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 text-gray-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+            ></path>
+          </svg>
+        </button>
+        <!-- 상단 메뉴 및 정렬 -->
+        <div
+          class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0"
+        >
+          <button
+            class="bg-gray-800 text-white font-bold py-2 px-6 rounded-md text-lg"
+          >
+            내집
+          </button>
+        </div>
 
-    <!-- =================================================================== -->
-    <!-- 왼쪽 매물 정보 패널 (슬라이드 기능 추가)                              -->
-    <!-- =================================================================== -->
-    <aside id="side-panel"
-      class="absolute top-0 left-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform transition-all duration-300 ease-in-out">
-      <!-- 전체화면에서 돌아오는 버튼 -->
-      <button id="collapse-fullscreen-button"
-        class="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-200 transition-colors hidden z-50" title="패널 축소">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+        <!-- 광고 이미지 고정 표시 -->
+        <div id="advertisement-container" class="mb-6 flex-shrink-0">
+          <img
+            src="images/loginO%20advertisement%20sample.png"
+            alt="광고 이미지"
+            class="w-full rounded-xl shadow-md object-cover"
+          />
+        </div>
+
+        <!-- 스크롤 가능한 콘텐츠 영역 -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+          <!-- 추천 매물 -->
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="text-xl font-bold text-gray-800">추천매물</h2>
+              <select class="border rounded-md p-2 text-sm">
+                <option>기본순</option>
+                <option>가격순</option>
+                <option>최신순</option>
+              </select>
+            </div>
+            <div id="recommended-list" class="grid grid-cols-2 gap-4">
+              <!-- JavaScript로 추천 매물 아이템이 여기에 추가됩니다. -->
+            </div>
+          </div>
+
+          <!-- 구분선 -->
+          <div class="border-t my-6"></div>
+
+          <!-- 일반 매물 -->
+          <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-3">일반 매물</h2>
+            <div id="property-list" class="flex flex-col space-y-4">
+              <!-- JavaScript로 일반 매물 아이템이 여기에 추가됩니다. -->
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 매물 상세 오버레이 패널 (A/B)는 property-detail-overlay.js에서 동적으로 렌더링됩니다 -->
+
+      <!-- 패널 열기 버튼 -->
+      <button
+        id="open-panel-button"
+        class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out opacity-0 pointer-events-none"
+        style="left: 0px"
+        title="패널 열기"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-gray-600"
+        >
+          <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </button>
-      <!-- 상단 메뉴 및 정렬 -->
-      <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
-        <button class="bg-gray-800 text-white font-bold py-2 px-6 rounded-md text-lg">
-          내집
-        </button>
-      </div>
 
-      <!-- 광고 이미지 고정 표시 -->
-      <div id="advertisement-container" class="mb-6 flex-shrink-0">
-        <img src="images/loginO%20advertisement%20sample.png" alt="광고 이미지"
-          class="w-full rounded-xl shadow-md object-cover" />
-      </div>
+      <!-- 패널 닫기 버튼 -->
+      <button
+        id="close-panel-button"
+        class="absolute top-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out"
+        style="left: 450px; transform: translateY(calc(-50% + 2.5rem))"
+        title="패널 닫기"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-gray-600"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
 
-      <!-- 스크롤 가능한 콘텐츠 영역 -->
-      <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
-        <!-- 추천 매물 -->
-        <div class="mb-6">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-xl font-bold text-gray-800">추천매물</h2>
-            <select class="border rounded-md p-2 text-sm">
-              <option>기본순</option>
-              <option>가격순</option>
-              <option>최신순</option>
-            </select>
-          </div>
-          <div id="recommended-list" class="grid grid-cols-2 gap-4">
-            <!-- JavaScript로 추천 매물 아이템이 여기에 추가됩니다. -->
-          </div>
-        </div>
+      <!-- 패널 확장 버튼 -->
+      <button
+        id="expand-panel-button"
+        class="absolute top-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out"
+        style="left: 450px; transform: translateY(calc(-50% - 2.5rem))"
+        title="패널 확장"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6 text-gray-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M13 5l7 7-7 7M5 5l7 7-7 7"
+          ></path>
+        </svg>
+      </button>
 
-        <!-- 구분선 -->
-        <div class="border-t my-6"></div>
-
-        <!-- 일반 매물 -->
-        <div>
-          <h2 class="text-xl font-bold text-gray-800 mb-3">일반 매물</h2>
-          <div id="property-list" class="flex flex-col space-y-4">
-            <!-- JavaScript로 일반 매물 아이템이 여기에 추가됩니다. -->
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- 매물 상세 오버레이 패널 (A/B)는 property-detail-overlay.js에서 동적으로 렌더링됩니다 -->
-
-    <!-- 패널 열기 버튼 -->
-    <button id="open-panel-button"
-      class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out opacity-0 pointer-events-none"
-      style="left: 0px" title="패널 열기">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
-        <polyline points="9 18 15 12 9 6"></polyline>
-      </svg>
-    </button>
-
-    <!-- 패널 닫기 버튼 -->
-    <button id="close-panel-button"
-      class="absolute top-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out"
-      style="left: 450px; transform: translateY(calc(-50% + 2.5rem))" title="패널 닫기">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
-        <polyline points="15 18 9 12 15 6"></polyline>
-      </svg>
-    </button>
-
-    <!-- 패널 확장 버튼 -->
-    <button id="expand-panel-button"
-      class="absolute top-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-r-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out"
-      style="left: 450px; transform: translateY(calc(-50% - 2.5rem))" title="패널 확장">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24"
-        stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-      </svg>
-    </button>
-
-    <!-- 우측 패널들(채팅, 프로필, 알림, 즐겨찾기, 비교, 내 매물 관리, 중개인 목록)은
+      <!-- 우측 패널들(채팅, 프로필, 알림, 즐겨찾기, 비교, 내 매물 관리, 중개인 목록)은
            right-side-panels.js에서 동적으로 렌더링됩니다 -->
 
-    <!-- 판매 매물 등록 패널은 sale-registration-panel.js에서 동적으로 렌더링됩니다 -->
+      <!-- 판매 매물 등록 패널은 sale-registration-panel.js에서 동적으로 렌더링됩니다 -->
 
-    <!-- =================================================================== -->
-    <!-- 오른쪽 상세 정보 패널 (슬라이드 기능 추가)                            -->
-    <!-- =================================================================== -->
-    <aside id="right-side-panel"
-      class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-20 transform transition-transform duration-300 ease-in-out">
-      <div class="flex flex-col items-center space-y-2">
-        <!-- 상단 아이콘 버튼들 -->
-        <button id="home-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10m-9-10" />
+      <!-- =================================================================== -->
+      <!-- 오른쪽 상세 정보 패널 (슬라이드 기능 추가)                            -->
+      <!-- =================================================================== -->
+      <aside
+        id="right-side-panel"
+        class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-20 transform transition-transform duration-300 ease-in-out"
+      >
+        <div class="flex flex-col items-center space-y-2">
+          <!-- 상단 아이콘 버튼들 -->
+          <button
+            id="home-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10m-9-10"
+              />
+            </svg>
+          </button>
+          <button
+            id="favorite-panel-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+              />
+            </svg>
+          </button>
+          <button
+            id="compare-panel-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+          </button>
+          <button
+            id="my-property-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </button>
+          <button
+            id="broker-list-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+          </button>
+          <button
+            id="chat-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </button>
+          <button
+            id="notification-button"
+            class="relative w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.73 21a2 2 0 01-3.46 0M8 8a4 4 0 018 0c0 5.5 2 6 2 6H6s2-.5 2-6z"
+              />
+            </svg>
+          </button>
+          <button
+            id="profile-button"
+            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </button>
+        </div>
+        <button
+          id="logout-button"
+          class="w-full aspect-square bg-[#FF3737] hover:brightness-95 transition-all rounded-2xl p-2 flex items-center justify-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-8 w-8 text-gray-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+            />
           </svg>
         </button>
-        <button id="favorite-panel-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-        </button>
-        <button id="compare-panel-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
-        </button>
-        <button id="my-property-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-        </button>
-        <button id="broker-list-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </button>
-        <button id="chat-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </button>
-        <button id="notification-button"
-          class="relative w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M13.73 21a2 2 0 01-3.46 0M8 8a4 4 0 018 0c0 5.5 2 6 2 6H6s2-.5 2-6z" />
-          </svg>
-        </button>
-        <button id="profile-button"
-          class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </button>
-      </div>
-      <button id="logout-button"
-        class="w-full aspect-square bg-[#FF3737] hover:brightness-95 transition-all rounded-2xl p-2 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-700" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+      </aside>
+
+      <!-- 오른쪽 패널 토글 버튼 -->
+      <button
+        id="right-panel-toggle-button"
+        class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-l-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out"
+        style="right: 75px"
+      >
+        <svg
+          id="right-open-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="hidden"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <svg
+          id="right-close-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </button>
-    </aside>
+    </div>
+    <!-- 통합 스크립트 (기존 방식 유지) -->
+    <!-- 먼저 스타일과 DOM 요소를 생성하는 스크립트들 -->
+    <script src="js/regular/main/style-loader.js"></script>
+    <script src="js/regular/main/map-filter-panel.js"></script>
+    <script src="js/regular/main/property-detail-overlay.js"></script>
+    <script src="js/regular/main/sale-registration-panel.js"></script>
+    <script src="js/regular/main/sale-registration-map-integration.js"></script>
+    <script src="js/regular/main/right-side-panels.js"></script>
 
-    <!-- 오른쪽 패널 토글 버튼 -->
-    <button id="right-panel-toggle-button"
-      class="absolute top-1/2 -translate-y-1/2 w-8 h-16 bg-white/90 shadow-lg rounded-l-lg flex items-center justify-center z-30 transition-all duration-300 ease-in-out"
-      style="right: 75px">
-      <svg id="right-open-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-        class="hidden">
-        <polyline points="15 18 9 12 15 6"></polyline>
-      </svg>
-      <svg id="right-close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"></polyline>
-      </svg>
-    </button>
-  </div>
-  <!-- 통합 스크립트 (기존 방식 유지) -->
-  <!-- 먼저 스타일과 DOM 요소를 생성하는 스크립트들 -->
-  <script src="js/regular/main/style-loader.js"></script>
-  <script src="js/regular/main/map-filter-panel.js"></script>
-  <script src="js/regular/main/property-detail-overlay.js"></script>
-  <script src="js/regular/main/sale-registration-panel.js"></script>
-  <script src="js/regular/main/right-side-panels.js"></script>
-
-  <!-- 그 다음 데이터 및 로직 스크립트들 -->
-  <script src="js/utils/auth-utils.js"></script>
-  <script src="js/regular/main/data.js"></script>
-  <script src="js/regular/main/ui-components.js"></script>
-  <script src="js/regular/main/panel-manager.js"></script>
-  <script src="js/regular/main/filter.js"></script>
-  <script src="js/regular/main/property-management-1.js"></script>
-  <script src="js/regular/main/property-management-2.js"></script>
-  <script src="js/regular/main/property-management-3.js"></script>
-  <script src="js/regular/main/property-management-4.js"></script>
-  <script src="js/regular/main/sales-map-integration.js"></script>
-  <script src="js/regular/main/sales-map-navigation.js"></script>
-  <script src="js/broker/management/broker-management.js"></script>
-  <script src="js/notification-management.js"></script>
-  <script src="js/shared/map/map-in-detail.js"></script>
-  <script src="js/regular/main/property-detail-panel.js"></script>
-  <script src="js/regular/main/app-init.js"></script>
-  <script src="js/regular/main/search.js"></script>
-</body>
-
+    <!-- 그 다음 데이터 및 로직 스크립트들 -->
+    <script src="js/utils/auth-utils.js"></script>
+    <script src="js/regular/main/data.js"></script>
+    <script src="js/regular/main/ui-components.js"></script>
+    <script src="js/regular/main/panel-manager.js"></script>
+    <script src="js/regular/main/filter.js"></script>
+    <script src="js/regular/main/property-management-1.js"></script>
+    <script src="js/regular/main/property-management-2.js"></script>
+    <script src="js/regular/main/property-management-3.js"></script>
+    <script src="js/regular/main/property-management-4.js"></script>
+    <script src="js/regular/main/sales-map-integration.js"></script>
+    <script src="js/regular/main/sales-map-navigation.js"></script>
+    <script src="js/broker/management/broker-management.js"></script>
+    <script src="js/notification-management.js"></script>
+    <script src="js/shared/map/map-in-detail.js"></script>
+    <script src="js/regular/main/property-detail-panel.js"></script>
+    <script src="js/regular/main/app-init.js"></script>
+    <script src="js/regular/main/search.js"></script>
+  </body>
 </html>
