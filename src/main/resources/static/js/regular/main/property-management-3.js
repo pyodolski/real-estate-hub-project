@@ -643,10 +643,10 @@
     claimId,
     formData
   ) {
-    console.log(
-      "[PropertyManagement] Sending sale registration request",
-      { claimId, formData }
-    );
+    console.log("[PropertyManagement] Sending sale registration request", {
+      claimId,
+      formData,
+    });
 
     try {
       // claimId로부터 property 정보 찾기
@@ -672,21 +672,24 @@
           maintenanceFee: formData.maintenanceFee,
           negotiable: formData.negotiable,
           availableFrom: formData.availableFrom,
-          isActive: formData.isActive
-        }
+          isActive: formData.isActive,
+        },
       };
 
       console.log("[PropertyManagement] Request body:", requestBody);
 
       // API 호출
-      const response = await fetch(`/api/properties/${propertyId}/delegations`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        `/api/properties/${propertyId}/delegations`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
@@ -695,14 +698,17 @@
           "판매 매물 등록 요청이 완료되었습니다. 중개인 승인 후 매물이 공개됩니다."
         );
         this.hideSaleRegistrationPanel();
-        
+
         // 목록 새로고침
         await this.loadMyProperties();
         return true;
       } else {
         const errorText = await response.text();
-        console.error("[PropertyManagement] Sale registration failed:", errorText);
-        
+        console.error(
+          "[PropertyManagement] Sale registration failed:",
+          errorText
+        );
+
         let errorMessage = "등록에 실패했습니다.";
         try {
           const errorJson = JSON.parse(errorText);
@@ -710,7 +716,7 @@
         } catch (e) {
           errorMessage = errorText || errorMessage;
         }
-        
+
         this.showError(`판매 등록 요청 실패: ${errorMessage}`);
         return false;
       }

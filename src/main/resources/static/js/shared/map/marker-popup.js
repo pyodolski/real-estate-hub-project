@@ -19,28 +19,48 @@ function parseOptions(oftionBit) {
 
 // 가격 포맷팅
 function formatPrice(property) {
-	const offers = property.property_offers || property.propertyOffers;
-	if (!offers) return property.price || '-';
-	
-	const { deposit, monthly_rent, total_price, type } = offers;
-	
-	if (type === 'SALE' || type === '매매') {
-		return `매매 ${Math.floor((total_price || 0) / 10000)}억`;
-	} else if (type === 'JEONSE' || type === '전세') {
-		return `전세 ${Math.floor((total_price || 0) / 10000)}억`;
-	} else if (type === 'MONTHLY_RENT' || type === '월세') {
-		const depositAmount = Math.floor((deposit || 0) / 10000);
-		const rentAmount = (monthly_rent || 0).toLocaleString();
-		return `월세 ${depositAmount}억/${rentAmount}`;
-	}
-	return property.price || '-';
-}
+  const offers = property.property_offers || property.propertyOffers || [];
+  const offer = offers[0]; // 일단 대표 1개만 사용
 
+  // 오퍼가 아예 없으면, fallback으로 property.price 사용
+  if (!offer) {
+    return property.price != null ? Number(property.price).toLocaleString() : '-';
+  }
+
+  const type = offer.type; // "SALE" | "JEONSE" | "WOLSE"
+  const total = offer.total_price != null ? Number(offer.total_price) : null;
+  const deposit = offer.deposit != null ? Number(offer.deposit) : null;
+  const monthly = offer.monthly_rent != null ? Number(offer.monthly_rent) : null;
+
+  if (type === 'SALE') {
+    if (total == null) return '매매가 협의';
+    const eok = Math.floor(total / 100000000); // 1억 = 100,000,000
+    const man = Math.round((total % 100000000) / 10000);
+    return eok > 0 ? `매매 ${eok}억${man ? ' ' + man + '만' : ''}` : `매매 ${man}만`;
+  }
+
+  if (type === 'JEONSE') {
+    if (total == null) return '전세가 협의';
+    const eok = Math.floor(total / 100000000);
+    const man = Math.round((total % 100000000) / 10000);
+    return eok > 0 ? `전세 ${eok}억${man ? ' ' + man + '만' : ''}` : `전세 ${man}만`;
+  }
+
+  if (type === 'WOLSE') {
+    if (deposit == null || monthly == null) return '월세 협의';
+    const eok = Math.floor(deposit / 100000000);
+    const man = Math.round((deposit % 100000000) / 10000);
+    return `월세 ${eok > 0 ? eok + '억 ' : ''}${man ? man + '만/' : ''}${monthly.toLocaleString()}`;
+  }
+
+  return property.price != null ? Number(property.price).toLocaleString() : '-';
+}
 // 백엔드 API 응답을 카드용 데이터로 변환
 function transformPropertyForCard(apiResponse) {
-	const offers = apiResponse.property_offers || apiResponse.propertyOffers || {};
+	const offers = apiResponse.property_offers[0] || apiResponse.propertyOffers || {};
 	const images = apiResponse.property_images || apiResponse.propertyImages || [];
-	
+    console.log('card src raw', apiResponse);
+
 	return {
 		id: apiResponse.id,
 		image: images[0]?.image_url || images[0]?.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
