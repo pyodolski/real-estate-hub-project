@@ -22,110 +22,177 @@
 
     // 다양한 스키마의 매물 객체를 상세 패널이 기대하는 형태로 변환하는 어댑터
     function normalizeProperty(p) {
-        if (!p || typeof p !== 'object') return {};
+      console.log("🟢 [NORMALIZE INPUT] =", p);
+      if (!p || typeof p !== 'object') return {};
 
-        // 위치 정보 처리
-        const city = p.city ?? p.si ?? '';
-        const district = p.district ?? p.gu ?? p.gun ?? '';
-        const dong = p.dong ?? p.town ?? '';
-        const locationText = p.location ?? (city || district || dong ? `${city} ${district} ${dong}`.trim() : '');
+      // 1) app-init 에서 전처리된 카드 객체면 그대로 써주기
+      //    (offers / _raw / priceText 등이 있는 경우)
+      if ('_raw' in p || 'offers' in p || 'priceText' in p) {
+        const status = p.status || 'AVAILABLE';
 
-        // 면적 정보
-        let areaM2 = p.areaM2 ?? p.area ?? p.sizeM2 ?? '';
+        const statusText =
+          status === 'SOLD'
+            ? '거래완료'
+            : status === 'CONTRACTED'
+            ? '계약중'
+            : '거래가능';
 
-        // 방 개수
-        let rooms = p.rooms ?? p.roomCount ?? p.bedrooms ?? '';
-
-        // 매물 타입
-        let type = p.type ?? p.houseType ?? p.category ?? '';
-
-        // details 텍스트 생성 또는 사용
-        let detailsText = p.details;
-        if (!detailsText) {
-            const parts = [];
-            if (type) parts.push(type);
-            if (rooms) parts.push(`방 ${rooms}개`);
-            if (areaM2) parts.push(`${areaM2}m²`);
-            detailsText = parts.join(' ∙ ');
-        }
-
-        // details에서 보조 파싱
-        if (!areaM2 && typeof detailsText === 'string') {
-            const m = detailsText.match(/([0-9]+(?:\.[0-9]+)?)\s*m²/);
-            if (m) areaM2 = m[1];
-        }
-        if (!rooms && typeof detailsText === 'string') {
-            const m = detailsText.match(/방\s*(\d+)/);
-            if (m) rooms = m[1];
-        }
-        if (!type && typeof detailsText === 'string') {
-            if (detailsText.includes('아파트')) type = '아파트';
-            else if (detailsText.includes('오피스텔')) type = '오피스텔';
-            else if (detailsText.includes('빌라')) type = '빌라';
-            else if (detailsText.includes('원룸')) type = '원룸';
-            else if (detailsText.includes('투룸')) type = '투룸';
-        }
-
-        // 상태 정보
-        const status = p.status ?? (p.isSold ? 'SOLD' : (p.isReserved ? 'CONTRACTED' : 'AVAILABLE'));
-        const statusText = p.statusText ?? (status === 'SOLD' ? '거래완료' : status === 'CONTRACTED' ? '계약중' : '거래가능');
-
-        // 이미지
-        const images = Array.isArray(p.images) ? p.images : (Array.isArray(p.photos) ? p.photos : []);
-        const image = p.image ?? images[0] ?? '';
-
-        // 옵션/태그
-        const optionsArr = p.options ?? p.tags ?? [];
-
-        // 기본 정보
-        const title = p.title ?? p.name ?? locationText;
-        const price = p.priceText ?? p.price ?? '';
-        const description = p.description ?? p.memo ?? '';
-        const id = p.id ?? p.propertyId ?? p.pid ?? undefined;
-
-        // 상세 정보
-        const buildingYear = p.buildingYear ?? p.buildYear ?? undefined;
-        const bath = p.bathrooms ?? p.baths ?? p.bath ?? '';
-        const direction = p.direction ?? '';
-        const parkingText = p.parkingText ?? (p.parking != null ? String(p.parking) : '');
-        const moveInDate = p.moveInDate ?? p.availableDate ?? '';
-
-        // 계산된 텍스트
+        const areaM2 = p.areaM2 ?? p.area_m2;
         const areaText = areaM2 ? `${areaM2}m²` : '';
-        const roomBathText = rooms || bath ? `방 ${rooms || '-'}개 / 욕실 ${bath || '-'}개` : '';
-
-        // 중개사 정보
-        const brokerName = p.brokerName ?? '';
-        const brokerPhone = p.brokerPhone ?? '';
-
-        // 아파트 여부
-        const isApartment = (type === '아파트') || (typeof detailsText === 'string' && detailsText.includes('아파트'));
-
         return {
-            id,
-            image,
-            title,
-            location: locationText,
-            price,
-            priceText: price,
-            details: detailsText,
-            options: optionsArr,
-            description,
-            status,
-            statusText,
-            buildingYear,
-            direction,
-            areaM2,
-            areaText,
-            roomBathText,
-            parkingText,
-            moveInDate,
-            brokerName,
-            brokerPhone,
-            isApartment,
-            floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`
+          id: p.id,
+          image: p.image,
+          title: p.title || p.location || '',
+          location: p.location || p.address || '',
+          address: p.address,
+          price: p.priceText || p.price || '',
+          priceText: p.priceText || p.price || '',
+          details: p.details || '',
+          options: p.options || p.tags || [],
+          tags: p.tags || p.options || [],
+          description: p.description || '',
+          status,
+          statusText,
+          buildingYear: p.buildingYear ?? p.building_year,
+          direction: p.direction,
+          areaM2,
+          areaText,
+          roomBathText: p.roomBathText || '',
+          parkingText: p.parkingText,
+          moveInDate: p.moveInDate,
+          brokerName: p.brokerName || '',
+          brokerPhone: p.brokerPhone || '',
+          isApartment: p.isApartment,
+          // floorPlan은 id 기준으로 대충 생성
+          floorPlan: `/images/floorplan${(Number(p.id) % 5) + 1}.jpg`,
+          maintenanceFee: p.maintenanceFee ?? p.maintenance_fee,
         };
+      }
+
+      // 2) 옛날 더미 데이터 / 다른 스키마용 기존 추론 로직
+      //    (아래는 네가 원래 쓰던 코드 그대로 두면 됨)
+      // --------------------------------------------------
+      // 위치 정보 처리
+      const city = p.city ?? p.si ?? "";
+      const district = p.district ?? p.gu ?? p.gun ?? "";
+      const dong = p.dong ?? p.town ?? "";
+      const locationText =
+        p.location ??
+        (city || district || dong ? `${city} ${district} ${dong}`.trim() : "");
+
+      // 면적 정보
+      let areaM2 = p.areaM2 ?? p.area ?? p.sizeM2 ?? "";
+
+      // 방 개수
+      let rooms = p.rooms ?? p.roomCount ?? p.bedrooms ?? "";
+
+      // 매물 타입
+      let type = p.type ?? p.houseType ?? p.category ?? "";
+
+      // details 텍스트 생성 또는 사용
+      let detailsText = p.details;
+      if (!detailsText) {
+        const parts = [];
+        if (type) parts.push(type);
+        if (rooms) parts.push(`방 ${rooms}개`);
+        if (areaM2) parts.push(`${areaM2}m²`);
+        detailsText = parts.join(" ∙ ");
+      }
+
+      // details에서 보조 파싱
+      if (!areaM2 && typeof detailsText === "string") {
+        const m = detailsText.match(/([0-9]+(?:\.[0-9]+)?)\s*m²/);
+        if (m) areaM2 = m[1];
+      }
+      if (!rooms && typeof detailsText === "string") {
+        const m = detailsText.match(/방\s*(\d+)/);
+        if (m) rooms = m[1];
+      }
+      if (!type && typeof detailsText === "string") {
+        if (detailsText.includes("아파트")) type = "아파트";
+        else if (detailsText.includes("오피스텔")) type = "오피스텔";
+        else if (detailsText.includes("빌라")) type = "빌라";
+        else if (detailsText.includes("원룸")) type = "원룸";
+        else if (detailsText.includes("투룸")) type = "투룸";
+      }
+
+      // 상태 정보
+      const status =
+        p.status ??
+        (p.isSold ? "SOLD" : p.isReserved ? "CONTRACTED" : "AVAILABLE");
+      const statusText =
+        p.statusText ??
+        (status === "SOLD"
+          ? "거래완료"
+          : status === "CONTRACTED"
+          ? "계약중"
+          : "거래가능");
+
+      // 이미지
+      const images = Array.isArray(p.images)
+        ? p.images
+        : Array.isArray(p.photos)
+        ? p.photos
+        : [];
+      const image = p.image ?? images[0] ?? "";
+
+      // 옵션/태그
+      const optionsArr = p.options ?? p.tags ?? [];
+
+      // 기본 정보
+      const title = p.title ?? p.name ?? locationText;
+      const price = p.priceText ?? p.price ?? "";
+      const description = p.description ?? p.memo ?? "";
+      const id = p.id ?? p.propertyId ?? p.pid ?? undefined;
+
+      // 상세 정보
+      const buildingYear = p.buildingYear ?? p.buildYear ?? undefined;
+      const bath = p.bathrooms ?? p.baths ?? p.bath ?? "";
+      const direction = p.direction ?? "";
+      const parkingText =
+        p.parkingText ?? (p.parking != null ? String(p.parking) : "");
+      const moveInDate = p.moveInDate ?? p.availableDate ?? "";
+
+      // 계산된 텍스트
+      const areaText = areaM2 ? `${areaM2}m²` : "";
+      const roomBathText =
+        rooms || bath ? `방 ${rooms || "-"}개 / 욕실 ${bath || "-"}개` : "";
+
+      // 중개사 정보
+      const brokerName = p.brokerName ?? "";
+      const brokerPhone = p.brokerPhone ?? "";
+
+      // 아파트 여부
+      const isApartment =
+        type === "아파트" ||
+        (typeof detailsText === "string" && detailsText.includes("아파트"));
+
+      return {
+        id,
+        image,
+        title,
+        location: locationText,
+        price,
+        priceText: price,
+        details: detailsText,
+        options: optionsArr,
+        description,
+        status,
+        statusText,
+        buildingYear,
+        direction,
+        areaM2,
+        areaText,
+        roomBathText,
+        parkingText,
+        moveInDate,
+        brokerName,
+        brokerPhone,
+        isApartment,
+        floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`,
+      };
     }
+
 
     function getElems(buf) {
         const suffix = buf === 'a' ? 'a' : 'b';
@@ -279,11 +346,25 @@
         const moveInDateEl = qs(`#detail-move-in-date-${suffix}`);
         if (moveInDateEl) moveInDateEl.textContent = d.moveInDate || '즉시 입주 가능';
 
+        // 🔵 관리비 표시
+        const maintenanceEl = qs(`#detail-maintenance-fee-${suffix}`);
+        if (maintenanceEl) {
+          const fee = d.maintenanceFee ?? d.maintenance_fee ?? null;
+          if (fee != null) {
+            const num = Number(fee);
+            maintenanceEl.textContent = Number.isNaN(num)
+              ? '-'
+              : `${num.toLocaleString()}원`;
+          } else {
+            maintenanceEl.textContent = '-';
+          }
+        }
+
+
         // 비워둘 항목들
         const emptyFields = [
             `detail-room-structure-${suffix}`,
             `detail-duplex-${suffix}`,
-            `detail-maintenance-fee-${suffix}`,
             `detail-household-count-${suffix}`
         ];
         emptyFields.forEach(id => {
@@ -332,58 +413,114 @@
     }
 
     async function findPropertyById(id) {
-        // 먼저 로컬 properties 배열에서 찾기
-        const list = getProperties();
-        if (Array.isArray(list)) {
-            const localProperty = list.find(p => p && (p.id === id || p.id === parseInt(id)));
-            if (localProperty) {
-                console.log(`✅ 로컬 데이터에서 매물 찾음: ${id}`, localProperty);
-                return localProperty;
-            }
-        }
+      // 1) 먼저 full API에서 제대로 된 offers 포함 데이터 가져오기
+      try {
+        console.log("🟡 [DETAIL FETCH] /api/properties/" + id + "/full 호출");
+        const response = await fetch(`/api/properties/${id}/full`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+          },
+        });
 
-        // 로컬에 없으면 API에서 가져오기
-        try {
-            const response = await fetch(`/api/properties/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
-                }
+        if (response.ok) {
+          const data = await response.json();
+          console.log("🟡 [DETAIL FETCH OK] =", data);
+
+          // 여기서 app-init과 같은 shape으로 맞춰줌
+          const offers =
+            data.property_offers || data.propertyOffers || data.offers || [];
+          const activeOffers = offers.filter(o =>
+            o.is_active !== undefined ? o.is_active : o.isActive
+          );
+          const mainOffer = activeOffers[0] || offers[0] || null;
+
+          let priceText;
+          if (typeof formatPriceFromOffers === "function") {
+            priceText = formatPriceFromOffers({
+              property_offers: offers,
+              price: data.price,
             });
+          } else {
+            priceText =
+              data.price != null
+                ? Number(data.price).toLocaleString()
+                : "가격 정보 없음";
+          }
 
-            if (!response.ok) {
-                console.error(`매물 상세 정보 로드 실패: ${id}`);
-                return null;
-            }
+          let options = [];
+          if (mainOffer && mainOffer.oftion != null && typeof parseOptions === "function") {
+            options = parseOptions(mainOffer.oftion);
+          }
 
-            const data = await response.json();
-            console.log(`✅ API에서 매물 상세 정보 로드 성공: ${id}`, data);
+          const status = data.status || "AVAILABLE";
+          const tags = [
+            ...(options.length ? options : []),
+            ...(status === "AVAILABLE" ? ["거래가능"] : []),
+            "판매등록완료",
+          ];
 
-            // PropertyWithOffersDto를 property-detail-panel이 기대하는 형식으로 변환
-            return {
-                id: data.id,
-                title: data.title || data.address,
-                location: data.address,
-                address: data.address,
-                price: data.price,
-                priceText: data.price ? `${(data.price / 10000).toFixed(0)}억` : '가격 문의',
-                details: data.title,
-                areaM2: data.areaM2,
-                buildingYear: data.buildingYear,
-                status: data.status,
-                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800',
-                options: data.offers?.map(o => o.type) || ['판매등록완료'],
-                tags: data.offers?.map(o => o.type) || ['판매등록완료'],
-                description: data.title,
-                brokerName: data.brokerName || data.ownerName || '',
-                brokerPhone: '',
-                // 원본 데이터 보관
-                _raw: data
-            };
-        } catch (error) {
-            console.error('매물 상세 정보 로드 중 오류:', error);
-            return null;
+          let imageUrl =
+            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800";
+          const images =
+            data.images ||
+            data.property_images ||
+            data.photos ||
+            data.propertyImages;
+          if (Array.isArray(images) && images.length > 0) {
+            const img0 = images[0];
+            imageUrl = img0.url || img0.imgUrl || img0.imageUrl || imageUrl;
+          }
+
+          const maintenanceFee =
+            mainOffer?.maintenance_fee ?? mainOffer?.maintenanceFee ?? null;
+
+
+          return {
+            id: data.id,
+            image: imageUrl,
+            price: priceText,
+            priceText,
+            location: data.address || "위치 정보 없음",
+            address: data.address,
+            title: data.title || data.address,
+            details: data.title || "상세 정보 없음",
+            tags,
+            options,
+            isRecommended: false,
+            status,
+            areaM2: data.areaM2 ?? data.area_m2,
+            buildingYear: data.buildingYear ?? data.building_year,
+            description: data.title || "상세 정보 없음",
+            brokerName: data.brokerName || data.ownerName || "",
+            brokerPhone: "",
+            offers,         // 🔵 여기 진짜 offers 들어감
+            images: images || [],
+            maintenanceFee,
+            _raw: data,
+          };
+        } else {
+          console.warn("🟡 [DETAIL FETCH FAIL]", response.status);
         }
+      } catch (e) {
+        console.error("🟡 [DETAIL FETCH ERROR]", e);
+      }
+
+      // 2) 실패하면 그때 로컬 fallback
+      const list = getProperties();
+      if (Array.isArray(list)) {
+        const localProperty = list.find(
+          p => p && (p.id === id || p.id === parseInt(id))
+        );
+        if (localProperty) {
+          console.log(`✅ 로컬 데이터 fallback: ${id}`, localProperty);
+          return localProperty;
+        }
+      }
+
+      return null;
     }
+
+
 
     // 좌측 패널 버튼 위치/투명도 제어 및 검색바 위치 조정
     function updatePanelButtonsForDetail(isDetailOpen) {
@@ -723,7 +860,8 @@
             return;
         }
 
-        const raw = data || await findPropertyById(id) || {};
+        const raw = await findPropertyById(compareId) || data || {};
+        console.log("🟣 [OPEN] raw incoming =", raw);
         const incoming = normalizeProperty(raw);
         const nextBuf = currentBuffer === 'a' ? 'b' : 'a';
         const curElems = getElems(currentBuffer);
@@ -894,6 +1032,7 @@
     function attachDelegatedClick(container) {
         if (!container) return;
         container.addEventListener('click', (e) => {
+
             // 매물 카드 찾기 (data-property-id 속성 또는 클래스 기반)
             let propertyCard;
             if (container.id === 'compare-list') {
@@ -960,7 +1099,7 @@
             }
 
             console.log('매물 클릭:', data);
-
+            console.log("🔵 [CLICK] data = ", data);
             // 패널 확장 상태 확인
             if (typeof window.isPanelExpanded !== 'undefined' && window.isPanelExpanded) {
                 const collapseFullscreenButton = document.getElementById('collapse-fullscreen-button');

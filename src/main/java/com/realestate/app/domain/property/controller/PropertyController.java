@@ -4,6 +4,8 @@ package com.realestate.app.domain.property.controller;
 import com.realestate.app.domain.auth.security.AuthUser;
 import com.realestate.app.domain.property.dto.CompleteDealRequest;
 import com.realestate.app.domain.property.dto.JeonseRatioResponse;
+import com.realestate.app.domain.property.dto.PropertyFullResponse;
+import com.realestate.app.domain.property.repository.PropertyFullRepository;
 import com.realestate.app.domain.property.service.JeonseRatioService;
 import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.dto.PropertyMarkerDto;
@@ -28,43 +30,36 @@ public class PropertyController {
 
     private final propertyservice service;
     private final JeonseRatioService jeonseRatioService;
-
+    private final PropertyFullRepository propertyFullRepository;
     // GET /api/properties?swLat=&swLng=&neLat=&neLng=&status=AVAILABLE&minPrice=&maxPrice=
     @GetMapping
-    public List<PropertyMarkerDto> inBounds(
+    public List<PropertyFullResponse> getInBounds(
             @RequestParam double swLat,
             @RequestParam double swLng,
             @RequestParam double neLat,
             @RequestParam double neLng,
-            @RequestParam(required = false) String status,      // ← String으로 받고
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice
+            @RequestParam(required = false) String status
     ) {
-        // 1) 들어온 값 로깅
-        log.info("[REQ] /api/properties sw=({},{}), ne=({},{}), status={}, minPrice={}, maxPrice={}",
-                swLat, swLng, neLat, neLng, status, minPrice, maxPrice);
+        // status 파라미터는 일단 무시하고, AVAILABLE + isActive = true 조건만 사용
+        List<Property> props =
+                propertyFullRepository.findAllAvailableInBoundsWithOffersAndImages(
+                        swLat, swLng, neLat, neLng
+                );
 
-        // 2) 경계 뒤집힘 보정
-        if (neLat < swLat) { double t = swLat; swLat = neLat; neLat = t; }
-        if (neLng < swLng) { double t = swLng; swLng = neLng; neLng = t; }
-
-        // 3) status 대소문자 무시 + 잘못된 값 방어
-        Property.Status statusEnum = null;
-        if (status != null && !status.isBlank()) {
-            try {
-                statusEnum = Property.Status.valueOf(status.trim().toUpperCase());
-            } catch (IllegalArgumentException ex) {
-                // 잘못된 값이면 필터 미적용(또는 400을 내고 싶으면 여기서 예외 던지기)
-                log.warn("invalid status '{}', ignoring status filter", status);
-            }
-        }
-
-        List<PropertyMarkerDto> out =
-                service.findInBounds(swLat, swLng, neLat, neLng, statusEnum, minPrice, maxPrice);
-
-        log.info("[RES] count={}", out.size());
-        return out;
+        return props.stream()
+                .map(PropertyFullResponse::from)
+                .toList();
     }
+
+
+
+    @GetMapping("/{id}/full")
+    public PropertyFullResponse getOne(@PathVariable Long id) {
+        Property p = propertyFullRepository.findByIdWithActiveOffersAndImages(id)
+                .orElseThrow();
+        return PropertyFullResponse.from(p);
+    }
+
 
     // ✅ 최종 경로: POST /api/properties/{id}/complete
     @PostMapping("/{id}/complete")

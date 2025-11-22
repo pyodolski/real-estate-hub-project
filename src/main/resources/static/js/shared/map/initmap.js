@@ -1,41 +1,67 @@
 // src/main/resources/static/js/shared/map/initmap.js
+import { initPoiLayers, refreshPoiOnBoundsChange } from './poi/poi-layer.js';
 import { debounce } from '../utils/debounce.js';
 import { renderMarkers, highlightMarker } from './markers.js';
-import { fetchPropertiesInBounds } from '../components/propertiesApi.js'; // ✅ fetchPropertyDetail 삭제
+import { fetchPropertiesInBounds } from '../components/propertiesApi.js';
 import { renderMarkerPopup, closeMarkerPopup } from './marker-popup.js';
 
 export function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
-  app.map = new naver.maps.Map('map', { center, zoom: 13, zoomControl: false });
+
+  app.map = new naver.maps.Map('map', {
+    center,
+    zoom: 13,
+    zoomControl: false,
+  });
+
   window.__naverMap = app.map;
+
   const el = document.getElementById('map');
   if (el) el.__MAP_CREATED__ = true;
 
-  // ✅ 캐시용 Map 보장 (id -> 매물 전체 데이터)
+  // ✅ 매물 캐시 (id -> 매물 전체 데이터)
   if (!app.propertiesById) {
     app.propertiesById = new Map();
   }
+
+  // ✅ POI(편의점/버스/지하철) 상태
+  if (!app.poiState) {
+    app.poiState = {
+      convenience: new Map(), // id -> marker
+      subway: new Map(),
+      bus: new Map(),
+      visibleLayers: {
+        convenience: true,
+        subway: true,
+        bus: true,
+      },
+    };
+  }
+
+  // 최초 한 번 POI 레이어 초기화 (체크박스/토글 이벤트 등)
+  initPoiLayers(app);
 
   // 지도 렌더 후(첫 idle) map:ready 발행
   naver.maps.Event.once(app.map, 'idle', () => {
     window.dispatchEvent(new Event('map:ready'));
   });
 
-  // (선택) 상단 상태 필터가 따로 있다면 사용
+  // (선택) 상단 상태 필터
   const statusFilterEl = document.getElementById('statusFilter');
 
   // 현재 활성 필터 합성: filter.js가 세팅한 window.currentFilters + status 필터
   function getActiveFilters() {
-    const base = (window.currentFilters && typeof window.currentFilters === 'object')
-      ? { ...window.currentFilters }
-      : {};
+    const base =
+      window.currentFilters && typeof window.currentFilters === 'object'
+        ? { ...window.currentFilters }
+        : {};
 
     const v = statusFilterEl?.value || '';
-    if (v) base.status = v; // 백엔드가 status를 받도록 구현되어 있다면
+    if (v) base.status = v; // 백엔드가 status를 받도록 구현된 경우
     return base;
   }
 
-  // 지도 영역 + 필터로 목록 재요청하고 마커/캐시 갱신
+  // ✅ 지도 영역 + 필터로 매물/POI 모두 갱신
   const onIdle = debounce(async () => {
     const b = app.map.getBounds();
     if (!b) return;
@@ -46,25 +72,29 @@ export function initMap(app) {
     const filters = getActiveFilters();
 
     try {
+      // 1) 매물 목록 조회
       const list = await fetchPropertiesInBounds({
         swLat: sw.y,
         swLng: sw.x,
         neLat: ne.y,
         neLng: ne.x,
-        filters, // ← 필터 전체 전달 (propertiesApi.js에서 적절히 직렬화)
+        filters, // ← 필터 전체 전달 (propertiesApi.js에서 직렬화)
       });
 
       const arr = Array.isArray(list) ? list : [];
 
-      // ✅ 1) id -> 전체 데이터 캐싱
+      // 2) 매물 캐시 갱신
       app.propertiesById.clear();
       for (const p of arr) {
         // 여기서 p는 PropertyFullResponse 한 건
         app.propertiesById.set(p.id, p);
       }
 
-      // ✅ 2) 마커만 갱신
+      // 3) 매물 마커 갱신
       renderMarkers(app, arr, onMarkerClick);
+
+      // 4) POI(편의점/지하철/버스)도 bounds 기준으로 새로고침
+      await refreshPoiOnBoundsChange(app, { sw, ne });
     } catch (e) {
       console.error('목록 조회 실패:', e);
       if (String(e?.message).includes('Unauthorized')) {
@@ -85,7 +115,7 @@ export function initMap(app) {
     });
   }
 
-  // 🔑 filter.js에서 보내는 커스텀 이벤트 수신 → 마커만 리프레시
+  // 🔑 filter.js에서 보내는 커스텀 이벤트 수신 → 목록/마커/POI 리프레시
   window.addEventListener('filters:changed', () => {
     app.currentId = null;
     onIdle();
@@ -97,6 +127,7 @@ export function initMap(app) {
   // 마커 클릭 시 작은 팝업 표시 (토글)
   async function onMarkerClick(id) {
     console.log('propertiesById', id);
+
     // 같은 마커 다시 클릭 → 팝업 닫기
     if (app.currentId === id) {
       closeMarkerPopup();
@@ -107,7 +138,7 @@ export function initMap(app) {
 
     app.currentId = id;
 
-    // ✅ 서버 재호출 대신, 방금 캐싱해둔 데이터에서 꺼내쓰기
+    // ✅ 서버 재호출 대신, 캐싱 데이터 사용
     const d = app.propertiesById.get(id);
     if (!d) {
       console.warn('propertiesById에 데이터가 없음:', id);

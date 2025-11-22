@@ -3,19 +3,23 @@
 
 // oftion 비트를 옵션 배열로 변환
 function parseOptions(oftionBit) {
-	const optionNames = [
-		'에어컨', '냉장고', '세탁기', '가스레인지', '인덕션레인지',
-		'침대', '전자레인지', 'TV', '책상', 'CCTV'
-	];
-	
-	const options = [];
-	for (let i = 0; i < optionNames.length; i++) {
-		if (oftionBit & (1 << (optionNames.length - 1 - i))) {
-			options.push(optionNames[i]);
-		}
-	}
-	return options;
-}
+  const optionNames = [
+    '에어컨', '냉장고', '세탁기', '가스레인지', '인덕션레인지',
+    '침대', '전자레인지', 'TV', '책상', 'CCTV'
+  ];
+
+  // 혹시 "1111" 이런 식으로 짧게 올 수도 있으니까 왼쪽 0패딩
+  const bitStr = String(oftionBit).padStart(optionNames.length, '0');
+
+  const options = [];
+  for (let i = 0; i < optionNames.length; i++) {
+    // bitStr[0] → 에어컨, bitStr[1] → 냉장고 ... 이런 식으로 대응
+    if (bitStr[i] === '1') {
+      options.push(optionNames[i]);
+    }
+  }
+  return options;
+  }
 
 // 가격 포맷팅
 function formatPrice(property) {
@@ -48,9 +52,9 @@ function formatPrice(property) {
 
   if (type === 'WOLSE') {
     if (deposit == null || monthly == null) return '월세 협의';
-    const eok = Math.floor(deposit / 100000000);
-    const man = Math.round((deposit % 100000000) / 10000);
-    return `월세 ${eok > 0 ? eok + '억 ' : ''}${man ? man + '만/' : ''}${monthly.toLocaleString()}`;
+    const man = Math.floor(deposit / 10000);
+    const wol = monthly/10000
+    return `월세 ${man ? man + '만' : ''} / ${wol.toLocaleString() + '만'}`;
   }
 
   return property.price != null ? Number(property.price).toLocaleString() : '-';
