@@ -12,7 +12,7 @@
 
   const qs = (sel) => document.querySelector(sel);
 
-  // 전역 properties 접근: data.js의 const properties 직접 사용
+  // 전역 properties 접근: data.js / app-init.js의 properties 사용
   function getProperties() {
     try {
       if (typeof properties !== "undefined" && Array.isArray(properties))
@@ -23,8 +23,55 @@
 
   // 다양한 스키마의 매물 객체를 상세 패널이 기대하는 형태로 변환하는 어댑터
   function normalizeProperty(p) {
+    console.log("🟢 [NORMALIZE INPUT] =", p);
     if (!p || typeof p !== "object") return {};
 
+    // 1) app-init 에서 전처리된 카드 객체면 그대로 써주기
+    //    (offers / _raw / priceText 등이 있는 경우)
+    if ("_raw" in p || "offers" in p || "priceText" in p) {
+      const status = p.status || "AVAILABLE";
+
+      const statusText =
+        status === "SOLD"
+          ? "거래완료"
+          : status === "CONTRACTED"
+          ? "계약중"
+          : "거래가능";
+
+      const areaM2 = p.areaM2 ?? p.area_m2;
+      const areaText = areaM2 ? `${areaM2}m²` : "";
+
+      return {
+        id: p.id,
+        image: p.image,
+        title: p.title || p.location || "",
+        location: p.location || p.address || "",
+        address: p.address,
+        price: p.priceText || p.price || "",
+        priceText: p.priceText || p.price || "",
+        details: p.details || "",
+        options: p.options || p.tags || [],
+        tags: p.tags || p.options || [],
+        description: p.description || "",
+        status,
+        statusText,
+        buildingYear: p.buildingYear ?? p.building_year,
+        direction: p.direction,
+        areaM2,
+        areaText,
+        roomBathText: p.roomBathText || "",
+        parkingText: p.parkingText,
+        moveInDate: p.moveInDate,
+        brokerName: p.brokerName || "",
+        brokerPhone: p.brokerPhone || "",
+        isApartment: p.isApartment,
+        floorPlan: p.floorPlan || `/images/floorplan${(Number(p.id) % 5) + 1}.jpg`,
+        maintenanceFee: p.maintenanceFee ?? p.maintenance_fee,
+        _raw: p._raw || p,
+      };
+    }
+
+    // 2) 옛날 더미 데이터 / 다른 스키마용 기존 추론 로직
     // 위치 정보 처리
     const city = p.city ?? p.si ?? "";
     const district = p.district ?? p.gu ?? p.gun ?? "";
@@ -71,8 +118,7 @@
 
     // 상태 정보
     const status =
-      p.status ??
-      (p.isSold ? "SOLD" : p.isReserved ? "CONTRACTED" : "AVAILABLE");
+      p.status ?? (p.isSold ? "SOLD" : p.isReserved ? "CONTRACTED" : "AVAILABLE");
     const statusText =
       p.statusText ??
       (status === "SOLD"
@@ -143,8 +189,7 @@
       brokerPhone,
       isApartment,
       floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`,
-      // 원본 데이터 보존 (시세 예측 등에서 사용)
-      _raw: p._raw || p,
+      _raw: p,
     };
   }
 
@@ -187,19 +232,19 @@
     if (isFullscreen) {
       // X 아이콘을 << 아이콘으로 변경
       el.closeBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
-                </svg>
-            `;
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
+        </svg>
+      `;
       el.closeBtn.title = "전체화면 해제";
       el.closeBtn.onclick = () => collapsePropertyDetailFromFullscreen();
     } else {
       // 원래 X 아이콘으로 복원
       el.closeBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            `;
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      `;
       el.closeBtn.title = "닫기";
       el.closeBtn.onclick = () => closePropertyDetail();
     }
@@ -213,7 +258,6 @@
     const suffix = buf;
 
     // propertyId를 데이터 속성으로 저장 (시세예측 등에서 사용)
-    // _raw가 PropertyFilterDto인 경우 propertyId 필드가 실제 property의 id입니다
     if (el.overlay) {
       const propertyId = d._raw?.propertyId || d.id;
       if (propertyId) {
@@ -221,25 +265,26 @@
       }
     }
 
-    // 매물 정보 채우기 - 실제 데이터 표시
-    el.img && (el.img.src = d.image || "");
+    // 이미지
+    if (el.img) el.img.src = d.image || "";
 
-    // 제목과 위치 정보 올바르게 표시
+    // 제목과 위치
     if (el.title) el.title.textContent = d.title || d.location || "";
     if (el.location) {
       el.location.textContent = d.location || "";
       el.location.style.display = d.location ? "block" : "none";
     }
 
+    // 가격 / 요약
     if (el.price) el.price.textContent = d.price || d.priceText || "";
-    //if (el.details) el.details.textContent = d.details || '';
+    if (el.details) el.details.textContent = d.details || "";
 
-    // buildingYear
+    // 건축년도
     const buildYearEl = qs(`#detail-building-year-${suffix}`);
     if (buildYearEl)
       buildYearEl.textContent = d.buildingYear ? `${d.buildingYear}년` : "-";
 
-    // area - details에서 파싱하거나 직접 사용
+    // 면적
     const areaEl = qs(`#detail-property-area-${suffix}`);
     if (areaEl) {
       let areaText = "";
@@ -252,7 +297,7 @@
       areaEl.textContent = areaText || "-";
     }
 
-    // 방/욕실 정보
+    // 방/욕실
     const roomBathEl = qs(`#detail-room-bath-${suffix}`);
     if (roomBathEl) {
       let roomBathText = "";
@@ -266,19 +311,19 @@
       roomBathEl.textContent = roomBathText;
     }
 
+    // 설명
     if (el.desc) el.desc.textContent = d.description || "";
 
+    // 중개사 정보
     const brokerName = qs(`#detail-broker-name-${suffix}`);
     const brokerPhone = qs(`#detail-broker-phone-${suffix}`);
     if (brokerName) brokerName.textContent = d.brokerName || "중개사 정보 없음";
     if (brokerPhone) brokerPhone.textContent = d.brokerPhone || "";
 
-    // 지도 초기화 (임시 영역에 지도 표시)
+    // 지도
     if (window.MapInDetail && window.MapInDetail.init) {
-      // 약간의 지연을 주어 DOM이 확실히 업데이트된 후 지도를 그리도록 함
       setTimeout(() => {
         const mapPlaceholderId = `detail-map-placeholder-${suffix}`;
-        // 주소 정보가 있으면 지도 표시
         const address = d.address || d.location;
         if (address) {
           window.MapInDetail.init(mapPlaceholderId, address);
@@ -286,10 +331,9 @@
       }, 100);
     }
 
-    // 평면도 노출: 모든 매물에 대해 표시
+    // 평면도
     const floorPlan = d.floorPlan;
     const floorplanWrapper = qs(`#detail-floorplan-wrapper-${suffix}`);
-
     if (floorplanWrapper) {
       floorplanWrapper.style.display = "block";
       const placeholder = qs(`#detail-floorplan-placeholder-${suffix}`);
@@ -300,7 +344,7 @@
       }
     }
 
-    // 기타 상세 항목들
+    // 방향 / 주차 / 입주일
     const directionEl = qs(`#detail-direction-${suffix}`);
     if (directionEl) directionEl.textContent = d.direction || "-";
 
@@ -311,16 +355,29 @@
     if (moveInDateEl)
       moveInDateEl.textContent = d.moveInDate || "즉시 입주 가능";
 
+    // 관리비
+    const maintenanceEl = qs(`#detail-maintenance-fee-${suffix}`);
+    if (maintenanceEl) {
+      const fee = d.maintenanceFee ?? d.maintenance_fee ?? null;
+      if (fee != null) {
+        const num = Number(fee);
+        maintenanceEl.textContent = Number.isNaN(num)
+          ? "-"
+          : `${num.toLocaleString()}원`;
+      } else {
+        maintenanceEl.textContent = "-";
+      }
+    }
+
     // 비워둘 항목들
     const emptyFields = [
       `detail-room-structure-${suffix}`,
       `detail-duplex-${suffix}`,
-      `detail-maintenance-fee-${suffix}`,
       `detail-household-count-${suffix}`,
     ];
     emptyFields.forEach((id) => {
-      const el = qs(`#${id}`);
-      if (el) el.textContent = "-";
+      const f = qs(`#${id}`);
+      if (f) f.textContent = "-";
     });
 
     // 상태 표시
@@ -330,9 +387,9 @@
         CONTRACTED: { text: "계약중", class: "bg-yellow-100 text-yellow-800" },
         SOLD: { text: "거래완료", class: "bg-gray-100 text-gray-800" },
       };
-      const status = statusMap[d.status] || statusMap["AVAILABLE"];
-      el.status.textContent = status.text;
-      el.status.className = `px-3 py-1 rounded-full text-sm font-semibold ${status.class}`;
+      const statusInfo = statusMap[d.status] || statusMap["AVAILABLE"];
+      el.status.textContent = statusInfo.text;
+      el.status.className = `px-3 py-1 rounded-full text-sm font-semibold ${statusInfo.class}`;
     }
 
     // 옵션 표시
@@ -348,6 +405,7 @@
       });
     }
 
+    // 즐겨찾기 버튼
     if (el.favBtn) {
       el.favBtn.onclick = () => {
         const pressed = el.favBtn.getAttribute("aria-pressed") === "true";
@@ -356,71 +414,123 @@
       };
     }
 
-    // closeBtn 이벤트는 updateCloseButtonForFullscreen에서 관리하므로 여기서는 설정하지 않음
-    // 초기 렌더링 시에만 기본 X 버튼 설정
+    // closeBtn 기본 이벤트는 여기서 한 번만
     if (el.closeBtn && !el.closeBtn.__eventSet) {
       updateCloseButtonForFullscreen(buf, false);
       el.closeBtn.__eventSet = true;
     }
   }
 
+  // 상세용 매물 찾기: 우선 /full API → 실패 시 로컬 properties
   async function findPropertyById(id) {
-    // 먼저 로컬 properties 배열에서 찾기
+    // 1) full API에서 offers/oftion 포함 데이터 가져오기
+    try {
+      console.log("🟡 [DETAIL FETCH] /api/properties/" + id + "/full 호출");
+      const response = await fetch(`/api/properties/${id}/full`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("🟡 [DETAIL FETCH OK] =", data);
+
+        const offers =
+          data.property_offers || data.propertyOffers || data.offers || [];
+        const activeOffers = offers.filter((o) =>
+          o.is_active !== undefined ? o.is_active : o.isActive
+        );
+        const mainOffer = activeOffers[0] || offers[0] || null;
+
+        let priceText;
+        if (typeof formatPriceFromOffers === "function") {
+          priceText = formatPriceFromOffers({
+            property_offers: offers,
+            price: data.price,
+          });
+        } else {
+          priceText =
+            data.price != null
+              ? Number(data.price).toLocaleString()
+              : "가격 정보 없음";
+        }
+
+        let options = [];
+        if (
+          mainOffer &&
+          mainOffer.oftion != null &&
+          typeof parseOptions === "function"
+        ) {
+          options = parseOptions(mainOffer.oftion);
+        }
+
+        const status = data.status || "AVAILABLE";
+        const tags = [
+          ...(status === "AVAILABLE" ? ["거래가능"] : []),
+          "판매등록완료",
+        ];
+
+        let imageUrl =
+          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800";
+        const images =
+          data.images ||
+          data.property_images ||
+          data.photos ||
+          data.propertyImages;
+        if (Array.isArray(images) && images.length > 0) {
+          const img0 = images[0];
+          imageUrl =
+            img0.url || img0.imgUrl || img0.imageUrl || img0.image_url || imageUrl;
+        }
+
+        const maintenanceFee =
+          mainOffer?.maintenance_fee ?? mainOffer?.maintenanceFee ?? null;
+
+        // app-init 카드와 유사한 형태로 맞춰줌
+        return {
+          id: data.id,
+          image: imageUrl,
+          price: priceText,
+          priceText,
+          location: data.address || "위치 정보 없음",
+          address: data.address,
+          title: data.title || data.address,
+          details: data.title || "상세 정보 없음",
+          tags,
+          options,
+          isRecommended: false,
+          status,
+          areaM2: data.areaM2 ?? data.area_m2,
+          buildingYear: data.buildingYear ?? data.building_year,
+          description: data.title || "상세 정보 없음",
+          brokerName: data.brokerName || data.ownerName || "",
+          brokerPhone: "",
+          offers, // 진짜 offers
+          images: images || [],
+          maintenanceFee,
+          _raw: data,
+        };
+      } else {
+        console.warn("🟡 [DETAIL FETCH FAIL]", response.status);
+      }
+    } catch (e) {
+      console.error("🟡 [DETAIL FETCH ERROR]", e);
+    }
+
+    // 2) 실패하면 로컬 fallback
     const list = getProperties();
     if (Array.isArray(list)) {
       const localProperty = list.find(
         (p) => p && (p.id === id || p.id === parseInt(id))
       );
       if (localProperty) {
-        console.log(`✅ 로컬 데이터에서 매물 찾음: ${id}`, localProperty);
+        console.log(`✅ 로컬 데이터 fallback: ${id}`, localProperty);
         return localProperty;
       }
     }
 
-    // 로컬에 없으면 API에서 가져오기
-    try {
-      const response = await fetch(`/api/properties/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-        },
-      });
-
-      if (!response.ok) {
-        console.error(`매물 상세 정보 로드 실패: ${id}`);
-        return null;
-      }
-
-      const data = await response.json();
-      console.log(`✅ API에서 매물 상세 정보 로드 성공: ${id}`, data);
-
-      // PropertyWithOffersDto를 property-detail-panel이 기대하는 형식으로 변환
-      return {
-        id: data.id,
-        title: data.title || data.address,
-        location: data.address,
-        address: data.address,
-        price: data.price,
-        priceText: data.price
-          ? `${(data.price / 10000).toFixed(0)}억`
-          : "가격 문의",
-        details: data.title,
-        areaM2: data.areaM2,
-        buildingYear: data.buildingYear,
-        status: data.status,
-        image:
-          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800",
-        options: data.offers?.map((o) => o.type) || ["판매등록완료"],
-        tags: data.offers?.map((o) => o.type) || ["판매등록완료"],
-        description: data.title,
-        brokerName: data.brokerName || data.ownerName || "",
-        brokerPhone: "",
-        // 원본 데이터 보관
-        _raw: data,
-      };
-    } catch (error) {
-      console.error("매물 상세 정보 로드 중 오류:", error);
-      return null;
-    }
+    return null;
   }
 
   // 좌측 패널 버튼 위치/투명도 제어 및 검색바 위치 조정
@@ -438,50 +548,43 @@
       if (!expandBtn.dataset.origLeft)
         expandBtn.dataset.origLeft = expandBtn.style.left || `${LIST_RIGHT}px`;
 
-      // 토글 버튼을 상세 패널 오른쪽 끝으로 이동 (450px 왼쪽 시작 + 450px 너비)
+      // 토글 버튼을 상세 패널 오른쪽 끝으로 이동
       expandBtn.style.left = `${DETAIL_RIGHT}px`;
-      expandBtn.style.zIndex = "15"; // 상세페이지보다 높은 z-index
-      expandBtn.style.opacity = "1"; // AB 전환 후 버튼 표시
-      expandBtn.style.pointerEvents = "auto"; // AB 전환 후 버튼 활성화
+      expandBtn.style.zIndex = "15";
+      expandBtn.style.opacity = "1";
+      expandBtn.style.pointerEvents = "auto";
 
-      // 닫기 버튼을 상세 패널 왼쪽 바로 앞으로 이동 (>> 버튼처럼 따라가게)
-      closeBtn.style.left = `${DETAIL_RIGHT}px`; // 상세 패널 왼쪽 바로 앞에 위치 (버튼 너비만큼 앞)
+      // 닫기 버튼도 상세 패널 오른쪽 끝 근처로 이동
+      closeBtn.style.left = `${DETAIL_RIGHT}px`;
       closeBtn.style.zIndex = "15";
       closeBtn.title = "상세 정보 닫기";
-      closeBtn.style.opacity = "1"; // AB 전환 후 버튼 표시
-      closeBtn.style.pointerEvents = "auto"; // AB 전환 후 버튼 활성화
+      closeBtn.style.opacity = "1";
+      closeBtn.style.pointerEvents = "auto";
 
-      // 검색 바를 상세 패널 오른쪽으로 밀어내기
+      // 검색 바 오른쪽으로 밀기
       if (searchBarContainer) {
         if (!searchBarContainer.dataset.origLeft) {
           searchBarContainer.dataset.origLeft =
             searchBarContainer.style.left || "474px";
         }
-        searchBarContainer.style.left = `${DETAIL_RIGHT + 24}px`; // 상세 패널 오른쪽 + 여백
+        searchBarContainer.style.left = `${DETAIL_RIGHT + 24}px`;
       }
 
-      // 토글 버튼의 기능을 상세 패널 전체화면으로 변경
+      // 확장 버튼 기능: 전체화면
       expandBtn.title = "상세 정보 전체화면";
 
-      // 기존 이벤트 리스너 제거하고 새로운 기능 추가
       if (!expandBtn.__originalClickHandler) {
-        // 기존 클릭 핸들러를 백업
         const originalHandler = expandBtn.onclick || (() => {});
         expandBtn.__originalClickHandler = originalHandler;
       }
 
-      // 기존 이벤트 리스너 제거하고 새로운 이벤트 추가
       if (!closeBtn.__detailEventAdded) {
-        // 새로운 이벤트 리스너 추가 - X 버튼과 동일한 동작
         closeBtn.__detailClickHandler = (e) => {
           e.stopPropagation();
-          // 현재 상세 패널이 전체화면인지 확인
           const currentOverlay = getElems(currentBuffer).overlay;
           if (currentOverlay && currentOverlay.__isFullscreen) {
-            // 전체화면 상태면 전체화면만 해제 (X 버튼과 동일)
             collapsePropertyDetailFromFullscreen();
           } else {
-            // 일반 상태면 상세 패널 완전히 닫기 (X 버튼과 동일)
             closePropertyDetail();
           }
         };
@@ -497,7 +600,7 @@
       if (closeBtn.dataset.origLeft) {
         closeBtn.style.left = closeBtn.dataset.origLeft;
       }
-      closeBtn.style.zIndex = ""; // z-index 원복
+      closeBtn.style.zIndex = "";
       closeBtn.title = "패널 닫기";
       if (expandBtn.dataset.origLeft) {
         expandBtn.style.left = expandBtn.dataset.origLeft;
@@ -505,17 +608,14 @@
       expandBtn.style.zIndex = "";
       expandBtn.title = "패널 확장";
 
-      // 검색 바 위치 원복
       if (searchBarContainer && searchBarContainer.dataset.origLeft) {
         searchBarContainer.style.left = searchBarContainer.dataset.origLeft;
       }
 
-      // 원래 클릭 핸들러 복원
       if (expandBtn.__originalClickHandler) {
         expandBtn.onclick = expandBtn.__originalClickHandler;
       }
 
-      // 상세 패널용 이벤트 리스너 제거
       if (closeBtn.__detailEventAdded && closeBtn.__detailClickHandler) {
         closeBtn.removeEventListener("click", closeBtn.__detailClickHandler);
         closeBtn.__detailEventAdded = false;
@@ -523,7 +623,6 @@
       }
     }
 
-    // 필터 드롭다운 위치도 조정
     if (typeof window.adjustAllFilterDropdownPosition === "function") {
       setTimeout(() => window.adjustAllFilterDropdownPosition(), 100);
     }
@@ -536,10 +635,8 @@
     const currentOverlay = getElems(currentBuffer).overlay;
     if (!currentOverlay) return;
 
-    // 애니메이션을 위한 transition 클래스 추가
     currentOverlay.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
 
-    // 기본 패널들을 부드럽게 페이드아웃
     const sidePanel = document.getElementById("side-panel");
     const rightSidePanel = document.getElementById("right-side-panel");
     const rightToggleButton = document.getElementById(
@@ -550,7 +647,6 @@
       "collapse-fullscreen-button"
     );
 
-    // 우측 영역은 확장 직전에 즉시 숨김 처리(bleed 방지)
     const rightInstantHide = [rightSidePanel, rightToggleButton];
     const rightCardPanelIds = [
       "chat-panel",
@@ -575,7 +671,6 @@
       }
     });
 
-    // 페이드아웃 애니메이션
     const elementsToHide = [
       sidePanel,
       rightSidePanel,
@@ -589,7 +684,6 @@
       }
     });
 
-    // 짧은 지연 후 요소들 숨기고 상세 패널 확장
     setTimeout(() => {
       elementsToHide.forEach((el) => {
         if (el) {
@@ -599,7 +693,6 @@
         }
       });
 
-      // 상세 패널을 전체화면으로 확장
       currentOverlay.classList.remove(
         `w-[${LIST_RIGHT}px]`,
         `left-[${LIST_RIGHT}px]`
@@ -607,7 +700,6 @@
       currentOverlay.classList.add("w-full", "left-0", "z-50");
       currentOverlay.style.transform = "translateX(0)";
 
-      // 전체화면 축소 버튼 표시
       if (collapseFullscreenButton) {
         collapseFullscreenButton.classList.remove("hidden");
         collapseFullscreenButton.onclick = () => {
@@ -615,10 +707,8 @@
         };
       }
 
-      // 확장 버튼과 닫기 버튼 숨기기 (전체화면에서는 별도의 축소 버튼 사용)
       const expandBtn = document.getElementById("expand-panel-button");
       const closeBtn = document.getElementById("close-panel-button");
-
       if (expandBtn) {
         expandBtn.style.opacity = "0";
         expandBtn.style.pointerEvents = "none";
@@ -628,16 +718,13 @@
         closeBtn.style.pointerEvents = "none";
       }
 
-      // X 버튼을 << 버튼으로 변경
       updateCloseButtonForFullscreen(currentBuffer, true);
 
-      // 애니메이션 완료 후 transition 제거
       setTimeout(() => {
         currentOverlay.style.transition = "";
       }, 300);
     }, 200);
 
-    // 상세 패널용 전체화면 상태 플래그
     currentOverlay.__isFullscreen = true;
   }
 
@@ -648,10 +735,8 @@
     const currentOverlay = getElems(currentBuffer).overlay;
     if (!currentOverlay || !currentOverlay.__isFullscreen) return;
 
-    // 애니메이션을 위한 transition 클래스 추가
     currentOverlay.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
 
-    // 전체화면 축소 버튼 숨기기
     const collapseFullscreenButton = document.getElementById(
       "collapse-fullscreen-button"
     );
@@ -660,10 +745,8 @@
       collapseFullscreenButton.onclick = null;
     }
 
-    // << 버튼을 X 버튼으로 복원
     updateCloseButtonForFullscreen(currentBuffer, false);
 
-    // 상세 패널을 원래 크기로 복원
     currentOverlay.classList.add(
       `w-[${LIST_RIGHT}px]`,
       `left-[${LIST_RIGHT}px]`
@@ -671,7 +754,6 @@
     currentOverlay.classList.remove("w-full", "left-0", "z-50");
     currentOverlay.style.transform = "translateX(0)";
 
-    // 부드러운 축소 애니메이션과 다른 요소들 복원
     setTimeout(() => {
       const sidePanel = document.getElementById("side-panel");
       const rightSidePanel = document.getElementById("right-side-panel");
@@ -697,7 +779,6 @@
         "broker-list-panel",
       ];
 
-      // 먼저 요소들을 표시하되 투명하게 시작
       elementsToShow.forEach((el) => {
         if (el) {
           el.classList.remove("hidden");
@@ -708,17 +789,7 @@
         }
       });
 
-      // 오른쪽 카드 패널들은 애니메이션 완료 후 복원 (부자연스러운 현상 방지)
       setTimeout(() => {
-        const rightCardPanelIds = [
-          "chat-panel",
-          "profile-panel",
-          "notification-panel",
-          "favorite-panel",
-          "compare-panel",
-          "my-property-panel",
-          "broker-list-panel",
-        ];
         rightCardPanelIds.forEach((id) => {
           const el = document.getElementById(id);
           if (el && el.__prevVisibility !== undefined) {
@@ -728,9 +799,8 @@
             el.style.visibility = "visible";
           }
         });
-      }, 300); // 애니메이션 시간과 동일하게 설정
+      }, 300);
 
-      // 닫기 버튼과 확장 버튼 복원
       const closeBtn = document.getElementById("close-panel-button");
       const expandBtn = document.getElementById("expand-panel-button");
 
@@ -749,17 +819,15 @@
         expandBtn.style.pointerEvents = "auto";
       }
 
-      // 다음 프레임에서 페이드인 시작
       requestAnimationFrame(() => {
         elementsToShow.forEach((el) => {
           if (el) {
             el.style.opacity = "1";
-            el.offsetHeight; // 강제 리플로우로 렌더링 보장
+            el.offsetHeight;
           }
         });
       });
 
-      // 애니메이션 완료 후 정리
       setTimeout(() => {
         elementsToShow.forEach((el) => {
           if (el) {
@@ -770,13 +838,11 @@
         if (closeBtn) {
           closeBtn.style.transition = "";
         }
-        // 확장 과정에서 부여한 inline transition/transform을 원복하여
-        // 이후 교차 전환 시 CSS 클래스 기반 애니메이션이 정상 동작하도록 함
+
         currentOverlay.style.transition = "";
         currentOverlay.style.transform = "";
-        document.body.offsetHeight; // 최종 레이아웃 확인
+        document.body.offsetHeight;
 
-        // 우측 즉시 숨김 요소들 가시성 복원
         rightInstantHide.forEach((el) => {
           if (el) {
             el.style.visibility = el.__prevVisibility || "";
@@ -794,18 +860,14 @@
           }
         });
       }, 300);
-    }, 150); // 상세 패널 축소 후 약간의 지연
+    }, 150);
 
-    // 전체화면 상태 플래그 제거
     currentOverlay.__isFullscreen = false;
-
-    // 버튼 위치 다시 업데이트
     updatePanelButtonsForDetail(true);
   }
 
   async function openPropertyDetail(id, data) {
-    // 같은 매물을 다시 클릭한 경우 (토글 동작) - f311d46 로직
-    // data가 있으면 data.id로 비교, 없으면 id로 비교
+    // 같은 매물을 다시 클릭하면 토글
     const compareId = data?.id ?? id;
     if (currentId === compareId && isOpen) {
       closePropertyDetail();
@@ -813,20 +875,19 @@
     }
 
     const raw = data || (await findPropertyById(id)) || {};
+    console.log("🟣 [OPEN] raw incoming =", raw);
     const incoming = normalizeProperty(raw);
+
     const nextBuf = currentBuffer === "a" ? "b" : "a";
     const curElems = getElems(currentBuffer);
     const nextElems = getElems(nextBuf);
 
     renderInto(nextBuf, incoming);
 
-    // 탭 초기화 (상세정보 탭으로)
     if (typeof window.switchDetailTab === "function") {
       window.switchDetailTab(nextBuf, "detail");
     }
 
-    // 다음에 열릴 패널의 초기 상태를 강제 세팅하여
-    // 확장/복귀 시 남아있을 수 있는 inline 스타일 영향을 제거
     if (nextElems.overlay) {
       nextElems.overlay.classList.add("-translate-x-full");
       nextElems.overlay.style.transform = "";
@@ -835,48 +896,41 @@
       nextElems.overlay.style.pointerEvents = "none";
     }
 
-    // 겹치기: 현재 닫히는 애니메이션 + 다음 열림 애니메이션 동시
     setOverlayVisible(nextElems.overlay, true);
     if (isOpen && curElems.overlay) {
-      // 현재를 닫는 모션을 위해 잠시 visible 유지 후 비활성
       curElems.overlay.classList.add("-translate-x-full");
       setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
     }
 
-    // AB 전환 시: 패널 애니메이션 완료 후 버튼 표시
     if (isOpen) {
       const closeBtn = document.getElementById("close-panel-button");
       const expandBtn = document.getElementById("expand-panel-button");
-
-      // 버튼을 먼저 숨김 (전환 중 깜빡임 방지)
       if (closeBtn && expandBtn) {
         closeBtn.style.opacity = "0";
         expandBtn.style.opacity = "0";
         closeBtn.style.pointerEvents = "none";
         expandBtn.style.pointerEvents = "none";
       }
-
-      // 패널 애니메이션 완료 후(300ms) 버튼을 상세 옆에 표시
       setTimeout(() => {
         updatePanelButtonsForDetail(true);
       }, 300);
     } else {
-      // 첫 번째 열기: 즉시 버튼 표시
       updatePanelButtonsForDetail(true);
     }
-    // 리사이즈 시 위치 재계산
+
     const onResize = () => {
       if (isOpen) updatePanelButtonsForDetail(true);
     };
     window.addEventListener("resize", onResize);
-    nextElems.overlay.__detailOnResize = onResize;
+    if (nextElems.overlay) {
+      nextElems.overlay.__detailOnResize = onResize;
+    }
 
     isOpen = true;
     window.isDetailOpen = true;
-    currentId = compareId; // data.id 또는 id 사용
+    currentId = compareId;
     currentBuffer = nextBuf;
 
-    // 우측 패널/필터 위치 조정 필요 시 호출
     if (typeof window.adjustAllFilterDropdownPosition === "function") {
       setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
     }
@@ -885,12 +939,17 @@
   function closePropertyDetail() {
     const curElems = getElems(currentBuffer);
     if (curElems.overlay) {
-      // 전체화면 상태인 경우 먼저 축소
       if (curElems.overlay.__isFullscreen) {
         collapsePropertyDetailFromFullscreen();
       }
       curElems.overlay.classList.add("-translate-x-full");
       setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
+
+      const onResize = curElems.overlay.__detailOnResize;
+      if (onResize) {
+        window.removeEventListener("resize", onResize);
+        curElems.overlay.__detailOnResize = null;
+      }
     }
     updatePanelButtonsForDetail(false);
     isOpen = false;
@@ -908,24 +967,16 @@
 
       if (tabBtn && contentDiv) {
         if (t === tabName) {
-          // 활성 탭 스타일
           tabBtn.classList.remove(
             "text-gray-500",
             "hover:text-gray-700",
             "border-transparent"
           );
-          tabBtn.classList.add(
-            "text-blue-600",
-            "border-b-2",
-            "border-blue-600"
-          );
+          tabBtn.classList.add("text-blue-600", "border-b-2", "border-blue-600");
 
-          // 컨텐츠 표시
           contentDiv.classList.remove("hidden");
 
-          // 동적 컨텐츠 로드
           if (t === "prediction") {
-            // 시세예측 탭: API 호출하여 데이터 로드
             const overlay = document.getElementById(
               `property-detail-overlay-${suffix}`
             );
@@ -951,7 +1002,6 @@
             }
           }
         } else {
-          // 비활성 탭 스타일
           tabBtn.classList.remove(
             "text-blue-600",
             "border-b-2",
@@ -962,17 +1012,14 @@
             "hover:text-gray-700",
             "border-transparent"
           );
-
-          // 컨텐츠 숨김
           contentDiv.classList.add("hidden");
         }
       }
     });
   };
 
-  // 모든 매물 상세 페이지 닫기 - f311d46 로직
+  // 모든 매물 상세 페이지 닫기
   function closeAllPropertyDetails() {
-    // 전체화면 상태 해제
     const overlayA = qs("#property-detail-overlay-a");
     const overlayB = qs("#property-detail-overlay-b");
 
@@ -983,7 +1030,6 @@
       collapsePropertyDetailFromFullscreen();
     }
 
-    // 두 패널 모두 완전히 숨기기
     if (overlayA) {
       overlayA.classList.add(
         "-translate-x-full",
@@ -995,7 +1041,6 @@
       overlayA.style.pointerEvents = "none";
       overlayA.style.zIndex = "";
       overlayA.__isFullscreen = false;
-      // X 버튼 상태 복원
       updateCloseButtonForFullscreen("a", false);
     }
     if (overlayB) {
@@ -1009,21 +1054,17 @@
       overlayB.style.pointerEvents = "none";
       overlayB.style.zIndex = "";
       overlayB.__isFullscreen = false;
-      // X 버튼 상태 복원
       updateCloseButtonForFullscreen("b", false);
     }
 
-    // 상태 초기화 (currentBuffer='a' 줄 제거. 버퍼는 리셋하지 않음. 교차 애니메이션 유지)
     isOpen = false;
     window.isDetailOpen = false;
     currentId = null;
 
-    // 상세 페이지가 닫힐 때: 좌측 패널 버튼 UI 원복
     updatePanelButtonsForDetail(false);
   }
 
   function initPropertyDetailPanel() {
-    // 초기 상태를 명시적으로 감춤
     ["a", "b"].forEach((buf) => {
       const el = getElems(buf).overlay;
       if (el) {
@@ -1063,10 +1104,8 @@
   function attachDelegatedClick(container) {
     if (!container) return;
     container.addEventListener("click", (e) => {
-      // 매물 카드 찾기 (data-property-id 속성 또는 클래스 기반)
       let propertyCard;
       if (container.id === "compare-list") {
-        // 비교 그룹의 경우 더 구체적인 선택자 사용
         propertyCard = e.target.closest(
           ".bg-white.rounded-lg.shadow-md.overflow-hidden.flex-1.min-w-0"
         );
@@ -1077,33 +1116,28 @@
       }
       if (!propertyCard) return;
 
-      // 이벤트 버블링 방지
       e.stopPropagation();
 
       let data;
       let propertyId;
 
-      // data-property-id가 있으면 ID로 매물 찾기
       if (propertyCard.hasAttribute("data-property-id")) {
         propertyId = propertyCard.getAttribute("data-property-id");
         const list = getProperties();
 
-        // ID로 매물 찾기 (숫자 ID 또는 문자열 ID 모두 지원)
         if (Array.isArray(list)) {
           data = list.find(
             (p) => p && (p.id == propertyId || p.id === parseInt(propertyId))
           );
         }
 
-        // 찾지 못했으면 인덱스로 시도
         if (!data && !isNaN(propertyId)) {
           const index = parseInt(propertyId);
-          data = list[index];
+          const list = getProperties();
+          data = Array.isArray(list) ? list[index] : undefined;
         }
       } else {
-        // 클래스 기반으로 찾기 (비교 그룹 등)
         if (container.id === "compare-list") {
-          // 비교 그룹: 그룹 내에서 매물 찾기
           const groupContainer = propertyCard.closest(
             ".bg-gray-50.border.rounded-lg"
           );
@@ -1112,7 +1146,6 @@
           const groupIndex = Array.from(container.children).indexOf(
             groupContainer
           );
-          // 비교 그룹 내에서 매물 카드들의 인덱스 찾기 (제목과 버튼 제외)
           const propertyCards = groupContainer.querySelectorAll(
             ".bg-white.rounded-lg.shadow-md.overflow-hidden.flex-1.min-w-0"
           );
@@ -1122,18 +1155,15 @@
             typeof compareGroups !== "undefined" && Array.isArray(compareGroups)
               ? compareGroups[groupIndex]
               : undefined;
-          // compareGroups의 데이터 구조: {groupId: 1, items: Array(2)} - 소문자 items 사용
           data =
             groupData && Array.isArray(groupData.items)
               ? groupData.items[cardIndex]
               : undefined;
 
-          // 비교 그룹 매물에 고유 ID 생성 (groupId + cardIndex)
           if (data) {
             data.id = `compare_${groupData.groupId}_${cardIndex}`;
           }
         } else {
-          // 일반 목록 - 인덱스로 찾기
           const idx = Array.from(container.children).indexOf(propertyCard);
           const originalIndex = getOriginalIndexFromContainer(
             container.id,
@@ -1151,7 +1181,6 @@
 
       console.log("매물 클릭:", data);
 
-      // 패널 확장 상태 확인
       if (
         typeof window.isPanelExpanded !== "undefined" &&
         window.isPanelExpanded
@@ -1180,11 +1209,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    // 상세 패널 초기화 및 클릭 바인딩(위임)
     initPropertyDetailPanel();
     attachDelegatedClick(qs("#recommended-list"));
     attachDelegatedClick(qs("#property-list"));
-    // favorite-list는 백엔드 DB 연동 예정이므로 제외
     attachDelegatedClick(qs("#compare-list"));
   });
 
