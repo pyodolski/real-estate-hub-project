@@ -143,6 +143,8 @@
       brokerPhone,
       isApartment,
       floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`,
+      // 원본 데이터 보존 (시세 예측 등에서 사용)
+      _raw: p._raw || p,
     };
   }
 
@@ -211,8 +213,12 @@
     const suffix = buf;
 
     // propertyId를 데이터 속성으로 저장 (시세예측 등에서 사용)
-    if (el.overlay && d.id) {
-      el.overlay.dataset.propertyId = d.id;
+    // _raw가 PropertyFilterDto인 경우 propertyId 필드가 실제 property의 id입니다
+    if (el.overlay) {
+      const propertyId = d._raw?.propertyId || d.id;
+      if (propertyId) {
+        el.overlay.dataset.propertyId = propertyId;
+      }
     }
 
     // 매물 정보 채우기 - 실제 데이터 표시
