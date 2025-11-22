@@ -406,6 +406,38 @@ const SaleRegistrationPanel = {
       return false;
     }
   },
+
+  /**
+   * 패널 표시
+   */
+  show() {
+    const panel = document.getElementById("sale-registration-panel");
+    if (panel) {
+      panel.style.display = "flex";
+      panel.classList.remove("translate-x-full");
+      console.log("[SaleRegistrationPanel] Panel shown");
+    }
+  },
+
+  /**
+   * 패널 숨김
+   */
+  hide() {
+    const panel = document.getElementById("sale-registration-panel");
+    if (panel) {
+      panel.classList.add("translate-x-full");
+      setTimeout(() => {
+        panel.style.display = "none";
+      }, 300); // 애니메이션 시간
+
+      // 폼 및 마커 초기화
+      if (window.SaleRegistrationMapIntegration) {
+        window.SaleRegistrationMapIntegration.clearForm();
+      }
+
+      console.log("[SaleRegistrationPanel] Panel hidden");
+    }
+  },
 };
 
 // DOM 로드 완료 후 패널 초기화 (재시도 메커니즘 포함)

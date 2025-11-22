@@ -308,11 +308,11 @@
       const card = document.createElement("div");
       card.className =
         "bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer";
-      
+
       // 카드 클릭 시 지도 이동
-      card.addEventListener('click', (e) => {
+      card.addEventListener("click", (e) => {
         // 버튼 클릭은 제외 (이벤트 버블링 방지)
-        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        if (e.target.tagName === "BUTTON" || e.target.closest("button")) {
           return;
         }
         this.moveMapToSalesProperty(property);
@@ -414,7 +414,7 @@
 
         <div class="flex gap-2 mb-2">
           <button onclick="propertyManagement.viewSalesPropertyDetail(${
-            property.id
+            property.propertyId
           })"
                   class="flex-1 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
             상세보기
@@ -526,24 +526,21 @@
     }
 
     // 판매 매물 상세보기
-    viewSalesPropertyDetail(delegationId) {
+    viewSalesPropertyDetail(propertyId) {
       console.log(
-        `[PropertyManagement] viewSalesPropertyDetail called for delegation: ${delegationId}`
+        `[PropertyManagement] viewSalesPropertyDetail called for property: ${propertyId}`
       );
 
       try {
-        // 해당 판매 매물 찾기
-        const salesProperty = this.mySalesProperties.find(
-          (p) => p.id === delegationId
-        );
-
-        if (!salesProperty) {
-          this.showError("판매 매물 정보를 찾을 수 없습니다.");
-          return;
+        // 매물 상세 패널 열기 (property-detail-panel.js의 openPropertyDetail 사용)
+        if (typeof window.openPropertyDetail === "function") {
+          window.openPropertyDetail(propertyId);
+        } else {
+          console.error(
+            "[PropertyManagement] openPropertyDetail function not found"
+          );
+          this.showError("매물 상세 정보를 표시할 수 없습니다.");
         }
-
-        // 상세보기 모달 생성 및 표시
-        this.createAndShowDetailModal(salesProperty);
       } catch (error) {
         console.error("판매 매물 상세보기 실패:", error);
         this.showError(
@@ -2239,3 +2236,80 @@
   // 클래스를 전역에 노출 (다른 파트에서 메서드 추가 가능)
   window.PropertyManagement = PropertyManagement;
 })(); // IIFE 닫기
+
+// 주소 검색 함수 (메인 화면과 동일한 방식)
+PropertyManagement.prototype.searchAddress = async function () {
+  const query = document.getElementById("address-search").value.trim();
+
+  if (!query || query.length < 2) {
+    alert("검색할 주소를 2자 이상 입력해주세요.");
+    return;
+  }
+
+  try {
+    // 서버 API 호출 (메인 화면과 동일)
+    const url = `/api/search/places?q=${encodeURIComponent(query)}&limit=5`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("장소 검색 실패");
+    }
+
+    const data = await response.json();
+    const items = (data.items || []).filter(
+      (it) =>
+        it.mapx &&
+        it.mapy &&
+        Number.isFinite(Number(it.mapx)) &&
+        Number.isFinite(Number(it.mapy))
+    );
+
+    if (!items.length) {
+      alert("검색 결과가 없습니다. 다른 키워드로 시도해주세요.");
+      return;
+    }
+
+    // 첫 번째 결과 사용
+    const result = items[0];
+    const mapx = Number(result.mapx);
+    const mapy = Number(result.mapy);
+
+    // 좌표 변환 (스케일된 경위도 → 일반 경위도)
+    let lng = mapx,
+      lat = mapy;
+    if (Math.abs(mapx) > 180 && Math.abs(mapy) > 90) {
+      lng = mapx / 1e7;
+      lat = mapy / 1e7;
+    }
+
+    // 지도 이동
+    if (this.propertyMap) {
+      const location = new naver.maps.LatLng(lat, lng);
+      this.propertyMap.setCenter(location);
+      this.propertyMap.setZoom(16);
+
+      // 마커 업데이트
+      if (this.propertyMarker) {
+        this.propertyMarker.setPosition(location);
+      } else {
+        this.propertyMarker = new naver.maps.Marker({
+          position: location,
+          map: this.propertyMap,
+        });
+      }
+    }
+
+    // 폼 필드 업데이트
+    const name = result.title?.replace(/<[^>]+>/g, "") || "";
+    const address = result.roadAddress || result.address || name;
+
+    document.getElementById("selected-address").value = address;
+    document.getElementById("location-x").value = lng;
+    document.getElementById("location-y").value = lat;
+
+    console.log("주소 검색 완료:", { name, address, lng, lat });
+  } catch (error) {
+    console.error("주소 검색 오류:", error);
+    alert("주소 검색 중 오류가 발생했습니다.");
+  }
+};

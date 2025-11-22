@@ -368,27 +368,27 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
 
-      // 전역 properties 배열 업데이트 (property-detail-panel.js에서 사용)
-      if (typeof properties !== 'undefined') {
-        properties.length = 0;
-        properties.push(...loadedProperties);
-      } else {
-        window.properties = loadedProperties;
-      }
+    // 전역 properties 배열 업데이트 (property-detail-panel.js에서 사용)
+    if (typeof properties !== 'undefined') {
+      properties.length = 0;
+      properties.push(...loadedProperties);
+    } else {
+      window.properties = loadedProperties;
+    }
 
-      // 매물 목록 렌더링
-      if (propertyList && recommendedList && typeof createPropertyCard === "function") {
-        propertyList.innerHTML = '';
-        recommendedList.innerHTML = '';
+    // 매물 목록 렌더링
+    if (propertyList && recommendedList && typeof createPropertyCard === "function") {
+      propertyList.innerHTML = '';
+      recommendedList.innerHTML = '';
 
-        loadedProperties.forEach((prop, index) => {
-          const cardHTML = createPropertyCard(prop, index);
-          if (prop.isRecommended) {
-            recommendedList.innerHTML += cardHTML;
-          } else {
-            propertyList.innerHTML += cardHTML;
-          }
-        });
+      loadedProperties.forEach((prop, index) => {
+        const cardHTML = createPropertyCard(prop, index);
+        if (prop.isRecommended) {
+          recommendedList.innerHTML += cardHTML;
+        } else {
+          propertyList.innerHTML += cardHTML;
+        }
+      });
 
         console.log(`✅ ${loadedProperties.length}개의 판매 등록 완료 매물을 표시했습니다.`);
         console.log('조건: 소유권 승인(APPROVED) + 판매 매물 등록(isActive=true)');

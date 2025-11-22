@@ -502,6 +502,11 @@ const RightSidePanels = {
           </button>
         </div>
 
+        <!-- 광고 이미지 -->
+        <div class="mb-4 flex-shrink-0">
+          <img src="/images/forsale.png" alt="광고" class="w-full rounded-xl shadow-md object-cover">
+        </div>
+
         <!-- 탭 네비게이션 -->
         <div class="mb-4 flex-shrink-0">
           <div class="flex border-b border-gray-200">

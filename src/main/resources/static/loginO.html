@@ -21,6 +21,7 @@
     <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g&submodules=coord,geocoder"></script>
     <!-- 커스텀 스타일은 style-loader.js에서 동적으로 로드됩니다 -->
   </head>
+
   <body class="bg-gray-100 h-screen overflow-hidden">
     <div class="relative w-full h-full">
       <!-- 지도 및 필터 패널은 map-filter-panel.js에서 동적으로 렌더링됩니다 -->
@@ -62,45 +63,15 @@
           >
             내집
           </button>
-          <div
-            id="add-listing-container"
-            class="flex items-center gap-2 transition-all duration-300 ease-in-out"
-          >
-            <button
-              class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md text-sm hover:bg-indigo-700 transition-colors flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              새 매물 등록
-            </button>
-          </div>
         </div>
 
-        <!-- 매물 개수 및 페이지네이션 -->
-        <div class="flex justify-between items-center mb-6 flex-shrink-0">
-          <p class="font-bold text-gray-800">10,822개의 매물</p>
-          <div class="flex items-center space-x-1">
-            <button class="px-3 py-1 border rounded-md bg-gray-200">1</button>
-            <button class="px-3 py-1 border rounded-md hover:bg-gray-100">
-              2
-            </button>
-            <button class="px-3 py-1 border rounded-md hover:bg-gray-100">
-              3
-            </button>
-            <button class="px-3 py-1 border rounded-md hover:bg-gray-100">
-              4
-            </button>
-          </div>
+        <!-- 광고 이미지 고정 표시 -->
+        <div id="advertisement-container" class="mb-6 flex-shrink-0">
+          <img
+            src="images/loginO%20advertisement%20sample.png"
+            alt="광고 이미지"
+            class="w-full rounded-xl shadow-md object-cover"
+          />
         </div>
 
         <!-- 스크롤 가능한 콘텐츠 영역 -->
@@ -333,7 +304,7 @@
           </button>
           <button
             id="notification-button"
-            class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
+            class="relative w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -434,6 +405,7 @@
     <script src="js/regular/main/map-filter-panel.js"></script>
     <script src="js/regular/main/property-detail-overlay.js"></script>
     <script src="js/regular/main/sale-registration-panel.js"></script>
+    <script src="js/regular/main/sale-registration-map-integration.js"></script>
     <script src="js/regular/main/right-side-panels.js"></script>
 
     <!-- 그 다음 데이터 및 로직 스크립트들 -->
