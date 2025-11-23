@@ -62,6 +62,40 @@ function formatPriceFromOffers(property) {
   return property.price != null ? Number(property.price).toLocaleString() : '가격 정보 없음';
 }
 
+/**
+ * Search API(PropertyFilterDto) 용 가격 포맷
+ *  - offerType / totalPrice / deposit / monthlyRent 사용
+ */
+function formatPriceFromSearchDto(prop) {
+  const type = prop.offerType; // "SALE" | "JEONSE" | "WOLSE"
+  const total = prop.totalPrice != null ? Number(prop.totalPrice) : null;
+  const deposit = prop.deposit != null ? Number(prop.deposit) : null;
+  const monthly = prop.monthlyRent != null ? Number(prop.monthlyRent) : null;
+
+  if (type === 'SALE') {
+    if (total == null) return '매매가 협의';
+    const eok = Math.floor(total / 100000000);
+    const man = Math.round((total % 100000000) / 10000);
+    return eok > 0 ? `매매 ${eok}억${man ? ' ' + man + '만' : ''}` : `매매 ${man}만`;
+  }
+
+  if (type === 'JEONSE') {
+    const base = total != null ? total : deposit;
+    if (base == null) return '전세가 협의';
+    const eok = Math.floor(base / 100000000);
+    const man = Math.round((base % 100000000) / 10000);
+    return eok > 0 ? `전세 ${eok}억${man ? ' ' + man + '만' : ''}` : `전세 ${man}만`;
+  }
+
+  if (type === 'WOLSE') {
+    if (deposit == null || monthly == null) return '월세 협의';
+    const man = Math.floor(deposit / 10000);
+    const wol = Math.floor(monthly / 10000);
+    return `월세 ${man ? man + '만 / ' : ''}${wol}만`;
+  }
+
+  return '가격 정보 없음';
+}
 
 
 
@@ -263,158 +297,125 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- 초기 렌더링 ---
-  async function initialRender() {
-    // 지도가 준비될 때까지 대기
-    if (!window.__naverMap) {
-      await new Promise(resolve => {
-        window.addEventListener('map:ready', resolve, { once: true });
-      });
-    }
-
-    // 실제 API에서 매물 목록 가져오기
-    try {
-      const map = window.__naverMap;
-      const bounds = map.getBounds();
-      const sw = bounds.getSW();
-      const ne = bounds.getNE();
-
-      // propertiesApi.js의 fetchPropertiesInBounds 사용
-      const response = await fetch('/api/properties?' + new URLSearchParams({
-        swLat: sw.y,
-        swLng: sw.x,
-        neLat: ne.y,
-        neLng: ne.x,
-        status: 'AVAILABLE'
-      }), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch properties');
-
-      const raw = await response.json();
-      console.log("🟡 /api/properties 응답 =", raw);
-
-      // 응답이 배열이 아니면 content/items 속성도 시도
-      const apiProperties = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw.content)
-          ? raw.content
-          : Array.isArray(raw.items)
-            ? raw.items
-            : [];
-
-      if (!Array.isArray(apiProperties)) {
-        throw new Error('API 응답 형식이 배열이 아닙니다.');
+    async function initialRender() {
+      // 지도가 준비될 때까지 대기
+      if (!window.__naverMap) {
+        await new Promise(resolve => {
+          window.addEventListener('map:ready', resolve, { once: true });
+        });
       }
 
-      // API 데이터를 UI 컴포넌트가 기대하는 형식으로 변환
-      const loadedProperties = apiProperties.map(prop => {
-        const offers = prop.property_offers || prop.propertyOffers || [];
-        const activeOffers =
-          offers.filter(o => (o.is_active !== undefined ? o.is_active : o.isActive));
-        const mainOffer = activeOffers[0] || offers[0] || null;
+      try {
+        const map = window.__naverMap;
+        const bounds = map.getBounds();
+        const sw = bounds.getSW();
+        const ne = bounds.getNE();
 
-        const priceText = formatPriceFromOffers({
-          ...prop,
-          property_offers: offers
+        // 🔵 추천 적용 Search API 호출
+        const response = await fetch('/api/properties/search-in-bounds?' + new URLSearchParams({
+          swLat: sw.y,
+          swLng: sw.x,
+          neLat: ne.y,
+          neLng: ne.x,
+          page: 0,
+          size: 100
+          // houseTypes, offerTypes 같은 필터 쓰고 싶으면 여기 파라미터 더 추가
+        }), {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
+          }
         });
 
-        let options = [];
-        if (mainOffer && mainOffer.oftion != null) {
-          options = parseOptions(mainOffer.oftion);
+        if (!response.ok) throw new Error('Failed to fetch properties(search-in-bounds)');
+
+        const raw = await response.json();
+        console.log("🟡 /api/properties/search-in-bounds 응답 =", raw);
+
+        const apiProperties = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw.content)
+            ? raw.content
+            : Array.isArray(raw.items)
+              ? raw.items
+              : [];
+
+        if (!Array.isArray(apiProperties)) {
+          throw new Error('API 응답 형식이 배열이 아닙니다.');
         }
 
-        const tags = [
-          ...(prop.status === 'AVAILABLE' ? ['거래가능'] : []),
-          '판매등록완료'
-        ];
+        // 🔵 PropertyFilterDto → 카드용 오브젝트로 변환
+        const loadedProperties = apiProperties.map(prop => {
+          const priceText = formatPriceFromSearchDto(prop);
+          const options = prop.oftion ? parseOptions(prop.oftion) : [];
 
-          // 🔵 이미지: property_images(image_url)도 같이 본다
+          const tags = [
+            ...(prop.recommended ? ['추천매물'] : []),
+            ...(prop.offerType === 'SALE'
+              ? ['매매']
+              : prop.offerType === 'JEONSE'
+              ? ['전세']
+              : prop.offerType === 'WOLSE'
+              ? ['월세']
+              : []),
+          ];
+
           let imageUrl =
             'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400';
 
-          const imgArr = prop.images || prop.property_images || prop.propertyImages;
-          if (Array.isArray(imgArr) && imgArr.length > 0) {
-            const img0 = imgArr[0];
-            imageUrl = img0.url || img0.imgUrl || img0.imageUrl || img0.image_url || imageUrl;
-          }
-
-
-        return {
-          id: prop.id,
-          image: imageUrl,
-          price: priceText,
-          priceText,
-          location: prop.address || '위치 정보 없음',
-          address: prop.address,
-          title: prop.title || prop.address,
-          details: prop.title || '상세 정보 없음',
-          tags,
-          options,
-          isRecommended: false,
-          status: prop.status || 'AVAILABLE',
-          areaM2: prop.areaM2 ?? prop.area_m2,
-          buildingYear: prop.buildingYear ?? prop.building_year,
-          description: prop.title || '상세 정보 없음',
-          brokerName: prop.brokerName || prop.ownerName || '',
-          brokerPhone: '',
-          offers,
-          images: imgArr || [],
-          maintenanceFee: mainOffer.maintenance_fee ?? null,
-          _raw: prop
-        };
-      });
-
-
-    // 전역 properties 배열 업데이트 (property-detail-panel.js에서 사용)
-    if (typeof properties !== 'undefined') {
-      properties.length = 0;
-      properties.push(...loadedProperties);
-    } else {
-      window.properties = loadedProperties;
-    }
-
-    // 매물 목록 렌더링
-    if (propertyList && recommendedList && typeof createPropertyCard === "function") {
-      propertyList.innerHTML = '';
-      recommendedList.innerHTML = '';
-
-      loadedProperties.forEach((prop, index) => {
-        const cardHTML = createPropertyCard(prop, index);
-        if (prop.isRecommended) {
-          recommendedList.innerHTML += cardHTML;
-        } else {
-          propertyList.innerHTML += cardHTML;
-        }
-      });
-
-        console.log(`✅ ${loadedProperties.length}개의 판매 등록 완료 매물을 표시했습니다.`);
-        console.log('조건: 소유권 승인(APPROVED) + 판매 매물 등록(isActive=true)');
-      }
-    } catch (error) {
-      console.error('매물 목록 로드 실패:', error);
-      // 에러 시 더미 데이터 폴백
-      /*
-      if (
-        propertyList &&
-        recommendedList &&
-        typeof properties !== "undefined" &&
-        typeof createPropertyCard === "function"
-      ) {
-        properties.forEach((prop, index) => {
-          const cardHTML = createPropertyCard(prop, index);
-          if (prop.isRecommended) {
-            recommendedList.innerHTML += cardHTML;
-          } else {
-            propertyList.innerHTML += cardHTML;
-          }
+          return {
+            id: prop.propertyId || prop.id,
+            image: imageUrl,
+            price: priceText,
+            priceText,
+            location: prop.address || '위치 정보 없음',
+            address: prop.address,
+            title: prop.title || prop.address,
+            details: prop.title || '상세 정보 없음',
+            tags,
+            options,
+            isRecommended: !!prop.recommended,       // 🔵 추천 여부 여기!
+            status: 'AVAILABLE',                     // 필요하면 DTO에 status 추가 후 사용
+            areaM2: prop.area,
+            buildingYear: prop.buildingYear ?? prop.building_year,
+            description: prop.recommendReason || prop.title || '상세 정보 없음',
+            brokerName: '',
+            brokerPhone: '',
+            offers: [],
+            images: [],
+            maintenanceFee: null,
+            _raw: prop
+          };
         });
-      }
-      */
-    }
-  }
 
-  initialRender();
-});
+        // 전역 properties 배열 업데이트
+        if (typeof properties !== 'undefined') {
+          properties.length = 0;
+          properties.push(...loadedProperties);
+        } else {
+          window.properties = loadedProperties;
+        }
+
+        // 매물 목록 렌더링
+        if (propertyList && recommendedList && typeof createPropertyCard === "function") {
+          propertyList.innerHTML = '';
+          recommendedList.innerHTML = '';
+
+          loadedProperties.forEach((prop, index) => {
+            const cardHTML = createPropertyCard(prop, index);
+            if (prop.isRecommended) {
+              recommendedList.innerHTML += cardHTML;  // 추천 리스트
+            } else {
+              propertyList.innerHTML += cardHTML;     // 일반 리스트
+            }
+          });
+
+          console.log(`✅ ${loadedProperties.length}개의 매물을 표시했습니다.`);
+          console.log('추천 매물 수:', loadedProperties.filter(p => p.isRecommended).length);
+        }
+      } catch (error) {
+        console.error('매물 목록 로드 실패:', error);
+      }
+    }
+
+    initialRender();
+  });

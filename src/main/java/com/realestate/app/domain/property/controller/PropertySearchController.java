@@ -19,4 +19,6 @@ public class PropertySearchController {
     public List<PropertyFilterDto> search(@RequestBody SearchRequest req) {
         return repository.search(req);
     }
+
+
 }

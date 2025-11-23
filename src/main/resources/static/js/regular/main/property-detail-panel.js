@@ -866,75 +866,95 @@
     updatePanelButtonsForDetail(true);
   }
 
-  async function openPropertyDetail(id, data) {
-    // 같은 매물을 다시 클릭하면 토글
-    const compareId = data?.id ?? id;
-    if (currentId === compareId && isOpen) {
-      closePropertyDetail();
-      return;
-    }
+   async function openPropertyDetail(id, data) {
+     // 1) 클릭한 매물 id 정규화 (card → propertyId, compare-list 등까지 고려)
+     const compareId = (data && (data._raw?.propertyId || data.id)) || id;
 
-    const raw = data || (await findPropertyById(id)) || {};
-    console.log("🟣 [OPEN] raw incoming =", raw);
-    const incoming = normalizeProperty(raw);
+     // 같은 매물을 다시 클릭하면 토글
+     if (currentId === compareId && isOpen) {
+       closePropertyDetail();
+       return;
+     }
 
-    const nextBuf = currentBuffer === "a" ? "b" : "a";
-    const curElems = getElems(currentBuffer);
-    const nextElems = getElems(nextBuf);
+     // 2) view 이벤트 전송 (선호도 업데이트)
+     try {
+       fetch(`/api/properties/${compareId}/view`, {
+         method: "POST",
+         headers: {
+           "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
+           "Content-Type": "application/json",
+         },
+       }).catch((err) => {
+         console.warn("view 이벤트 전송 실패:", err);
+       });
+     } catch (e) {
+       console.warn("view 이벤트 호출 중 오류:", e);
+     }
 
-    renderInto(nextBuf, incoming);
+     // 3) 항상 /full API 먼저 시도 → 실패하면 카드 데이터 사용
+     const full = await findPropertyById(compareId);   // /api/properties/{id}/full
+     const raw = full || data || {};
+     console.log("🟣 [OPEN] raw incoming =", raw);
 
-    if (typeof window.switchDetailTab === "function") {
-      window.switchDetailTab(nextBuf, "detail");
-    }
+     const incoming = normalizeProperty(raw);
 
-    if (nextElems.overlay) {
-      nextElems.overlay.classList.add("-translate-x-full");
-      nextElems.overlay.style.transform = "";
-      nextElems.overlay.style.transition = "";
-      nextElems.overlay.style.opacity = "0";
-      nextElems.overlay.style.pointerEvents = "none";
-    }
+     const nextBuf = currentBuffer === "a" ? "b" : "a";
+     const curElems = getElems(currentBuffer);
+     const nextElems = getElems(nextBuf);
 
-    setOverlayVisible(nextElems.overlay, true);
-    if (isOpen && curElems.overlay) {
-      curElems.overlay.classList.add("-translate-x-full");
-      setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
-    }
+     renderInto(nextBuf, incoming);
 
-    if (isOpen) {
-      const closeBtn = document.getElementById("close-panel-button");
-      const expandBtn = document.getElementById("expand-panel-button");
-      if (closeBtn && expandBtn) {
-        closeBtn.style.opacity = "0";
-        expandBtn.style.opacity = "0";
-        closeBtn.style.pointerEvents = "none";
-        expandBtn.style.pointerEvents = "none";
-      }
-      setTimeout(() => {
-        updatePanelButtonsForDetail(true);
-      }, 300);
-    } else {
-      updatePanelButtonsForDetail(true);
-    }
+     if (typeof window.switchDetailTab === "function") {
+       window.switchDetailTab(nextBuf, "detail");
+     }
 
-    const onResize = () => {
-      if (isOpen) updatePanelButtonsForDetail(true);
-    };
-    window.addEventListener("resize", onResize);
-    if (nextElems.overlay) {
-      nextElems.overlay.__detailOnResize = onResize;
-    }
+     if (nextElems.overlay) {
+       nextElems.overlay.classList.add("-translate-x-full");
+       nextElems.overlay.style.transform = "";
+       nextElems.overlay.style.transition = "";
+       nextElems.overlay.style.opacity = "0";
+       nextElems.overlay.style.pointerEvents = "none";
+     }
 
-    isOpen = true;
-    window.isDetailOpen = true;
-    currentId = compareId;
-    currentBuffer = nextBuf;
+     setOverlayVisible(nextElems.overlay, true);
+     if (isOpen && curElems.overlay) {
+       curElems.overlay.classList.add("-translate-x-full");
+       setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
+     }
 
-    if (typeof window.adjustAllFilterDropdownPosition === "function") {
-      setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
-    }
-  }
+     if (isOpen) {
+       const closeBtn = document.getElementById("close-panel-button");
+       const expandBtn = document.getElementById("expand-panel-button");
+       if (closeBtn && expandBtn) {
+         closeBtn.style.opacity = "0";
+         expandBtn.style.opacity = "0";
+         closeBtn.style.pointerEvents = "none";
+         expandBtn.style.pointerEvents = "none";
+       }
+       setTimeout(() => {
+         updatePanelButtonsForDetail(true);
+       }, 300);
+     } else {
+       updatePanelButtonsForDetail(true);
+     }
+
+     const onResize = () => {
+       if (isOpen) updatePanelButtonsForDetail(true);
+     };
+     window.addEventListener("resize", onResize);
+     if (nextElems.overlay) {
+       nextElems.overlay.__detailOnResize = onResize;
+     }
+
+     isOpen = true;
+     window.isDetailOpen = true;
+     currentId = compareId;
+     currentBuffer = nextBuf;
+
+     if (typeof window.adjustAllFilterDropdownPosition === "function") {
+       setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
+     }
+   }
 
   function closePropertyDetail() {
     const curElems = getElems(currentBuffer);
