@@ -67,13 +67,19 @@ public class PropertySearchRepository {
         if (req.buildYearMax()!=null) { sql.append(" AND p.building_year <= :byMax "); p.addValue("byMax", req.buildYearMax()); }
 
         // 옵션 비트마스크 (WHERE에서는 bit로 비교)
+        // 옵션 비트마스크 (WHERE에서는 bit로 비교)
         if (req.optionMask()!=null && !req.optionMask().isBlank()) {
             if ("ANY".equalsIgnoreCase(req.optionMatchMode())) {
-                sql.append(" AND (po.oftion & CAST(:opt AS bit(10))) <> B'0000000000' ");
+                sql.append("""
+            AND (CAST(po.oftion AS bit(10)) & CAST(:opt AS bit(10))) <> B'0000000000'
+        """);
             } else {
-                sql.append(" AND (po.oftion & CAST(:opt AS bit(10))) = CAST(:opt AS bit(10)) ");
+                sql.append("""
+            AND (CAST(po.oftion AS bit(10)) & CAST(:opt AS bit(10))) = CAST(:opt AS bit(10))
+        """);
             }
-            p.addValue("opt", req.optionMask()); // "1100000000"
+            // opt 값은 그냥 "1010000000" 이런 문자열이면 됨 (앞뒤에 B'' 붙이면 안 됨)
+            p.addValue("opt", req.optionMask());
         }
 
         // 가격
@@ -126,24 +132,62 @@ public class PropertySearchRepository {
     }
 
     // ★ SELECT의 alias(카멜케이스)로 읽어오는 수동 매퍼
-    private static final RowMapper<PropertyFilterDto> ROW_MAPPER = new RowMapper<>() {
-        @Override public PropertyFilterDto mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new PropertyFilterDto(
-                    rs.getLong("id"),
-                    rs.getLong("propertyId"),
-                    rs.getString("houseType"),
-                    rs.getString("offerType"),
-                    rs.getObject("floor") == null ? null : rs.getInt("floor"),
-                    rs.getString("oftion"), // varchar로 캐스팅되어 들어옴
-                    rs.getBigDecimal("totalPrice"),
-                    rs.getBigDecimal("deposit"),
-                    rs.getBigDecimal("monthlyRent"),
-                    rs.getString("title"),
-                    rs.getString("address"),
-                    rs.getObject("area") == null ? null : rs.getInt("area"),
-                    rs.getObject("lat") == null ? null : rs.getDouble("lat"),
-                    rs.getObject("lng") == null ? null : rs.getDouble("lng")
-            );
-        }
-    };
+    private static final RowMapper<PropertyFilterDto> ROW_MAPPER = (rs, rowNum) ->
+            PropertyFilterDto.builder()
+                    .id(rs.getLong("id"))
+                    .propertyId(rs.getLong("propertyId"))
+                    .houseType(rs.getString("houseType"))
+                    .offerType(rs.getString("offerType"))
+                    .floor(rs.getObject("floor") == null ? null : rs.getInt("floor"))
+                    .oftion(rs.getString("oftion"))
+                    // numeric(14,2) → Double로 안전하게 변환
+                    .totalPrice(rs.getObject("totalPrice") == null ? null : rs.getDouble("totalPrice"))
+                    .deposit(rs.getObject("deposit") == null ? null : rs.getDouble("deposit"))
+                    .monthlyRent(rs.getObject("monthlyRent") == null ? null : rs.getDouble("monthlyRent"))
+                    .title(rs.getString("title"))
+                    .address(rs.getString("address"))
+                    .area(rs.getObject("area") == null ? null : rs.getInt("area"))
+                    .lat(rs.getObject("lat") == null ? null : rs.getDouble("lat"))
+                    .lng(rs.getObject("lng") == null ? null : rs.getDouble("lng"))
+                    // 추천용 필드는 초기값 세팅
+                    .score(null)
+                    .recommended(false)
+                    .recommendReason(null)
+                    .build();
+
+
+    public PropertyFilterDto findOneForRecommend(Long propertyId) {
+        String sql = """
+        SELECT
+          po.id,
+          po.property_id AS propertyId,
+          po.housetype   AS houseType,
+          po.type        AS offerType,
+          CAST(po.floor AS integer)                 AS floor,
+          CAST(po.oftion AS varchar)                AS oftion,
+          po.total_price   AS totalPrice,
+          po.deposit       AS deposit,
+          po.monthly_rent  AS monthlyRent,
+          p.title,
+          p.address,
+          CAST(p.area_m2 AS integer)                AS area,
+          CAST(p.location_y AS double precision)    AS lat,
+          CAST(p.location_x AS double precision)    AS lng
+        FROM property_offers po
+        JOIN properties p ON p.id = po.property_id
+        WHERE po.is_active = true
+          AND p.status = 'AVAILABLE'
+          AND po.property_id = :propertyId
+        ORDER BY po.created_at DESC
+        LIMIT 1
+        """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("propertyId", propertyId);
+
+        List<PropertyFilterDto> list = jdbc.query(sql, params, ROW_MAPPER);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+
 }

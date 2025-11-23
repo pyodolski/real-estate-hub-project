@@ -6,10 +6,13 @@ import com.realestate.app.domain.property.dto.CompleteDealRequest;
 import com.realestate.app.domain.property.dto.JeonseRatioResponse;
 import com.realestate.app.domain.property.dto.PropertyFullResponse;
 import com.realestate.app.domain.property.repository.PropertyFullRepository;
+import com.realestate.app.domain.property.repository.PropertySearchRepository;
 import com.realestate.app.domain.property.service.JeonseRatioService;
 import com.realestate.app.domain.property.table.Property;
-import com.realestate.app.domain.property.dto.PropertyMarkerDto;
+import com.realestate.app.domain.property.dto.PropertyFilterDto;
 import com.realestate.app.domain.property.service.propertyservice;
+import com.realestate.app.recproperty.service.PropertySearchService;
+import com.realestate.app.recproperty.service.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,7 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.realestate.app.domain.property.dto.request.SearchRequest;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -31,6 +34,10 @@ public class PropertyController {
     private final propertyservice service;
     private final JeonseRatioService jeonseRatioService;
     private final PropertyFullRepository propertyFullRepository;
+    private final PropertySearchService propertySearchService;
+    private final RecommendationService recommendationService;
+    private final PropertySearchRepository propertySearchRepository;
+
     // GET /api/properties?swLat=&swLng=&neLat=&neLng=&status=AVAILABLE&minPrice=&maxPrice=
     @GetMapping
     public List<PropertyFullResponse> getInBounds(
@@ -83,5 +90,77 @@ public class PropertyController {
             @RequestParam(value = "salePriceFallback", required = false) BigDecimal salePriceFallback
     ) {
         return jeonseRatioService.computeByProperty(propertyId, salePriceFallback);
+    }
+
+    @PostMapping("/{id}/view")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> onView(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        if (authUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Long uid = authUser.getId();
+
+        // 🔵 id = propertyId 기준으로 본다고 가정
+        PropertyFilterDto dto = propertySearchRepository.findOneForRecommend(id);
+        if (dto != null) {
+            recommendationService.updatePreferenceOnView(uid, dto);
+        }
+
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/search-in-bounds")
+    public List<PropertyFilterDto> searchInBounds(
+            @RequestParam double swLat,
+            @RequestParam double swLng,
+            @RequestParam double neLat,
+            @RequestParam double neLng,
+
+            @RequestParam(required = false) List<String> houseTypes,
+            @RequestParam(required = false) List<String> offerTypes,
+            @RequestParam(required = false) Integer areaMin,
+            @RequestParam(required = false) Integer areaMax,
+            @RequestParam(required = false) Integer floorMin,
+            @RequestParam(required = false) Integer floorMax,
+            @RequestParam(required = false) String optionMask,
+            @RequestParam(required = false, defaultValue = "ALL") String optionMatchMode,
+
+            @RequestParam(required = false) BigDecimal buyMin,
+            @RequestParam(required = false) BigDecimal buyMax,
+            @RequestParam(required = false) BigDecimal jeonseMin,
+            @RequestParam(required = false) BigDecimal jeonseMax,
+            @RequestParam(required = false) BigDecimal monthlyDepositMin,
+            @RequestParam(required = false) BigDecimal monthlyDepositMax,
+            @RequestParam(required = false) BigDecimal monthlyRentMin,
+            @RequestParam(required = false) BigDecimal monthlyRentMax,
+
+            @RequestParam(required = false) Integer buildYearMin,
+            @RequestParam(required = false) Integer buildYearMax,
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "50") Integer size,
+
+            // 네가 쓰는 Principal 타입에 맞게 조정하면 됨
+            @AuthenticationPrincipal(expression = "id") Long userId
+    ) {
+        // ⚠️ 여기서 Builder 쓰면 안 됨! record라서 생성자는 new SearchRequest(...)
+        SearchRequest req = new SearchRequest(
+                houseTypes,
+                offerTypes,
+                areaMin, areaMax,
+                floorMin, floorMax,
+                optionMask,
+                optionMatchMode,
+                buyMin, buyMax,
+                jeonseMin, jeonseMax,
+                monthlyDepositMin, monthlyDepositMax,
+                monthlyRentMin, monthlyRentMax,
+                buildYearMin, buildYearMax,
+                page, size
+        );
+
+        return propertySearchService.search(req, userId);
     }
 }

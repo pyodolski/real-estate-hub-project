@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (propertyList && recommendedList && typeof createPropertyCard === "function") {
         propertyList.innerHTML = '';
         recommendedList.innerHTML = '';
-
+        // 여기서 매물 목록 입력 완완완
         properties.forEach((prop) => {
           const cardHTML = createPropertyCard(prop);
           if (prop.isRecommended) {

@@ -85,3 +85,36 @@ RecommendService — 추천 계산
 이 클래스는 위 두 서비스를 이용해
 실제로 추천 점수를 계산하고 상위 N개를 반환합니다.
 
+
+user 가중치 table
+
+create table user_property_preferences (
+user_id     bigint primary key,
+pref_vector double precision[],   -- 최소 구조
+updated_at  timestamp default now()
+);
+
+
+공용 가중치 table
+
+create table recommender_feature_weights (
+id         serial primary key,
+name       text not null,
+weights    double precision[],
+updated_at timestamp default now()
+);
+
+
+공용 디폴트 가중치
+insert into recommender_feature_weights(name, weights)
+values(
+'default',
+'{
+1.0,   -- IDX_PRICE
+1.0, 1.0, 1.0,   -- SALE, JEONSE, WOLSE
+1.2, 1.0, 1.0,   -- APART, VILLA, ONE
+1.0,             -- AREA
+1.3,             -- OPTION
+1.5              -- SUBWAY_DISTANCE
+}'
+);
