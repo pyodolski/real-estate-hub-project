@@ -298,12 +298,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 초기 렌더링 ---
     async function initialRender() {
-      // 지도가 준비될 때까지 대기
-      if (!window.__naverMap) {
+      // 지도가 준비될 때까지 대기 (initmap.js에서 설정한 플래그 확인)
+      if (!window.__MAP_IS_READY__) {
+        console.log("[app-init] Waiting for map to be ready...");
         await new Promise(resolve => {
           window.addEventListener('map:ready', resolve, { once: true });
         });
       }
+      console.log("[app-init] Map is ready, fetching properties...");
 
       try {
         const map = window.__naverMap;
