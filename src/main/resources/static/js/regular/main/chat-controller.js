@@ -8,6 +8,8 @@ export const ChatController = {
     currentRoomId: null,
     pollingInterval: null,
     currentUser: null,
+    allRooms: [], // 전체 채팅방 목록 저장용
+    lastMessageSignature: null, // 메시지 변경 감지용 (ID 또는 타임스탬프 조합)
 
     async init() {
         this.bindGlobalEvents();
@@ -63,6 +65,41 @@ export const ChatController = {
                 }
             }
         });
+
+        // 채팅방 검색 입력
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'chat-search-input') {
+                const keyword = e.target.value.trim().toLowerCase();
+                this.filterChatList(keyword);
+            }
+        });
+    },
+
+    /**
+     * 채팅방 목록 필터링
+     */
+    filterChatList(keyword) {
+        const listContainer = document.getElementById('chat-list');
+        if (!listContainer || !window.ChatPanel || !this.currentUser) return;
+
+        if (!keyword) {
+            // 검색어 없으면 전체 목록 표시
+            listContainer.innerHTML = window.ChatPanel.renderChatListItems(this.allRooms, this.currentUser.id);
+            return;
+        }
+
+        // 검색어로 필터링 (상대방 이름 기준)
+        const filteredRooms = this.allRooms.filter(room => {
+            let opponentName = '';
+            if (room.opponentNames && room.opponentNames.length > 0) {
+                opponentName = room.opponentNames.join(', ');
+            } else if (room.opponentUserIds && room.opponentUserIds.length > 0) {
+                opponentName = `사용자 ${room.opponentUserIds.join(', ')}`;
+            }
+            return opponentName.toLowerCase().includes(keyword);
+        });
+
+        listContainer.innerHTML = window.ChatPanel.renderChatListItems(filteredRooms, this.currentUser.id);
     },
 
     /**
@@ -84,7 +121,9 @@ export const ChatController = {
             container.innerHTML = `
                 <div id="chat-header" class="flex-shrink-0"></div>
                 <div id="chat-search-area" class="flex-shrink-0 p-4 border-b"></div>
-                <div id="chat-list" class="flex-grow overflow-y-auto"></div>
+                <div id="chat-content-area" class="flex-grow overflow-y-auto custom-scrollbar">
+                    <div id="chat-list" class="space-y-3"></div>
+                </div>
             `;
             listContainer = document.getElementById('chat-list');
         }
@@ -98,6 +137,17 @@ export const ChatController = {
         }
         const searchArea = document.getElementById('chat-search-area');
         if (searchArea) searchArea.classList.remove('hidden');
+
+        // 레이아웃 복원 (목록 모드)
+        const contentArea = document.getElementById('chat-content-area');
+        if (contentArea) {
+            contentArea.classList.add('overflow-y-auto', 'custom-scrollbar');
+            contentArea.classList.remove('flex', 'flex-col', 'overflow-hidden');
+        }
+        if (listContainer) {
+            listContainer.classList.remove('h-full', 'flex', 'flex-col');
+            listContainer.classList.add('space-y-3');
+        }
 
         // 로딩 표시
         listContainer.innerHTML = '<div class="text-center text-gray-500 mt-10">채팅방을 불러오는 중...</div>';
@@ -114,6 +164,7 @@ export const ChatController = {
 
             const rooms = await ChatService.getMyRooms();
             const roomList = rooms.content || rooms;
+            this.allRooms = roomList; // 전체 목록 저장
 
             if (window.ChatPanel) {
                 listContainer.innerHTML = window.ChatPanel.renderChatListItems(roomList, this.currentUser.id);
@@ -131,6 +182,7 @@ export const ChatController = {
      */
     async openChatRoom(roomId, roomTitle = '채팅방') {
         this.currentRoomId = roomId;
+        this.lastMessageSignature = null; // 방 변경 시 초기화
         const listContainer = document.getElementById('chat-list');
 
         // 헤더 변경
@@ -142,6 +194,17 @@ export const ChatController = {
         // 검색 영역 숨기기
         const searchArea = document.getElementById('chat-search-area');
         if (searchArea) searchArea.classList.add('hidden');
+
+        // 레이아웃 변경 (채팅방 모드: 입력창 고정)
+        const contentArea = document.getElementById('chat-content-area');
+        if (contentArea) {
+            contentArea.classList.remove('overflow-y-auto', 'custom-scrollbar');
+            contentArea.classList.add('flex', 'flex-col', 'overflow-hidden');
+        }
+        if (listContainer) {
+            listContainer.classList.remove('space-y-3');
+            listContainer.classList.add('h-full', 'flex', 'flex-col');
+        }
 
         if (listContainer) {
             listContainer.innerHTML = '<div class="text-center mt-10">대화를 불러오는 중...</div>';
@@ -171,8 +234,17 @@ export const ChatController = {
 
         try {
             const messages = await ChatService.getMessages(roomId);
-            // messages가 배열인지 Page 객체인지 확인
             const msgList = Array.isArray(messages) ? messages : (messages.content || []);
+
+            // 변경 사항 확인 (팅김 방지)
+            // 간단하게 마지막 메시지 ID와 전체 길이를 조합하여 서명 생성
+            const lastMsg = msgList.length > 0 ? msgList[msgList.length - 1] : null;
+            const currentSignature = lastMsg ? `${msgList.length}-${lastMsg.id}-${lastMsg.sentAt}` : '0';
+
+            if (!isInitial && this.lastMessageSignature === currentSignature) {
+                return; // 변경 없음
+            }
+            this.lastMessageSignature = currentSignature;
 
             if (!this.currentUser) {
                 this.currentUser = await authService.getCurrentUser();
@@ -187,18 +259,51 @@ export const ChatController = {
 
                 // 스크롤 위치 저장 (폴링 시)
                 const msgListDiv = document.getElementById('message-list');
+                // 여유값 50px: 사용자가 거의 바닥에 있으면 바닥으로 간주
                 const wasAtBottom = msgListDiv ? (msgListDiv.scrollHeight - msgListDiv.scrollTop <= msgListDiv.clientHeight + 50) : true;
+                
+                let partialUpdateSuccess = false;
 
-                listContainer.innerHTML = window.ChatPanel.renderChatRoomContent(msgList, this.currentUser.id);
+                if (msgListDiv && !isInitial && this.currentRoomId === roomId) {
+                    // 현재 렌더링된 마지막 메시지 ID 찾기
+                    const lastRenderedMsg = msgListDiv.querySelector('.message-item:last-child');
+                    const lastRenderedId = lastRenderedMsg ? parseInt(lastRenderedMsg.dataset.messageId) : -1;
 
-                const newInput = document.getElementById('chat-input');
-                if (newInput) {
-                    newInput.value = currentVal;
-                    if (isFocused) newInput.focus();
+                    // 새 메시지 필터링
+                    const newMessages = msgList.filter(msg => msg.id > lastRenderedId);
+
+                    if (newMessages.length > 0) {
+                        // 새 메시지만 추가
+                        const newHtml = newMessages.map(msg => window.ChatPanel.renderMessageItem(msg, this.currentUser.id)).join('');
+                        msgListDiv.insertAdjacentHTML('beforeend', newHtml);
+                        partialUpdateSuccess = true;
+                    } else if (msgList.length === msgListDiv.querySelectorAll('.message-item').length) {
+                        // 메시지 개수가 같으면 업데이트 불필요 (이미 최신)
+                        partialUpdateSuccess = true;
+                    }
                 }
 
+                if (!partialUpdateSuccess) {
+                    // 전체 렌더링 (최초 로드, 방 변경, 또는 부분 업데이트 실패 시)
+                    listContainer.innerHTML = window.ChatPanel.renderChatRoomContent(msgList, this.currentUser.id);
+                    
+                    const newInput = document.getElementById('chat-input');
+                    if (newInput) {
+                        newInput.value = currentVal;
+                        if (isFocused) newInput.focus();
+                        if (isFocused) {
+                            newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
+                        }
+                    }
+                }
+
+                // 스마트 스크롤: 최초 로드거나 사용자가 바닥에 있었을 때만 스크롤 이동
+                // 부분 업데이트 시에는 무조건 스크롤 내리는 게 자연스러울 수 있음 (새 메시지 왔으니까)
+                // 하지만 사용자 요청대로 스마트 스크롤 유지
                 const newMsgListDiv = document.getElementById('message-list');
                 if (newMsgListDiv) {
+                    // 부분 업데이트 성공했고 새 메시지가 추가된 경우, 
+                    // 사용자가 바닥에 있었으면 스크롤 내림
                     if (isInitial || wasAtBottom) {
                         newMsgListDiv.scrollTop = newMsgListDiv.scrollHeight;
                     }
