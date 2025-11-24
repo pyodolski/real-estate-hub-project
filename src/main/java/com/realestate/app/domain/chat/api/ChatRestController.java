@@ -20,13 +20,15 @@ public class ChatRestController {
     private final ChatService chatService;
     private final AuthFacade auth;
     private final NotificationService notificationService;
+    private final com.realestate.app.domain.user.repository.UserRepository userRepo;
+    private final com.realestate.app.domain.broker_profile.BrokerProfileRepository brokerProfileRepo;
 
     @PostMapping("/rooms")
     public RoomResponse createRoom(@RequestBody CreateRoomRequest req) {
         Long me = auth.currentUserId();
         ChatRoom room = chatService.findOrCreateRoom(
                 req.propertyId(), me, req.opponentUserId(), req.opponentUserId2()
-        );
+            );
         return new RoomResponse(
                 room.getId(),
                 room.getProperty().getId(),
@@ -34,12 +36,12 @@ public class ChatRestController {
                 room.getUser2().getId(),
                 room.getUser3() != null ? room.getUser3().getId() : null,
                 room.getCreatedAt().toString()
-        );
+            );
     }
 
     @GetMapping("/rooms")
     public Page<RoomSummaryResponse> myRooms(@RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size) {
         Long me = auth.currentUserId();
         return chatService.myRooms(me, PageRequest.of(page, size))
                 .map(r -> {
@@ -52,6 +54,17 @@ public class ChatRestController {
                     if (!u2.equals(me)) oppIds.add(u2);
                     if (u3 != null && !u3.equals(me)) oppIds.add(u3);
 
+                    // 상대방 이름 조회
+                    List<String> opponentNames = new ArrayList<>();
+                    for (Long oppId : oppIds) {
+                        var brokerProfile = brokerProfileRepo.findById(oppId);
+                        if (brokerProfile.isPresent()) {
+                            opponentNames.add(brokerProfile.get().getAgencyName() + " (중개사)");
+                        } else {
+                            userRepo.findById(oppId).ifPresent(u -> opponentNames.add(u.getUsername()));
+                        }
+                    }
+
                     var last = chatService.findLastMessage(r.getId());
                     int unread = chatService.countUnread(r.getId(), me);
 
@@ -59,38 +72,38 @@ public class ChatRestController {
                             r.getId(),
                             r.getProperty().getId(),
                             oppIds,
-                            null, // opponentNames: 필요 시 UserRepo 통해 매핑해서 채워도 됨
+                            opponentNames, // opponentNames: 필요 시 UserRepo 통해 매핑해서 채워도 됨
                             last != null ? last.getContent() : null,
                             last != null ? last.getSentAt().toString() : null,
                             unread
-                    );
+                        );
                 });
     }
 
     @GetMapping("/rooms/{roomId}/messages")
     public List<MessageResponse> messages(@PathVariable Long roomId,
-                                          @RequestParam(required = false) Long cursorId,
-                                          @RequestParam(defaultValue = "backward") String dir,
-                                          @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "backward") String dir,
+            @RequestParam(defaultValue = "50") int size) {
         Long me = auth.currentUserId();
         chatService.assertRoomMember(roomId, me);
         return chatService.pageMessages(roomId, cursorId, dir, size).stream()
                 .map(m -> new MessageResponse(
                         m.getId(), roomId, m.getSender().getId(),
                         m.getContent(), m.getSentAt().toString(), Boolean.TRUE.equals(m.getIsRead())
-                )).toList();
+                    )).toList();
     }
 
     @PostMapping("/rooms/{roomId}/messages")
     public MessageResponse sendMessage(@PathVariable Long roomId,
-                                       @RequestBody SendMessageRequest req) {
+            @RequestBody SendMessageRequest req) {
         Long me = auth.currentUserId();
         var saved = chatService.saveMessage(roomId, me, req.content());
         return new MessageResponse(
                 saved.getId(), roomId, me,
                 saved.getContent(), saved.getSentAt().toString(),
                 Boolean.TRUE.equals(saved.getIsRead())
-        );
+            );
     }
 
     @PostMapping("/rooms/{roomId}/read")
@@ -109,5 +122,5 @@ public class ChatRestController {
         notificationService.markChatMessageNotificationsRead(me, roomId);
     }
 
-
+    
 }

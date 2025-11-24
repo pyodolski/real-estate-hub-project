@@ -241,9 +241,8 @@ export class PanelController {
 
       case 'chat':
         return `
-          <div class="space-y-3">
-            <h3 class="font-semibold text-gray-800">채팅</h3>
-            <p class="text-sm text-gray-600">고객과의 채팅 내역이 여기에 표시됩니다.</p>
+          <div id="chat-panel-container" class="h-full flex flex-col">
+            <!-- 채팅 패널 콘텐츠는 chat-controller.js에서 렌더링됩니다 -->
           </div>
         `;
 
@@ -306,6 +305,13 @@ export class PanelController {
       panelInfo.panel.classList.remove('translate-x-full');
     }, 10);
     panelInfo.isOpen = true;
+
+    // 채팅 패널인 경우 채팅 목록 렌더링
+    if (panelKey === 'chat' && window.ChatController) {
+      setTimeout(() => {
+        window.ChatController.renderChatList();
+      }, 100);
+    }
 
     console.log(`패널 열림: ${panelKey}`);
   }
