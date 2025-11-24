@@ -9,54 +9,74 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record PropertyFullResponse(
-                Long id,
-                String title,
-                String address,
-                BigDecimal price,
+        Long id,
+        String title,
+        String address,
+        BigDecimal price,
 
-                @JsonProperty("area_m2") BigDecimal areaM2,
+        @JsonProperty("area_m2")
+        BigDecimal areaM2,
 
-                @JsonProperty("location_x") Double locationX,
+        @JsonProperty("location_x")
+        Double locationX,
 
-                @JsonProperty("location_y") Double locationY,
+        @JsonProperty("location_y")
+        Double locationY,
 
-                @JsonProperty("building_year") Integer buildingYear,
+        @JsonProperty("building_year")
+        Integer buildingYear,
 
-                String status,
+        String status,
 
-                @JsonProperty("listing_type") String listingType,
+        @JsonProperty("listing_type")
+        String listingType,
 
-                @JsonProperty("broker_name") String brokerName,
-                @JsonProperty("broker_id") Long brokerId,
-                // String brokerPhone,
+        @JsonProperty("broker_name") String brokerName,
+        @JsonProperty("broker_id") Long brokerId,
+        // String brokerPhone,
 
-                @JsonProperty("property_offers") List<OfferResponse> propertyOffers,
+        @JsonProperty("property_offers")
+        List<OfferResponse> propertyOffers,
 
-                @JsonProperty("property_images") List<ImageResponse> propertyImages) {
-        public static PropertyFullResponse from(Property p) {
-                return new PropertyFullResponse(
-                                p.getId(),
-                                p.getTitle(),
-                                p.getAddress(),
-                                p.getPrice(),
-                                p.getAreaM2(),
-                                p.getLocationX(),
-                                p.getLocationY(),
-                                p.getBuildingYear(),
-                                p.getStatus().name(),
-                                p.getListingType().name(),
-                                p.getBroker() != null ? p.getBroker().getAgencyName() : null,
-                                p.getBroker() != null ? p.getBroker().getUserId() : null,
-                                // p.getBroker() != null && p.getBroker().getUser() != null ?
-                                // p.getBroker().getUser().getPhoneNumber() : null,
-                                p.getOffers().stream()
-                                                .filter(o -> Boolean.TRUE.equals(o.getIsActive()))
-                                                .map(OfferResponse::from)
-                                                .toList(),
-                                p.getImages().stream()
-                                                .map(ImageResponse::from)
-                                                .toList());
-        }
+        @JsonProperty("property_images")
+        List<ImageResponse> propertyImages,
+
+        Boolean favorite,
+
+        @JsonProperty("favorite_count")
+        Long favoriteCount
+) {
+    public static PropertyFullResponse from(Property p) {
+        // 예전 코드 호환용 – 기본값: 즐찾 아님, 카운트 0
+        return from(p, false, 0L);
+    }
+
+    public static PropertyFullResponse from(Property p, Boolean favorite, Long favoriteCount) {
+        return new PropertyFullResponse(
+                p.getId(),
+                p.getTitle(),
+                p.getAddress(),
+                p.getPrice(),
+                p.getAreaM2(),
+                p.getLocationX(),
+                p.getLocationY(),
+                p.getBuildingYear(),
+                p.getStatus().name(),
+                p.getListingType().name(),
+                p.getBroker() != null ? p.getBroker().getAgencyName() : null,
+                p.getBroker() != null ? p.getBroker().getUserId() : null,
+                p.getOffers().stream()
+
+                        .filter(o -> Boolean.TRUE.equals(o.getIsActive()))
+                        .map(OfferResponse::from)
+                        .toList(),
+                p.getImages().stream()
+                        .map(ImageResponse::from)
+                        .toList(),
+                favorite,
+                favoriteCount
+        );
+    }
 
         public record OfferResponse(
                         Long id,

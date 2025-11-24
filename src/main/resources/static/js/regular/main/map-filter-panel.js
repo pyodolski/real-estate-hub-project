@@ -59,7 +59,7 @@ const MapFilterPanel = {
           <!-- Filter Buttons -->
           <div
             id="house-type-wrapper"
-            class="relative inline-block bg-white rounded-full shadow-lg"
+            class="relative inline-block bg-white rounded-full shadow-lg filter-wrapper"
           >
             <button
               id="house-type-button"
@@ -99,7 +99,7 @@ const MapFilterPanel = {
 
           <div
             id="offer-type-wrapper"
-            class="relative inline-block bg-white rounded-full shadow-lg"
+            class="relative inline-block bg-white rounded-full shadow-lg filter-wrapper"
           >
             <button
               id="offer-type-button"
@@ -137,7 +137,7 @@ const MapFilterPanel = {
           </div>
           <div
             id="area-wrapper"
-            class="relative inline-block bg-white rounded-full shadow-lg"
+            class="relative inline-block bg-white rounded-full shadow-lg filter-wrapper"
           >
             <button
               id="area-button"
@@ -194,7 +194,7 @@ const MapFilterPanel = {
           </div>
           <div
             id="floor-wrapper"
-            class="relative inline-block bg-white rounded-full shadow-lg"
+            class="relative inline-block bg-white rounded-full shadow-lg filter-wrapper"
           >
             <button
               id="floor-button"
@@ -251,7 +251,7 @@ const MapFilterPanel = {
           </div>
           <div
             id="option-wrapper"
-            class="relative inline-block bg-white rounded-full shadow-lg"
+            class="relative inline-block bg-white rounded-full shadow-lg filter-wrapper"
           >
             <button
               id="option-button"
@@ -337,7 +337,7 @@ const MapFilterPanel = {
           </div>
           <div
             id="all-filter-wrapper"
-            class="relative inline-block bg-white rounded-full shadow-lg"
+            class="relative inline-block bg-white rounded-full shadow-lg filter-wrapper"
           >
             <button
               id="all-filter-button"

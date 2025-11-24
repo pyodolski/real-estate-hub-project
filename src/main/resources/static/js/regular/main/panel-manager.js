@@ -197,6 +197,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (allFilterDropdown && !allFilterDropdown.classList.contains("hidden")) {
       setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     }
+
+
   }
 
   function openRightPanel(panelName) {

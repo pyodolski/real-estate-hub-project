@@ -11,17 +11,19 @@ import java.util.List;
 @Repository
 public interface FavoriteJpaRepository extends JpaRepository<Favorite, Long> {
 
-    boolean existsByUserIdAndPropertyId(Long userId, Long propertyId);
+    // ✅ user.id, property.id 기반
+    boolean existsByUser_IdAndProperty_Id(Long userId, Long propertyId);
 
-    // 파생 delete 쿼리 — @Modifying 없어도 동작하는 버전도 있지만, 붙여두면 명시적이라 좋습니다.
+    // deleteBy 도 마찬가지로 _Id 써야 함
     @Modifying
-    long deleteByUserIdAndPropertyId(Long userId, Long propertyId);
+    long deleteByUser_IdAndProperty_Id(Long userId, Long propertyId);
 
-    long countByPropertyId(Long propertyId);
+    long countByProperty_Id(Long propertyId);
+
     @Query("select f.user.id from Favorite f where f.property.id = :pid")
     List<Long> findUserIdsByPropertyId(@Param("pid") Long propertyId);
 
-/*
+    /*
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
         INSERT INTO favorites(user_id, property_id, created_at)
@@ -30,10 +32,8 @@ public interface FavoriteJpaRepository extends JpaRepository<Favorite, Long> {
         """, nativeQuery = true)
     int insertIgnore(@Param("userId") Long userId, @Param("propertyId") Long propertyId);
 
-    // 원자 토글의 삭제 단계
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "DELETE FROM favorites WHERE user_id = :userId AND property_id = :propertyId", nativeQuery = true)
     int deleteByUserIdAndPropertyIdNative(@Param("userId") Long userId, @Param("propertyId") Long propertyId);
     */
-
 }

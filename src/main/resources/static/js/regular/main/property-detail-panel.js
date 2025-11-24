@@ -68,6 +68,15 @@
         isApartment: p.isApartment,
         floorPlan: p.floorPlan || `/images/floorplan${(Number(p.id) % 5) + 1}.jpg`,
         maintenanceFee: p.maintenanceFee ?? p.maintenance_fee,
+        isFavorite:
+              p.isFavorite ??
+              (p._raw && typeof p._raw.favorite !== "undefined"
+                ? !!p._raw.favorite
+                : !!p.favorite),
+            favoriteCount:
+              typeof p.favoriteCount !== "undefined"
+                ? p.favoriteCount
+                : p._raw?.favoriteCount ?? 0,
         _raw: p._raw || p,
       };
     }
@@ -192,6 +201,15 @@
       brokerId,
       isApartment,
       floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`,
+      isFavorite:
+        p.isFavorite ??
+        (p._raw && typeof p._raw.favorite !== "undefined"
+          ? !!p._raw.favorite
+          : !!p.favorite),
+      favoriteCount:
+        typeof p.favoriteCount !== "undefined"
+          ? p.favoriteCount
+          : p._raw?.favoriteCount ?? 0,
       _raw: p,
     };
   }
@@ -410,27 +428,47 @@
     }
 
     // 즐겨찾기 버튼
+    // ⭐ 즐겨찾기 버튼 (DB 연동)
     if (el.favBtn) {
-      // 초기 상태 설정
-      const isFavored = window.isFavored ? window.isFavored(d.id) : false;
-      el.favBtn.setAttribute("aria-pressed", isFavored.toString());
-      if (el.favIcon) {
-          el.favIcon.classList.toggle("text-red-500", isFavored);
-          el.favIcon.classList.toggle("text-gray-600", !isFavored); // 회색 클래스도 토글
-      }
+      const favoredInitial = !!d.isFavorite;
+      el.favBtn.setAttribute("aria-pressed", favoredInitial.toString());
+      el.favIcon && el.favIcon.classList.toggle("text-red-500", favoredInitial);
 
-      // 클릭 이벤트
-      el.favBtn.onclick = (e) => {
+      el.favBtn.onclick = async (e) => {
         e.stopPropagation();
-        if (window.toggleFavorite) {
-            window.toggleFavorite(d.id, el.favBtn);
-        } else {
-            console.error("toggleFavorite function not found");
+
+        const overlay = getElems(buf).overlay;
+        const propertyId =
+          overlay?.dataset?.propertyId || d._raw?.propertyId || d.id;
+
+        try {
+          const res = await fetch(`/api/properties/${propertyId}/favorite`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
+              "Content-Type": "application/json"
+            }
+          });
+
+          if (!res.ok) throw new Error("favorite toggle failed");
+
+          const body = await res.json(); // { favored: true/false }
+          const favored = !!body.favored;
+
+          // UI 반영
+          el.favBtn.setAttribute("aria-pressed", favored.toString());
+          el.favIcon.classList.toggle("text-red-500", favored);
+
+          // in-memory 업데이트
+          d.isFavorite = favored;
+          if (d._raw) d._raw.favorite = favored;
+
+        } catch (err) {
+          console.error("Favorite toggle error", err);
+          alert("즐겨찾기 변경 실패");
         }
       };
     }
-
-    // 연락하기 버튼
     if (el.contactBtn) {
       el.contactBtn.onclick = () => {
         if (d.brokerId && window.ChatController) {
@@ -540,6 +578,8 @@
           offers, // 진짜 offers
           images: images || [],
           maintenanceFee,
+          isFavorite: !!data.favorite,
+          favoriteCount: data.favoriteCount ?? 0,
           _raw: data,
         };
       } else {
