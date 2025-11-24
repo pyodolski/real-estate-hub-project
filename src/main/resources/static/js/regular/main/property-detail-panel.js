@@ -17,7 +17,7 @@
     try {
       if (typeof properties !== "undefined" && Array.isArray(properties))
         return properties;
-    } catch (_e) {}
+    } catch (_e) { }
     return undefined;
   }
 
@@ -35,8 +35,8 @@
         status === "SOLD"
           ? "거래완료"
           : status === "CONTRACTED"
-          ? "계약중"
-          : "거래가능";
+            ? "계약중"
+            : "거래가능";
 
       const areaM2 = p.areaM2 ?? p.area_m2;
       const areaText = areaM2 ? `${areaM2}m²` : "";
@@ -124,15 +124,15 @@
       (status === "SOLD"
         ? "거래완료"
         : status === "CONTRACTED"
-        ? "계약중"
-        : "거래가능");
+          ? "계약중"
+          : "거래가능");
 
     // 이미지
     const images = Array.isArray(p.images)
       ? p.images
       : Array.isArray(p.photos)
-      ? p.photos
-      : [];
+        ? p.photos
+        : [];
     const image = p.image ?? images[0] ?? "";
 
     // 옵션/태그
@@ -504,7 +504,7 @@
           areaM2: data.areaM2 ?? data.area_m2,
           buildingYear: data.buildingYear ?? data.building_year,
           description: data.title || "상세 정보 없음",
-          brokerName: data.brokerName || data.ownerName || "",
+          brokerName: data.brokerName || data.broker_name || data.ownerName || "",
           brokerPhone: "",
           offers, // 진짜 offers
           images: images || [],
@@ -574,7 +574,7 @@
       expandBtn.title = "상세 정보 전체화면";
 
       if (!expandBtn.__originalClickHandler) {
-        const originalHandler = expandBtn.onclick || (() => {});
+        const originalHandler = expandBtn.onclick || (() => { });
         expandBtn.__originalClickHandler = originalHandler;
       }
 
@@ -866,95 +866,95 @@
     updatePanelButtonsForDetail(true);
   }
 
-   async function openPropertyDetail(id, data) {
-     // 1) 클릭한 매물 id 정규화 (card → propertyId, compare-list 등까지 고려)
-     const compareId = (data && (data._raw?.propertyId || data.id)) || id;
+  async function openPropertyDetail(id, data) {
+    // 1) 클릭한 매물 id 정규화 (card → propertyId, compare-list 등까지 고려)
+    const compareId = (data && (data._raw?.propertyId || data.id)) || id;
 
-     // 같은 매물을 다시 클릭하면 토글
-     if (currentId === compareId && isOpen) {
-       closePropertyDetail();
-       return;
-     }
+    // 같은 매물을 다시 클릭하면 토글
+    if (currentId === compareId && isOpen) {
+      closePropertyDetail();
+      return;
+    }
 
-     // 2) view 이벤트 전송 (선호도 업데이트)
-     try {
-       fetch(`/api/properties/${compareId}/view`, {
-         method: "POST",
-         headers: {
-           "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
-           "Content-Type": "application/json",
-         },
-       }).catch((err) => {
-         console.warn("view 이벤트 전송 실패:", err);
-       });
-     } catch (e) {
-       console.warn("view 이벤트 호출 중 오류:", e);
-     }
+    // 2) view 이벤트 전송 (선호도 업데이트)
+    try {
+      fetch(`/api/properties/${compareId}/view`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
+          "Content-Type": "application/json",
+        },
+      }).catch((err) => {
+        console.warn("view 이벤트 전송 실패:", err);
+      });
+    } catch (e) {
+      console.warn("view 이벤트 호출 중 오류:", e);
+    }
 
-     // 3) 항상 /full API 먼저 시도 → 실패하면 카드 데이터 사용
-     const full = await findPropertyById(compareId);   // /api/properties/{id}/full
-     const raw = full || data || {};
-     console.log("🟣 [OPEN] raw incoming =", raw);
+    // 3) 항상 /full API 먼저 시도 → 실패하면 카드 데이터 사용
+    const full = await findPropertyById(compareId);   // /api/properties/{id}/full
+    const raw = full || data || {};
+    console.log("🟣 [OPEN] raw incoming =", raw);
 
-     const incoming = normalizeProperty(raw);
+    const incoming = normalizeProperty(raw);
 
-     const nextBuf = currentBuffer === "a" ? "b" : "a";
-     const curElems = getElems(currentBuffer);
-     const nextElems = getElems(nextBuf);
+    const nextBuf = currentBuffer === "a" ? "b" : "a";
+    const curElems = getElems(currentBuffer);
+    const nextElems = getElems(nextBuf);
 
-     renderInto(nextBuf, incoming);
+    renderInto(nextBuf, incoming);
 
-     if (typeof window.switchDetailTab === "function") {
-       window.switchDetailTab(nextBuf, "detail");
-     }
+    if (typeof window.switchDetailTab === "function") {
+      window.switchDetailTab(nextBuf, "detail");
+    }
 
-     if (nextElems.overlay) {
-       nextElems.overlay.classList.add("-translate-x-full");
-       nextElems.overlay.style.transform = "";
-       nextElems.overlay.style.transition = "";
-       nextElems.overlay.style.opacity = "0";
-       nextElems.overlay.style.pointerEvents = "none";
-     }
+    if (nextElems.overlay) {
+      nextElems.overlay.classList.add("-translate-x-full");
+      nextElems.overlay.style.transform = "";
+      nextElems.overlay.style.transition = "";
+      nextElems.overlay.style.opacity = "0";
+      nextElems.overlay.style.pointerEvents = "none";
+    }
 
-     setOverlayVisible(nextElems.overlay, true);
-     if (isOpen && curElems.overlay) {
-       curElems.overlay.classList.add("-translate-x-full");
-       setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
-     }
+    setOverlayVisible(nextElems.overlay, true);
+    if (isOpen && curElems.overlay) {
+      curElems.overlay.classList.add("-translate-x-full");
+      setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
+    }
 
-     if (isOpen) {
-       const closeBtn = document.getElementById("close-panel-button");
-       const expandBtn = document.getElementById("expand-panel-button");
-       if (closeBtn && expandBtn) {
-         closeBtn.style.opacity = "0";
-         expandBtn.style.opacity = "0";
-         closeBtn.style.pointerEvents = "none";
-         expandBtn.style.pointerEvents = "none";
-       }
-       setTimeout(() => {
-         updatePanelButtonsForDetail(true);
-       }, 300);
-     } else {
-       updatePanelButtonsForDetail(true);
-     }
+    if (isOpen) {
+      const closeBtn = document.getElementById("close-panel-button");
+      const expandBtn = document.getElementById("expand-panel-button");
+      if (closeBtn && expandBtn) {
+        closeBtn.style.opacity = "0";
+        expandBtn.style.opacity = "0";
+        closeBtn.style.pointerEvents = "none";
+        expandBtn.style.pointerEvents = "none";
+      }
+      setTimeout(() => {
+        updatePanelButtonsForDetail(true);
+      }, 300);
+    } else {
+      updatePanelButtonsForDetail(true);
+    }
 
-     const onResize = () => {
-       if (isOpen) updatePanelButtonsForDetail(true);
-     };
-     window.addEventListener("resize", onResize);
-     if (nextElems.overlay) {
-       nextElems.overlay.__detailOnResize = onResize;
-     }
+    const onResize = () => {
+      if (isOpen) updatePanelButtonsForDetail(true);
+    };
+    window.addEventListener("resize", onResize);
+    if (nextElems.overlay) {
+      nextElems.overlay.__detailOnResize = onResize;
+    }
 
-     isOpen = true;
-     window.isDetailOpen = true;
-     currentId = compareId;
-     currentBuffer = nextBuf;
+    isOpen = true;
+    window.isDetailOpen = true;
+    currentId = compareId;
+    currentBuffer = nextBuf;
 
-     if (typeof window.adjustAllFilterDropdownPosition === "function") {
-       setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
-     }
-   }
+    if (typeof window.adjustAllFilterDropdownPosition === "function") {
+      setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
+    }
+  }
 
   function closePropertyDetail() {
     const curElems = getElems(currentBuffer);
