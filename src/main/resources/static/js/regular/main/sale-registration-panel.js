@@ -431,9 +431,7 @@ const SaleRegistrationPanel = {
       }, 300); // 애니메이션 시간
 
       // 폼 및 마커 초기화
-      if (window.SaleRegistrationMapIntegration) {
-        window.SaleRegistrationMapIntegration.clearForm();
-      }
+
 
       console.log("[SaleRegistrationPanel] Panel hidden");
     }

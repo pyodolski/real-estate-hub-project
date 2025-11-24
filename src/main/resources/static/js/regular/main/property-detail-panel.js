@@ -17,7 +17,7 @@
     try {
       if (typeof properties !== "undefined" && Array.isArray(properties))
         return properties;
-    } catch (_e) {}
+    } catch (_e) { }
     return undefined;
   }
 
@@ -35,8 +35,8 @@
         status === "SOLD"
           ? "거래완료"
           : status === "CONTRACTED"
-          ? "계약중"
-          : "거래가능";
+            ? "계약중"
+            : "거래가능";
 
       const areaM2 = p.areaM2 ?? p.area_m2;
       const areaText = areaM2 ? `${areaM2}m²` : "";
@@ -64,6 +64,7 @@
         moveInDate: p.moveInDate,
         brokerName: p.brokerName || "",
         brokerPhone: p.brokerPhone || "",
+        brokerId: p.brokerId ?? p.broker_id,
         isApartment: p.isApartment,
         floorPlan: p.floorPlan || `/images/floorplan${(Number(p.id) % 5) + 1}.jpg`,
         maintenanceFee: p.maintenanceFee ?? p.maintenance_fee,
@@ -133,15 +134,15 @@
       (status === "SOLD"
         ? "거래완료"
         : status === "CONTRACTED"
-        ? "계약중"
-        : "거래가능");
+          ? "계약중"
+          : "거래가능");
 
     // 이미지
     const images = Array.isArray(p.images)
       ? p.images
       : Array.isArray(p.photos)
-      ? p.photos
-      : [];
+        ? p.photos
+        : [];
     const image = p.image ?? images[0] ?? "";
 
     // 옵션/태그
@@ -169,6 +170,7 @@
     // 중개사 정보
     const brokerName = p.brokerName ?? "";
     const brokerPhone = p.brokerPhone ?? "";
+    const brokerId = p.brokerId ?? p.broker_id ?? undefined;
 
     // 아파트 여부
     const isApartment =
@@ -196,6 +198,7 @@
       moveInDate,
       brokerName,
       brokerPhone,
+      brokerId,
       isApartment,
       floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`,
       isFavorite:
@@ -226,6 +229,7 @@
       desc: qs(`#detail-property-description-${suffix}`),
       favBtn: qs(`#favorite-button-${suffix}`),
       favIcon: qs(`#favorite-icon-${suffix}`),
+      contactBtn: qs(`#contact-broker-button-${suffix}`),
     };
   }
 
@@ -465,7 +469,17 @@
         }
       };
     }
-
+    if (el.contactBtn) {
+      el.contactBtn.onclick = () => {
+        if (d.brokerId && window.ChatController) {
+          window.ChatController.openChatWithBroker(d.id, d.brokerId);
+        } else if (!d.brokerId) {
+          alert("중개사 정보를 불러올 수 없습니다.");
+        } else {
+          alert("채팅 기능을 사용할 수 없습니다.");
+        }
+      };
+    }
 
     // closeBtn 기본 이벤트는 여기서 한 번만
     if (el.closeBtn && !el.closeBtn.__eventSet) {
@@ -488,6 +502,7 @@
       if (response.ok) {
         const data = await response.json();
         console.log("🟡 [DETAIL FETCH OK] =", data);
+        console.log("🔍 [DEBUG] broker_id from API:", data.broker_id, "brokerId:", data.brokerId);
 
         const offers =
           data.property_offers || data.propertyOffers || data.offers || [];
@@ -557,8 +572,9 @@
           areaM2: data.areaM2 ?? data.area_m2,
           buildingYear: data.buildingYear ?? data.building_year,
           description: data.title || "상세 정보 없음",
-          brokerName: data.brokerName || data.ownerName || "",
+          brokerName: data.brokerName || data.broker_name || data.ownerName || "",
           brokerPhone: "",
+          brokerId: data.brokerId || data.broker_id,
           offers, // 진짜 offers
           images: images || [],
           maintenanceFee,
@@ -629,7 +645,7 @@
       expandBtn.title = "상세 정보 전체화면";
 
       if (!expandBtn.__originalClickHandler) {
-        const originalHandler = expandBtn.onclick || (() => {});
+        const originalHandler = expandBtn.onclick || (() => { });
         expandBtn.__originalClickHandler = originalHandler;
       }
 
@@ -921,95 +937,95 @@
     updatePanelButtonsForDetail(true);
   }
 
-   async function openPropertyDetail(id, data) {
-     // 1) 클릭한 매물 id 정규화 (card → propertyId, compare-list 등까지 고려)
-     const compareId = (data && (data._raw?.propertyId || data.id)) || id;
+  async function openPropertyDetail(id, data) {
+    // 1) 클릭한 매물 id 정규화 (card → propertyId, compare-list 등까지 고려)
+    const compareId = (data && (data._raw?.propertyId || data.id)) || id;
 
-     // 같은 매물을 다시 클릭하면 토글
-     if (currentId === compareId && isOpen) {
-       closePropertyDetail();
-       return;
-     }
+    // 같은 매물을 다시 클릭하면 토글
+    if (currentId === compareId && isOpen) {
+      closePropertyDetail();
+      return;
+    }
 
-     // 2) view 이벤트 전송 (선호도 업데이트)
-     try {
-       fetch(`/api/properties/${compareId}/view`, {
-         method: "POST",
-         headers: {
-           "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
-           "Content-Type": "application/json",
-         },
-       }).catch((err) => {
-         console.warn("view 이벤트 전송 실패:", err);
-       });
-     } catch (e) {
-       console.warn("view 이벤트 호출 중 오류:", e);
-     }
+    // 2) view 이벤트 전송 (선호도 업데이트)
+    try {
+      fetch(`/api/properties/${compareId}/view`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
+          "Content-Type": "application/json",
+        },
+      }).catch((err) => {
+        console.warn("view 이벤트 전송 실패:", err);
+      });
+    } catch (e) {
+      console.warn("view 이벤트 호출 중 오류:", e);
+    }
 
-     // 3) 항상 /full API 먼저 시도 → 실패하면 카드 데이터 사용
-     const full = await findPropertyById(compareId);   // /api/properties/{id}/full
-     const raw = full || data || {};
-     console.log("🟣 [OPEN] raw incoming =", raw);
+    // 3) 항상 /full API 먼저 시도 → 실패하면 카드 데이터 사용
+    const full = await findPropertyById(compareId);   // /api/properties/{id}/full
+    const raw = full || data || {};
+    console.log("🟣 [OPEN] raw incoming =", raw);
 
-     const incoming = normalizeProperty(raw);
+    const incoming = normalizeProperty(raw);
 
-     const nextBuf = currentBuffer === "a" ? "b" : "a";
-     const curElems = getElems(currentBuffer);
-     const nextElems = getElems(nextBuf);
+    const nextBuf = currentBuffer === "a" ? "b" : "a";
+    const curElems = getElems(currentBuffer);
+    const nextElems = getElems(nextBuf);
 
-     renderInto(nextBuf, incoming);
+    renderInto(nextBuf, incoming);
 
-     if (typeof window.switchDetailTab === "function") {
-       window.switchDetailTab(nextBuf, "detail");
-     }
+    if (typeof window.switchDetailTab === "function") {
+      window.switchDetailTab(nextBuf, "detail");
+    }
 
-     if (nextElems.overlay) {
-       nextElems.overlay.classList.add("-translate-x-full");
-       nextElems.overlay.style.transform = "";
-       nextElems.overlay.style.transition = "";
-       nextElems.overlay.style.opacity = "0";
-       nextElems.overlay.style.pointerEvents = "none";
-     }
+    if (nextElems.overlay) {
+      nextElems.overlay.classList.add("-translate-x-full");
+      nextElems.overlay.style.transform = "";
+      nextElems.overlay.style.transition = "";
+      nextElems.overlay.style.opacity = "0";
+      nextElems.overlay.style.pointerEvents = "none";
+    }
 
-     setOverlayVisible(nextElems.overlay, true);
-     if (isOpen && curElems.overlay) {
-       curElems.overlay.classList.add("-translate-x-full");
-       setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
-     }
+    setOverlayVisible(nextElems.overlay, true);
+    if (isOpen && curElems.overlay) {
+      curElems.overlay.classList.add("-translate-x-full");
+      setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
+    }
 
-     if (isOpen) {
-       const closeBtn = document.getElementById("close-panel-button");
-       const expandBtn = document.getElementById("expand-panel-button");
-       if (closeBtn && expandBtn) {
-         closeBtn.style.opacity = "0";
-         expandBtn.style.opacity = "0";
-         closeBtn.style.pointerEvents = "none";
-         expandBtn.style.pointerEvents = "none";
-       }
-       setTimeout(() => {
-         updatePanelButtonsForDetail(true);
-       }, 300);
-     } else {
-       updatePanelButtonsForDetail(true);
-     }
+    if (isOpen) {
+      const closeBtn = document.getElementById("close-panel-button");
+      const expandBtn = document.getElementById("expand-panel-button");
+      if (closeBtn && expandBtn) {
+        closeBtn.style.opacity = "0";
+        expandBtn.style.opacity = "0";
+        closeBtn.style.pointerEvents = "none";
+        expandBtn.style.pointerEvents = "none";
+      }
+      setTimeout(() => {
+        updatePanelButtonsForDetail(true);
+      }, 300);
+    } else {
+      updatePanelButtonsForDetail(true);
+    }
 
-     const onResize = () => {
-       if (isOpen) updatePanelButtonsForDetail(true);
-     };
-     window.addEventListener("resize", onResize);
-     if (nextElems.overlay) {
-       nextElems.overlay.__detailOnResize = onResize;
-     }
+    const onResize = () => {
+      if (isOpen) updatePanelButtonsForDetail(true);
+    };
+    window.addEventListener("resize", onResize);
+    if (nextElems.overlay) {
+      nextElems.overlay.__detailOnResize = onResize;
+    }
 
-     isOpen = true;
-     window.isDetailOpen = true;
-     currentId = compareId;
-     currentBuffer = nextBuf;
+    isOpen = true;
+    window.isDetailOpen = true;
+    currentId = compareId;
+    currentBuffer = nextBuf;
 
-     if (typeof window.adjustAllFilterDropdownPosition === "function") {
-       setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
-     }
-   }
+    if (typeof window.adjustAllFilterDropdownPosition === "function") {
+      setTimeout(() => window.adjustAllFilterDropdownPosition(), 300);
+    }
+  }
 
   function closePropertyDetail() {
     const curElems = getElems(currentBuffer);
@@ -1288,7 +1304,6 @@
     attachDelegatedClick(qs("#recommended-list"));
     attachDelegatedClick(qs("#property-list"));
     attachDelegatedClick(qs("#compare-list"));
-    attachDelegatedClick(qs("#favorite-list")); // ⭐ 이 줄 추가
   });
 
   // 공개 API
