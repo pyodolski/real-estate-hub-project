@@ -27,6 +27,7 @@ public record PropertyFullResponse(
                 @JsonProperty("listing_type") String listingType,
 
                 @JsonProperty("broker_name") String brokerName,
+                @JsonProperty("broker_id") Long brokerId,
                 // String brokerPhone,
 
                 @JsonProperty("property_offers") List<OfferResponse> propertyOffers,
@@ -45,6 +46,7 @@ public record PropertyFullResponse(
                                 p.getStatus().name(),
                                 p.getListingType().name(),
                                 p.getBroker() != null ? p.getBroker().getAgencyName() : null,
+                                p.getBroker() != null ? p.getBroker().getUserId() : null,
                                 // p.getBroker() != null && p.getBroker().getUser() != null ?
                                 // p.getBroker().getUser().getPhoneNumber() : null,
                                 p.getOffers().stream()

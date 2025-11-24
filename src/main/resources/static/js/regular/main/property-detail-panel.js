@@ -64,6 +64,7 @@
         moveInDate: p.moveInDate,
         brokerName: p.brokerName || "",
         brokerPhone: p.brokerPhone || "",
+        brokerId: p.brokerId ?? p.broker_id,
         isApartment: p.isApartment,
         floorPlan: p.floorPlan || `/images/floorplan${(Number(p.id) % 5) + 1}.jpg`,
         maintenanceFee: p.maintenanceFee ?? p.maintenance_fee,
@@ -160,6 +161,7 @@
     // 중개사 정보
     const brokerName = p.brokerName ?? "";
     const brokerPhone = p.brokerPhone ?? "";
+    const brokerId = p.brokerId ?? p.broker_id ?? undefined;
 
     // 아파트 여부
     const isApartment =
@@ -187,6 +189,7 @@
       moveInDate,
       brokerName,
       brokerPhone,
+      brokerId,
       isApartment,
       floorPlan: `/images/floorplan${(id % 5) + 1}.jpg`,
       _raw: p,
@@ -208,6 +211,7 @@
       desc: qs(`#detail-property-description-${suffix}`),
       favBtn: qs(`#favorite-button-${suffix}`),
       favIcon: qs(`#favorite-icon-${suffix}`),
+      contactBtn: qs(`#contact-broker-button-${suffix}`),
     };
   }
 
@@ -414,6 +418,19 @@
       };
     }
 
+    // 연락하기 버튼
+    if (el.contactBtn) {
+      el.contactBtn.onclick = () => {
+        if (d.brokerId && window.ChatController) {
+          window.ChatController.openChatWithBroker(d.id, d.brokerId);
+        } else if (!d.brokerId) {
+          alert("중개사 정보를 불러올 수 없습니다.");
+        } else {
+          alert("채팅 기능을 사용할 수 없습니다.");
+        }
+      };
+    }
+
     // closeBtn 기본 이벤트는 여기서 한 번만
     if (el.closeBtn && !el.closeBtn.__eventSet) {
       updateCloseButtonForFullscreen(buf, false);
@@ -435,6 +452,7 @@
       if (response.ok) {
         const data = await response.json();
         console.log("🟡 [DETAIL FETCH OK] =", data);
+        console.log("🔍 [DEBUG] broker_id from API:", data.broker_id, "brokerId:", data.brokerId);
 
         const offers =
           data.property_offers || data.propertyOffers || data.offers || [];
@@ -506,6 +524,7 @@
           description: data.title || "상세 정보 없음",
           brokerName: data.brokerName || data.broker_name || data.ownerName || "",
           brokerPhone: "",
+          brokerId: data.brokerId || data.broker_id,
           offers, // 진짜 offers
           images: images || [],
           maintenanceFee,
