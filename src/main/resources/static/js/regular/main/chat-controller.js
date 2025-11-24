@@ -8,6 +8,7 @@ export const ChatController = {
     currentRoomId: null,
     pollingInterval: null,
     currentUser: null,
+    allRooms: [], // 전체 채팅방 목록 저장용
 
     async init() {
         this.bindGlobalEvents();
@@ -63,6 +64,43 @@ export const ChatController = {
                 }
             }
         });
+
+        // 채팅방 검색 입력
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'chat-search-input') {
+                console.log('검색어 입력 감지:', e.target.value);
+                const keyword = e.target.value.trim().toLowerCase();
+                this.filterChatList(keyword);
+            }
+        });
+    },
+
+    /**
+     * 채팅방 목록 필터링
+     */
+    filterChatList(keyword) {
+        console.log('필터링 실행, 키워드:', keyword);
+        const listContainer = document.getElementById('chat-list');
+        if (!listContainer || !window.ChatPanel || !this.currentUser) return;
+
+        if (!keyword) {
+            // 검색어 없으면 전체 목록 표시
+            listContainer.innerHTML = window.ChatPanel.renderChatListItems(this.allRooms, this.currentUser.id);
+            return;
+        }
+
+        // 검색어로 필터링 (상대방 이름 기준)
+        const filteredRooms = this.allRooms.filter(room => {
+            let opponentName = '';
+            if (room.opponentNames && room.opponentNames.length > 0) {
+                opponentName = room.opponentNames.join(', ');
+            } else if (room.opponentUserIds && room.opponentUserIds.length > 0) {
+                opponentName = `사용자 ${room.opponentUserIds.join(', ')}`;
+            }
+            return opponentName.toLowerCase().includes(keyword);
+        });
+
+        listContainer.innerHTML = window.ChatPanel.renderChatListItems(filteredRooms, this.currentUser.id);
     },
 
     /**
@@ -114,6 +152,7 @@ export const ChatController = {
 
             const rooms = await ChatService.getMyRooms();
             const roomList = rooms.content || rooms;
+            this.allRooms = roomList; // 전체 목록 저장
 
             if (window.ChatPanel) {
                 listContainer.innerHTML = window.ChatPanel.renderChatListItems(roomList, this.currentUser.id);
