@@ -407,10 +407,22 @@
 
     // 즐겨찾기 버튼
     if (el.favBtn) {
-      el.favBtn.onclick = () => {
-        const pressed = el.favBtn.getAttribute("aria-pressed") === "true";
-        el.favBtn.setAttribute("aria-pressed", (!pressed).toString());
-        el.favIcon && el.favIcon.classList.toggle("text-red-500", !pressed);
+      // 초기 상태 설정
+      const isFavored = window.isFavored ? window.isFavored(d.id) : false;
+      el.favBtn.setAttribute("aria-pressed", isFavored.toString());
+      if (el.favIcon) {
+          el.favIcon.classList.toggle("text-red-500", isFavored);
+          el.favIcon.classList.toggle("text-gray-600", !isFavored); // 회색 클래스도 토글
+      }
+
+      // 클릭 이벤트
+      el.favBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (window.toggleFavorite) {
+            window.toggleFavorite(d.id, el.favBtn);
+        } else {
+            console.error("toggleFavorite function not found");
+        }
       };
     }
 
