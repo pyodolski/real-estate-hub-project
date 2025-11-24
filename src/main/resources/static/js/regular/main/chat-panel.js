@@ -178,34 +178,23 @@ const ChatPanel = {
    * @param {number} currentUserId - 현재 사용자 ID
    */
   renderChatRoomContent(messages, currentUserId) {
-    let html = `<div id="message-list" class="flex-grow space-y-4 p-2 overflow-y-auto custom-scrollbar">`;
+    // overflow-y-scroll: 항상 스크롤바 공간 확보하여 레이아웃 밀림 방지
+    let html = `<div id="message-list" class="flex-grow space-y-4 p-2 overflow-y-scroll custom-scrollbar">`;
 
     if (!messages || messages.length === 0) {
       html += `<div class="text-center text-gray-400 mt-10">대화를 시작해보세요!</div>`;
     } else {
       // 메시지 렌더링 (역순으로 올 수 있으므로 주의, 여기서는 시간순 정렬 가정)
       messages.forEach(msg => {
-        const isMe = msg.senderId === currentUserId;
-        const alignClass = isMe ? 'justify-end' : 'justify-start';
-        const bubbleClass = isMe ? 'bg-blue-500 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none';
-        const time = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        html += `
-          <div class="flex ${alignClass}">
-            <div class="max-w-[70%] ${bubbleClass} px-4 py-2 rounded-2xl shadow-sm relative group">
-              <p class="text-sm break-words">${msg.content}</p>
-              <span class="text-[10px] opacity-70 absolute bottom-1 ${isMe ? 'left-[-45px] text-gray-500' : 'right-[-45px] text-gray-500'} w-10 text-center">${time}</span>
-            </div>
-          </div>
-        `;
+        html += this.renderMessageItem(msg, currentUserId);
       });
     }
 
     html += `</div>`;
 
-    // 입력창 영역
+    // 입력창 영역 (하단 여백, 왼쪽 패딩 추가)
     html += `
-      <div class="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
+      <div class="mt-4 pt-4 pb-6 pl-4 border-t border-gray-200 flex-shrink-0">
         <form id="chat-send-form" class="flex items-center space-x-2">
           <input
             type="text"
@@ -227,6 +216,25 @@ const ChatPanel = {
     `;
 
     return html;
+  },
+
+  /**
+   * 개별 메시지 아이템 HTML 생성
+   */
+  renderMessageItem(msg, currentUserId) {
+    const isMe = msg.senderId === currentUserId;
+    const alignClass = isMe ? 'justify-end' : 'justify-start';
+    const bubbleClass = isMe ? 'bg-blue-500 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none';
+    const time = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    return `
+      <div class="flex ${alignClass} message-item" data-message-id="${msg.id}">
+        <div class="max-w-[70%] ${bubbleClass} px-4 py-2 rounded-2xl shadow-sm relative group">
+          <p class="text-sm break-words">${msg.content}</p>
+          <span class="text-[10px] opacity-70 absolute bottom-1 ${isMe ? 'left-[-45px] text-gray-500' : 'right-[-45px] text-gray-500'} w-10 text-center">${time}</span>
+        </div>
+      </div>
+    `;
   }
 };
 

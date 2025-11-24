@@ -19,6 +19,7 @@ const RightSidePanels = {
       >
         <!-- 채팅 패널 헤더 -->
         <div
+          id="chat-header"
           class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0"
         >
           <h2 class="text-xl font-bold text-gray-800">채팅 목록</h2>
@@ -45,7 +46,7 @@ const RightSidePanels = {
         </div>
 
         <!-- 채팅 검색 -->
-        <div class="mb-4 flex-shrink-0">
+        <div id="chat-search-area" class="mb-4 flex-shrink-0">
           <div class="relative">
             <input
               type="text"
@@ -71,7 +72,7 @@ const RightSidePanels = {
         </div>
 
         <!-- 스크롤 가능한 채팅 목록 영역 -->
-        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+        <div id="chat-content-area" class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
           <div id="chat-list" class="space-y-3">
             <!-- JavaScript로 채팅 목록이 여기에 추가됩니다. -->
           </div>
