@@ -72,7 +72,23 @@ export const ChatController = {
         this.stopPolling();
         this.currentRoomId = null;
 
-        const listContainer = document.getElementById('chat-list');
+        // loginO.html의 chat-list 또는 intermediary.html의 chat-panel-container 찾기
+        let listContainer = document.getElementById('chat-list');
+        const isIntermediaryPage = !listContainer;
+        
+        if (isIntermediaryPage) {
+            const container = document.getElementById('chat-panel-container');
+            if (!container) return;
+            
+            // intermediary.html용 채팅 UI 구조 생성
+            container.innerHTML = `
+                <div id="chat-header" class="flex-shrink-0"></div>
+                <div id="chat-search-area" class="flex-shrink-0 p-4 border-b"></div>
+                <div id="chat-list" class="flex-grow overflow-y-auto"></div>
+            `;
+            listContainer = document.getElementById('chat-list');
+        }
+        
         if (!listContainer) return;
 
         // 헤더 및 검색 영역 복원
