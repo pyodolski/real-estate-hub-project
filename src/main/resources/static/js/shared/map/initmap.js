@@ -43,6 +43,7 @@ export function initMap(app) {
 
   // 지도 렌더 후(첫 idle) map:ready 발행
   naver.maps.Event.once(app.map, 'idle', () => {
+    window.__MAP_IS_READY__ = true; // ✅ 지도 준비 완료 플래그
     window.dispatchEvent(new Event('map:ready'));
   });
 

@@ -125,20 +125,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // 다른 스크립트(panel-manager.js)에서 호출할 수 있도록 window 객체에 할당
   window.renderNotifications = renderNotifications;
 
-  // 즐겨찾기 매물 렌더링
-  function renderFavoriteProperties() {
-    if (
-      !favoriteList ||
-      typeof favoriteProperties === "undefined" ||
-      typeof createFavoritePropertyCard !== "function"
-    )
-      return;
-    favoriteList.innerHTML = "";
-    favoriteProperties.forEach((property) => {
-      favoriteList.innerHTML += createFavoritePropertyCard(property);
-    });
-  }
-  window.renderFavoriteProperties = renderFavoriteProperties;
+  // 즐겨찾기 매물 렌더링 (favorites.js의 loadFavorites 사용 권장)
+  // panel-manager.js에서 renderFavoriteProperties를 호출하므로, 
+  // favorites.js의 loadFavorites를 연결해줍니다.
+  window.renderFavoriteProperties = function() {
+      if (typeof window.loadFavorites === 'function') {
+          window.loadFavorites();
+      }
+  };
 
   // 비교 그룹 렌더링
   function renderCompareGroups() {
@@ -298,12 +292,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 초기 렌더링 ---
     async function initialRender() {
-      // 지도가 준비될 때까지 대기
-      if (!window.__naverMap) {
+      // 0. 즐겨찾기 목록 먼저 로드 (하트 표시 위해)
+      if (typeof window.loadFavorites === 'function') {
+          await window.loadFavorites();
+      }
+
+      // 지도가 준비될 때까지 대기 (initmap.js에서 설정한 플래그 확인)
+      if (!window.__MAP_IS_READY__) {
+        console.log("[app-init] Waiting for map to be ready...");
         await new Promise(resolve => {
           window.addEventListener('map:ready', resolve, { once: true });
         });
       }
+      console.log("[app-init] Map is ready, fetching properties...");
 
       try {
         const map = window.__naverMap;
