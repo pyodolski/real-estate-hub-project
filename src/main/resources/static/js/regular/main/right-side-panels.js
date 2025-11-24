@@ -1,12 +1,87 @@
-/**
- * 우측 사이드 패널들 렌더링 및 관리
- * 채팅, 프로필, 알림, 즐겨찾기, 비교, 내 매물 관리, 중개인 목록 패널
- */
 
 const RightSidePanels = {
   /**
    * 채팅 패널 HTML 생성
    */
+  async loadFavoriteList() {
+     const listEl = document.getElementById("favorite-list");
+     const totalSpan = document.getElementById("favorite-total-count");
+     if (!listEl || !totalSpan) return;
+
+     const token = localStorage.getItem("accessToken") || "";
+
+     try {
+       const res = await fetch("/api/properties/favorites?limit=100&offset=0", {
+         headers: {
+           "Authorization": `Bearer ${token}`,
+           "Content-Type": "application/json",
+         },
+       });
+
+       if (!res.ok) throw new Error("즐겨찾기 불러오기 실패");
+
+       const favorites = await res.json();
+
+       totalSpan.textContent = `총 ${favorites.length}개 매물`;
+       listEl.innerHTML = "";
+
+       favorites.forEach((f) => {
+         const img = f.thumbnailUrl ??
+           "https://via.placeholder.com/150?text=No+Image";
+
+         const card = `
+           <div class="bg-white rounded-lg shadow p-3 flex gap-3 cursor-pointer"
+                data-property-id="${f.propertyId}">
+             <img src="${img}" class="w-24 h-20 rounded object-cover" />
+
+             <div class="flex-1 flex flex-col justify-between">
+               <div>
+                 <p class="font-semibold text-sm">${f.title}</p>
+                 <p class="text-xs text-gray-500">${f.address}</p>
+               </div>
+
+               <div class="flex justify-between items-center mt-2">
+                 <span class="text-blue-600 font-bold text-sm">
+                   ${Number(f.price).toLocaleString()}원
+                 </span>
+
+                 <button class="text-xs text-red-500 favorite-remove-btn"
+                         data-property-id="${f.propertyId}">
+                   해제
+                 </button>
+               </div>
+             </div>
+           </div>
+         `;
+
+         listEl.insertAdjacentHTML("beforeend", card);
+       });
+
+       // 삭제(토글) 처리
+       listEl.addEventListener("click", async (e) => {
+         const btn = e.target.closest(".favorite-remove-btn");
+         if (!btn) return;
+
+         const pid = btn.getAttribute("data-property-id");
+
+         const toggleRes = await fetch(`/api/properties/${pid}/favorite`, {
+           method: "POST",
+           headers: {
+             "Authorization": `Bearer ${token}`,
+             "Content-Type": "application/json",
+           },
+         });
+
+         if (!toggleRes.ok) return alert("해제 실패");
+
+         this.loadFavoriteList();
+       });
+     } catch (e) {
+       console.error(e);
+       totalSpan.textContent = "불러오기 실패";
+       listEl.innerHTML = "<p>목록을 불러올 수 없습니다.</p>";
+     }
+   },
   renderChatPanel() {
     return `
       <!-- =================================================================== -->
@@ -379,7 +454,9 @@ const RightSidePanels = {
           <div
             class="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
           >
-            <span class="text-sm text-gray-700">총 12개 매물</span>
+            <span id="favorite-total-count" class="text-sm text-gray-700">
+              총 0개 매물
+            </span>
             <select class="text-sm border border-gray-300 rounded px-2 py-1">
               <option>최근 순</option>
               <option>가격 낮은 순</option>
@@ -821,6 +898,7 @@ const RightSidePanels = {
       // right-side-panel이 없으면 body에 추가
       document.body.insertAdjacentHTML("beforeend", panelsHTML);
     }
+    this.loadFavoriteList();
 
     console.log("[RightSidePanels] 우측 패널들 초기화 완료");
   },

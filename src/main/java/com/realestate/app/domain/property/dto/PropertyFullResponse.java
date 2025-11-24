@@ -35,9 +35,19 @@ public record PropertyFullResponse(
         List<OfferResponse> propertyOffers,
 
         @JsonProperty("property_images")
-        List<ImageResponse> propertyImages
+        List<ImageResponse> propertyImages,
+
+        Boolean favorite,
+
+        @JsonProperty("favorite_count")
+        Long favoriteCount
 ) {
     public static PropertyFullResponse from(Property p) {
+        // 예전 코드 호환용 – 기본값: 즐찾 아님, 카운트 0
+        return from(p, false, 0L);
+    }
+
+    public static PropertyFullResponse from(Property p, Boolean favorite, Long favoriteCount) {
         return new PropertyFullResponse(
                 p.getId(),
                 p.getTitle(),
@@ -56,7 +66,9 @@ public record PropertyFullResponse(
                         .toList(),
                 p.getImages().stream()
                         .map(ImageResponse::from)
-                        .toList()
+                        .toList(),
+                favorite,
+                favoriteCount
         );
     }
 

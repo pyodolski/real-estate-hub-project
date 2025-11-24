@@ -35,21 +35,19 @@ public class PropertyFavoriteService {
     }
 
     public boolean isFavored(Long userId, Long propertyId) {
-        return favoriteRepo.existsByUserIdAndPropertyId(userId, propertyId);
+        return favoriteRepo.existsByUser_IdAndProperty_Id(userId, propertyId);
     }
 
     public long favoriteCount(Long propertyId) {
-        return favoriteRepo.countByPropertyId(propertyId);
+        return favoriteRepo.countByProperty_Id(propertyId);
     }
-
 
     @Transactional
     public boolean toggleFavorite(Long userId, Long propertyId) {
 
-        boolean exists = favoriteRepo.existsByUserIdAndPropertyId(userId, propertyId);
+        boolean exists = favoriteRepo.existsByUser_IdAndProperty_Id(userId, propertyId);
         if (exists) {
-            favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
-            long n = favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
+            long n = favoriteRepo.deleteByUser_IdAndProperty_Id(userId, propertyId);
             log.debug("favorite delete affectedRows={} (userId={}, propertyId={})", n, userId, propertyId);
             return false; // 해제됨
         }
@@ -57,25 +55,14 @@ public class PropertyFavoriteService {
         Favorite f = new Favorite();
         f.setUser(userRepo.getReferenceById(userId));
         f.setProperty(propertyRepo.getReferenceById(propertyId));
-        f.setCreatedAt(LocalDateTime.now());
         favoriteRepo.save(f);
         return true; // 추가됨
-
-         /*
-        int inserted = favoriteRepo.insertIgnore(userId, propertyId);
-        if (inserted > 0) return true; // 새로 즐겨찾기 설정됨
-
-        favoriteRepo.deleteByUserIdAndPropertyIdNative(userId, propertyId);
-        return false; // 해제됨
-        */
-
     }
 
-    /** 명시적 삭제(원하면 프론트에서 DELETE로 호출) */
     @Transactional
     public void removeFavorite(Long userId, Long propertyId) {
-        favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
-        long n = favoriteRepo.deleteByUserIdAndPropertyId(userId, propertyId);
+        long n = favoriteRepo.deleteByUser_IdAndProperty_Id(userId, propertyId);
         log.debug("favorite delete affectedRows={} (userId={}, propertyId={})", n, userId, propertyId);
     }
+
 }

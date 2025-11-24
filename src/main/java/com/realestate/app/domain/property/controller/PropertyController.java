@@ -8,6 +8,7 @@ import com.realestate.app.domain.property.dto.PropertyFullResponse;
 import com.realestate.app.domain.property.repository.PropertyFullRepository;
 import com.realestate.app.domain.property.repository.PropertySearchRepository;
 import com.realestate.app.domain.property.service.JeonseRatioService;
+import com.realestate.app.domain.property.service.PropertyFavoriteService;
 import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.property.dto.PropertyFilterDto;
 import com.realestate.app.domain.property.service.propertyservice;
@@ -37,7 +38,7 @@ public class PropertyController {
     private final PropertySearchService propertySearchService;
     private final RecommendationService recommendationService;
     private final PropertySearchRepository propertySearchRepository;
-
+    private final PropertyFavoriteService favoriteService; // ⭐ 주입
     // GET /api/properties?swLat=&swLng=&neLat=&neLng=&status=AVAILABLE&minPrice=&maxPrice=
     @GetMapping
     public List<PropertyFullResponse> getInBounds(
@@ -61,10 +62,17 @@ public class PropertyController {
 
 
     @GetMapping("/{id}/full")
-    public PropertyFullResponse getOne(@PathVariable Long id) {
+    public PropertyFullResponse getOne(
+            @AuthenticationPrincipal AuthUser me,
+            @PathVariable Long id
+    ) {
         Property p = propertyFullRepository.findByIdWithActiveOffersAndImages(id)
                 .orElseThrow();
-        return PropertyFullResponse.from(p);
+
+        boolean isFav = me != null && favoriteService.isFavored(me.getId(), id);
+        long favCount = favoriteService.favoriteCount(id);
+
+        return PropertyFullResponse.from(p, isFav, favCount);
     }
 
 
