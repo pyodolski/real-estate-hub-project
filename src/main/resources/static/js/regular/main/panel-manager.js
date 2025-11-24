@@ -228,9 +228,13 @@ document.addEventListener("DOMContentLoaded", () => {
       renderFavoriteProperties();
     if (panelName === "compare" && typeof renderCompareGroups === "function")
       renderCompareGroups();
-    if (panelName === "chat" && typeof renderChatList === "function") {
-      renderChatList();
-      initializeChatSearch();
+    if (panelName === "chat") {
+      if (window.ChatController) {
+        window.ChatController.renderChatList();
+      } else if (typeof renderChatList === "function") {
+        renderChatList();
+        initializeChatSearch();
+      }
     }
     if (panelName === "my-property" && window.propertyManagement) {
       window.propertyManagement.loadMyProperties();
