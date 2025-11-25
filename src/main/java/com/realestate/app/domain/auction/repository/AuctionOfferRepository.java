@@ -11,8 +11,6 @@ import java.util.Optional;
 
 public interface AuctionOfferRepository extends JpaRepository<AuctionOffer, Long> {
 
-    List<AuctionOffer> findByAuction(PropertyAuction auction);
-
     Optional<AuctionOffer> findByAuctionAndAcceptedIsTrue(PropertyAuction auction);
 
     @Query("""
@@ -21,4 +19,8 @@ public interface AuctionOfferRepository extends JpaRepository<AuctionOffer, Long
         where o.auction = :auction
         """)
     BigDecimal findMaxAmountByAuction(PropertyAuction auction);
+
+    Optional<AuctionOffer> findTopByAuctionOrderByAmountDesc(PropertyAuction auction);
+
+    List<AuctionOffer> findByAuction(PropertyAuction auction);
 }

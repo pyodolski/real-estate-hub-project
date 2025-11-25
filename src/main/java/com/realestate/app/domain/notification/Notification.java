@@ -59,12 +59,13 @@ public class Notification {
     public enum NotificationType {
         PROPERTY_APPROVED("매물 승인"),
         PROPERTY_REJECTED("매물 거절"),
-        PROPERTY_SUBMITTED("매물 신청"),
         SYSTEM_UPDATE("시스템 업데이트"),
         CHAT_MESSAGE("새 메시지"),
-        PRICE_ALERT("가격 알림"),
-        PROPERTY_SOLD("찜한 매물 거래 완료"),
-        PURCHASE_COMPLETED("구매 완료");
+        PURCHASE_COMPLETED("구매 완료"),
+        RECOMMENDED_PROPERTY("새로운 추천 매물"),
+        AUCTION_NEW_BID("경매 새 입찰"),
+        AUCTION_OUTBID("내 입찰 상회"),
+        AUCTION_COMPLETED("참여한 경매 종료");
 
         private final String displayName;
 

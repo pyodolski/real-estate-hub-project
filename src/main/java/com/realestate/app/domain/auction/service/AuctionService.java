@@ -21,6 +21,7 @@ import com.realestate.app.domain.property.table.PropertyOffer.OfferType2;
 import com.realestate.app.domain.user.entity.User;
 import com.realestate.app.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuctionService {
@@ -42,6 +44,8 @@ public class AuctionService {
     private final PropertyOfferRepository propertyOfferRepo;
     private final UserRepository userRepo;
 
+    private final com.realestate.app.domain.notification.NotificationService notificationService;
+    private final com.realestate.app.recproperty.service.RecommendationService recommendationService;
     /**
      * 오너가 새 경매 생성
      */
@@ -124,6 +128,10 @@ public class AuctionService {
         BrokerProfile broker = brokerProfileRepo.findByUserId(brokerUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "broker profile not found"));
 
+        // 🔹 새 입찰 이전 최고 입찰자 (outbid 알림용)
+        AuctionOffer prevTopOffer = offerRepo.findTopByAuctionOrderByAmountDesc(auction)
+                .orElse(null);
+
         BigDecimal max = offerRepo.findMaxAmountByAuction(auction);
         if (max != null && amount.compareTo(max) <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -138,7 +146,43 @@ public class AuctionService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return offerRepo.save(offer);
+        AuctionOffer saved = offerRepo.save(offer);
+
+        // 1) 경매 소유자에게 "입찰 들어옴" 알림
+        Property property = auction.getProperty();
+        if (property != null && property.getOwner() != null) {
+            Long ownerUserId = property.getOwner().getId();
+
+            String brokerName = null;
+            if (broker.getUser() != null) {
+                brokerName = broker.getUser().getUsername();
+            }
+
+            notificationService.createAuctionNewBidNotificationToOwner(
+                    ownerUserId,
+                    auction.getId(),
+                    amount,
+                    brokerName
+            );
+        }
+
+        // 2) 직전 최고 입찰자에게 "내 입찰 상회됨" 알림
+        if (prevTopOffer != null
+                && prevTopOffer.getBroker() != null
+                && prevTopOffer.getBroker().getUser() != null) {
+
+            Long prevBrokerUserId = prevTopOffer.getBroker().getUser().getId();
+
+            if (!prevBrokerUserId.equals(brokerUserId)) {
+                notificationService.createAuctionOutbidNotification(
+                        prevBrokerUserId,
+                        auction.getId(),
+                        amount
+                );
+            }
+        }
+
+        return saved;
     }
 
     /**
@@ -197,9 +241,8 @@ public class AuctionService {
         property.setBroker(offer.getBroker());
         property.setListingType(ListingType.BROKER);
 
-        // 5) 최종 property_offers 한 건 생성
+        // 5) 최종 property_offers 한 건 생성 (기존 로직 그대로)
         var dealType = auction.getDealType();
-
         PropertyOffer po = PropertyOffer.builder()
                 .property(property)
                 .housetype(auction.getHousetype())
@@ -213,19 +256,46 @@ public class AuctionService {
                 .build();
 
         switch (dealType) {
-            case SALE -> {
-                po.setTotalPrice(offer.getAmount());
-            }
-            case JEONSE -> {
-                po.setDeposit(offer.getAmount());
-            }
-            case WOLSE -> {
-                // 일단 amount 를 월세로 본다고 가정 (원하면 deposit/monthlyRent 분리 필드 추가 가능)
-                po.setMonthlyRent(offer.getAmount());
-                // 보증금을 경매 입력으로 할지, 등록폼 값으로 할지 설계에 따라 추가
-            }
+            case SALE -> po.setTotalPrice(offer.getAmount());
+            case JEONSE -> po.setDeposit(offer.getAmount());
+            case WOLSE -> po.setMonthlyRent(offer.getAmount());
         }
 
         propertyOfferRepo.save(po);
+
+        try {
+            recommendationService.notifyRecommendedUsersForNewOffer(
+                    property,
+                    po,
+                    0.7   // 코사인 유사도 임계값 (튜닝 가능)
+            );
+        } catch (Exception e) {
+            // 추천/알림 실패해도 경매 수락 자체는 롤백하지 않도록 방어
+            log.warn("[RECOMMEND] failed to send recommended notifications for auction offer: {} - {}",
+                    offerId, e.getMessage());
+        }
+
+        // 6) 참여한 모든 브로커에게 "경매 종료" 알림 보내기
+        //    - winner: true / loser: false 로 구분
+        var allOffers = offerRepo.findByAuction(auction);
+        Long winnerBrokerUserId = (offer.getBroker() != null && offer.getBroker().getUser() != null)
+                ? offer.getBroker().getUser().getId()
+                : null;
+
+        // 중복 브로커 제거 (한 브로커가 여러 번 입찰했을 수 있으므로)
+        java.util.Set<Long> notified = new java.util.HashSet<>();
+
+        for (AuctionOffer ao : allOffers) {
+            if (ao.getBroker() == null || ao.getBroker().getUser() == null) continue;
+            Long brokerUserId = ao.getBroker().getUser().getId();
+            if (!notified.add(brokerUserId)) continue; // 이미 알림 보낸 브로커는 스킵
+
+            boolean isWinner = (winnerBrokerUserId != null && winnerBrokerUserId.equals(brokerUserId));
+            notificationService.createAuctionCompletedNotification(
+                    brokerUserId,
+                    auction.getId(),
+                    isWinner
+            );
+        }
     }
 }
