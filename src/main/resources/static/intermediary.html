@@ -18,6 +18,8 @@
     <!-- 위임 요청 상세 패널 -->
     <script src="/js/broker/delegation/delegation-detail-overlay.js"></script>
     <script src="/js/broker/delegation/delegation-detail-panel.js"></script>
+    <link rel="stylesheet" href="./css/map.css" />
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=madicr2e0g&submodules=coord,geocoder"></script>
     <!-- Google Fonts (Inter & Noto Sans KR) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -570,7 +572,8 @@
         }
       });
     </script>
-    
+    <script src="js/regular/main/map-filter-panel.js"></script>
+
     <!-- 채팅 기능 스크립트 -->
     <script type="module" src="js/regular/main/chat-panel.js"></script>
     <script type="module" src="js/regular/main/chat-controller.js"></script>
