@@ -119,8 +119,31 @@ export const ChatController = {
             
             // intermediary.html용 채팅 UI 구조 생성
             container.innerHTML = `
-                <div id="chat-header" class="flex-shrink-0"></div>
-                <div id="chat-search-area" class="flex-shrink-0 p-4 border-b"></div>
+                <div id="chat-header" class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0 px-6 pt-6"></div>
+                <div id="chat-search-area" class="mb-4 flex-shrink-0">
+                  <div class="relative">
+                    <input
+                      type="text"
+                      id="chat-search-input"
+                      placeholder="채팅방 검색"
+                      class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
                 <div id="chat-content-area" class="flex-grow overflow-y-auto custom-scrollbar">
                     <div id="chat-list" class="space-y-3"></div>
                 </div>
@@ -131,9 +154,23 @@ export const ChatController = {
         if (!listContainer) return;
 
         // 헤더 및 검색 영역 복원
+        // 헤더 및 검색 영역 복원
         const header = document.getElementById('chat-header');
-        if (header && window.ChatPanel) {
-            header.innerHTML = window.ChatPanel.renderListHeader();
+        if (header) {
+            // Intermediary 페이지용 흰색 헤더 (클래스 체크 대신 항상 흰색 스타일 적용)
+            if (!header.classList.contains('bg-gradient-to-r')) {
+                header.innerHTML = `
+                    <h2 class="text-xl font-bold text-gray-800">채팅 목록</h2>
+                    <button id="close-chat-panel" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                `;
+            } else if (window.ChatPanel) {
+                // 일반 페이지용 (혹은 그라디언트가 남아있는 경우)
+                header.innerHTML = window.ChatPanel.renderListHeader();
+            }
         }
         const searchArea = document.getElementById('chat-search-area');
         if (searchArea) searchArea.classList.remove('hidden');
@@ -187,8 +224,27 @@ export const ChatController = {
 
         // 헤더 변경
         const header = document.getElementById('chat-header');
-        if (header && window.ChatPanel) {
-            header.innerHTML = window.ChatPanel.renderRoomHeader(roomTitle);
+        if (header) {
+            // Intermediary 페이지용 흰색 헤더
+            if (!header.classList.contains('bg-gradient-to-r')) {
+                header.innerHTML = `
+                    <div class="flex items-center">
+                        <button id="back-to-chat-list" class="mr-2 p-2 rounded-full hover:bg-gray-200 transition-colors" title="목록으로">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <h2 class="text-xl font-bold text-gray-800 truncate">${roomTitle}</h2>
+                    </div>
+                    <button id="close-chat-panel" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                `;
+            } else if (window.ChatPanel) {
+                header.innerHTML = window.ChatPanel.renderRoomHeader(roomTitle);
+            }
         }
 
         // 검색 영역 숨기기

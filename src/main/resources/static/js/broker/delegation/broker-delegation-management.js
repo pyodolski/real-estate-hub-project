@@ -6,8 +6,15 @@ class BrokerDelegationManagement {
   }
 
   init() {
-    this.setupEventListeners();
-    this.loadDelegationRequests();
+    // 이벤트 리스너 설정 제거 (PanelController가 담당)
+    // this.setupEventListeners();
+    
+    // 초기 데이터 로드는 패널이 열릴 때 PanelController가 호출함
+    // 하지만 페이지 로드 시 통계 등은 미리 로드할 수도 있음
+    // 일단은 패널 열릴 때 로드하도록 변경되었으므로 여기서는 제거하거나 유지해도 무방하나, 
+    // 불필요한 API 호출을 줄이기 위해 제거.
+    // this.loadDelegationRequests();
+    
     this.initDetailPanel();
   }
 
@@ -21,46 +28,8 @@ class BrokerDelegationManagement {
     }
   }
 
-  setupEventListeners() {
-    // 위임 요청 버튼 클릭
-    const delegationButton = document.getElementById(
-      "delegation-request-button"
-    );
-    if (delegationButton) {
-      delegationButton.addEventListener("click", () => {
-        this.showDelegationPanel();
-      });
-    }
-
-    // 패널 닫기 버튼
-    const closeButton = document.getElementById("close-delegation-panel");
-    if (closeButton) {
-      closeButton.addEventListener("click", () => {
-        this.hideDelegationPanel();
-      });
-    }
-  }
-
-  // 위임 요청 패널 표시
-  showDelegationPanel() {
-    const panel = document.getElementById("delegation-request-panel");
-    if (panel) {
-      panel.style.display = "block";
-      panel.classList.remove("translate-x-full");
-      this.loadDelegationRequests();
-    }
-  }
-
-  // 위임 요청 패널 숨기기
-  hideDelegationPanel() {
-    const panel = document.getElementById("delegation-request-panel");
-    if (panel) {
-      panel.classList.add("translate-x-full");
-      setTimeout(() => {
-        panel.style.display = "none";
-      }, 300);
-    }
-  }
+  // setupEventListeners, showDelegationPanel, hideDelegationPanel 제거됨
+  // PanelController가 패널 열기/닫기 및 버튼 이벤트를 관리함
 
   // 상태별 필터링
   filterByStatus(status) {
