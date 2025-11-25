@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -143,5 +144,55 @@ public class NotificationService {
                                      reason != null ? reason : "관리자 검토 결과");
         
         createNotification(userId, Notification.NotificationType.PROPERTY_REJECTED, title, message, claimId);
+    }
+
+    @Transactional
+    public void createRecommendedPropertyNotification(
+            Long userId,
+            Long propertyId,
+            String propertyTitleOrAddr
+    ) {
+        String title = "새로운 추천 매물";
+        String msg = String.format(
+                "회원님 취향에 맞는 매물 '%s'이(가) 새로 등록되었습니다.",
+                propertyTitleOrAddr != null ? propertyTitleOrAddr : "매물"
+        );
+
+        createNotification(
+                userId,
+                Notification.NotificationType.RECOMMENDED_PROPERTY,
+                title,
+                msg,
+                propertyId
+        );
+    }
+
+    @Transactional
+    public void createAuctionNewBidNotificationToOwner(Long ownerUserId, Long auctionId, BigDecimal amount, String brokerName) {
+        String title = "경매 새 입찰 도착";
+        String msg   = String.format("%s 브로커가 %s원에 새 입찰을 등록했습니다.",
+                brokerName != null ? brokerName : "어떤",
+                amount != null ? amount.toPlainString() : "-");
+        createNotification(ownerUserId, Notification.NotificationType.AUCTION_NEW_BID,
+                title, msg, auctionId);
+    }
+
+    @Transactional
+    public void createAuctionOutbidNotification(Long brokerUserId, Long auctionId, BigDecimal newAmount) {
+        String title = "내 입찰이 상회되었습니다";
+        String msg   = String.format("참여 중인 경매에 더 높은 입찰(%s원)이 들어왔습니다.",
+                newAmount != null ? newAmount.toPlainString() : "-");
+        createNotification(brokerUserId, Notification.NotificationType.AUCTION_OUTBID,
+                title, msg, auctionId);
+    }
+
+    @Transactional
+    public void createAuctionCompletedNotification(Long brokerUserId, Long auctionId, boolean winner) {
+        String title = "참여한 경매가 종료되었습니다";
+        String msg   = winner
+                ? "참여하신 경매에서 최종 선정된 브로커가 되었습니다."
+                : "참여하신 경매가 종료되었습니다. 다른 브로커가 최종 선정되었습니다.";
+        createNotification(brokerUserId, Notification.NotificationType.AUCTION_COMPLETED,
+                title, msg, auctionId);
     }
 }
