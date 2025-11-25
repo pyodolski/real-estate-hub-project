@@ -45,3 +45,4 @@ application-local.yml
 ### File Uploads ###
 uploads/
 !uploads/.gitkeep
+java_pid24300.hprof
