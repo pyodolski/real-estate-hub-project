@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>부동산 서비스 로그인</title>
@@ -11,252 +11,291 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
-      rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+            rel="stylesheet"
     />
 
     <style>
-      body {
-        font-family: "Inter", "Noto Sans KR", sans-serif;
-      }
+        body {
+            font-family: "Inter", "Noto Sans KR", sans-serif;
+        }
     </style>
-  </head>
-  <body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
-    <div class="w-full max-w-md">
-      <!-- 로그인 카드 -->
-      <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
+<div class="w-full max-w-md">
+    <!-- 로그인 카드 -->
+    <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
         <!-- 헤더 -->
         <div class="px-6 pt-6 pb-4 text-center">
-          <!-- 로고 -->
-          <div class="mb-4">
-            <div
-              class="w-16 h-16 mx-auto bg-green-400 rounded-2xl flex items-center justify-center mb-3"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-8 w-8 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10m-9-10"
-                />
-              </svg>
+            <!-- 로고 -->
+            <div class="mb-4">
+                <div
+                        class="w-16 h-16 mx-auto bg-green-400 rounded-2xl flex items-center justify-center mb-3"
+                >
+                    <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-8 w-8 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                    >
+                        <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10m-9-10"
+                        />
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">부동산 서비스</h1>
+                <p class="text-gray-600 text-sm mt-1">
+                    로그인하여 서비스를 이용하세요
+                </p>
             </div>
-            <h1 class="text-xl font-bold text-gray-800">부동산 서비스</h1>
-            <p class="text-gray-600 text-sm mt-1">
-              로그인하여 서비스를 이용하세요
-            </p>
-          </div>
         </div>
 
         <!-- 로그인 폼 -->
         <div class="px-6 pb-6">
-          <form id="loginForm" class="space-y-4">
-            <!-- 이메일 입력 -->
-            <div>
-              <label
-                for="email"
-                class="block text-sm font-medium text-gray-700 mb-2"
-                >이메일</label
-              >
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400"
-                placeholder="이메일을 입력하세요"
-              />
-            </div>
+            <form id="loginForm" class="space-y-4">
+                <!-- 이메일 입력 -->
+                <div>
+                    <label
+                            for="email"
+                            class="block text-sm font-medium text-gray-700 mb-2"
+                    >이메일</label>
+                    <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400"
+                            placeholder="이메일을 입력하세요"
+                    />
+                </div>
 
-            <!-- 비밀번호 입력 -->
-            <div>
-              <label
-                for="password"
-                class="block text-sm font-medium text-gray-700 mb-2"
-                >비밀번호</label
-              >
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400"
-                placeholder="비밀번호를 입력하세요"
-              />
-            </div>
+                <!-- 비밀번호 입력 -->
+                <div>
+                    <label
+                            for="password"
+                            class="block text-sm font-medium text-gray-700 mb-2"
+                    >비밀번호</label>
+                    <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400"
+                            placeholder="비밀번호를 입력하세요"
+                    />
+                </div>
 
-            <!-- 로그인 옵션 -->
-            <div class="flex items-center justify-between text-sm">
-              <label class="flex items-center">
-                <input
-                  type="checkbox"
-                  class="rounded border-gray-300 text-green-400 focus:ring-green-400"
-                />
-                <span class="ml-2 text-gray-600">로그인 상태 유지</span>
-              </label>
-              <a href="#" class="text-green-500 hover:text-green-700"
-                >비밀번호 찾기</a
-              >
-            </div>
+                <!-- 로그인 옵션 -->
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center">
+                        <input
+                                type="checkbox"
+                                class="rounded border-gray-300 text-green-400 focus:ring-green-400"
+                        />
+                        <span class="ml-2 text-gray-600">로그인 상태 유지</span>
+                    </label>
+                    <!-- 비밀번호 찾기 -->
+                    <a
+                            href="#"
+                            id="forgot-password-link"
+                            class="text-green-500 hover:text-green-700"
+                    >
+                        비밀번호 찾기
+                    </a>
+                </div>
 
-            <!-- 로그인 버튼 -->
-            <button
-              type="submit"
-              class="w-full bg-green-400 hover:bg-green-500 text-white font-medium py-2 px-4 rounded-2xl transition-colors"
-            >
-              로그인
-            </button>
-
-            <!-- 회원가입 링크 -->
-            <div class="text-center">
-              <p class="text-sm text-gray-600">
-                계정이 없으신가요?
-                <a
-                  href="signup.html"
-                  class="text-green-500 hover:text-green-700 font-medium"
-                  >회원가입</a
+                <!-- 로그인 버튼 -->
+                <button
+                        type="submit"
+                        class="w-full bg-green-400 hover:bg-green-500 text-white font-medium py-2 px-4 rounded-2xl transition-colors"
                 >
-              </p>
-            </div>
-          </form>
+                    로그인
+                </button>
+
+                <!-- 회원가입 링크 -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        계정이 없으신가요?
+                        <a
+                                href="signup.html"
+                                class="text-green-500 hover:text-green-700 font-medium"
+                        >회원가입</a>
+                    </p>
+                </div>
+            </form>
         </div>
-      </div>
     </div>
+</div>
 
-    <!-- AuthUtils 스크립트 로드 -->
-    <script src="js/utils/auth-utils.js"></script>
+<!-- AuthUtils 스크립트 로드 -->
+<script src="js/utils/auth-utils.js"></script>
 
-    <script type="module">
-      function setToken(raw) {
+<script type="module">
+    function setToken(raw) {
         const bearer = raw?.startsWith("Bearer ") ? raw : `Bearer ${raw}`;
         localStorage.setItem("auth_token", bearer);
         window.TOKEN = bearer;
-      }
+    }
 
-      // 페이지 로드 시 자동 로그아웃 (토큰 제거)
-      window.addEventListener("DOMContentLoaded", function () {
-        localStorage.removeItem("auth_token"); // ★ 추가
-        localStorage.removeItem("refresh_token"); // ★ 추가
+    // 페이지 로드 시 자동 로그아웃 (토큰 제거)
+    window.addEventListener("DOMContentLoaded", function () {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
         // AuthUtils를 사용하여 토큰 제거
         AuthUtils.removeToken();
         localStorage.removeItem("refreshToken");
 
-        // sessionStorage에서도 토큰 제거 (혹시 있을 수 있는 경우)
+        // sessionStorage에서도 토큰 제거
         sessionStorage.removeItem("refreshToken");
         sessionStorage.removeItem("auth_token");
         sessionStorage.removeItem("refresh_token");
 
         console.log("자동 로그아웃 완료 - 모든 토큰이 제거되었습니다.");
-      });
+    });
 
-      // 폼 제출 처리
-      document
+    // 🔹 비밀번호 찾기 클릭 시 비밀번호 재설정 메일 요청
+    const forgotLink = document.getElementById("forgot-password-link");
+    if (forgotLink) {
+        forgotLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            const emailInput = document.getElementById("email");
+            let email = emailInput?.value?.trim();
+
+            if (!email) {
+                email = window.prompt("비밀번호를 재설정할 이메일을 입력하세요.");
+            }
+
+            if (!email) {
+                alert("이메일을 입력해주세요.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/auth/forgot-password", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        // 컨트롤러에서 받는 X-App-Base-Url
+                        "X-App-Base-Url": window.location.origin,
+                    },
+                    body: JSON.stringify({ email }),
+                });
+
+                if (!res.ok) {
+                    const msg = await res.text();
+                    throw new Error(msg || "비밀번호 재설정 요청에 실패했습니다.");
+                }
+
+                // 컨트롤러가 204 NO_CONTENT 보내므로 body 안 읽어도 됨
+                alert("비밀번호 재설정 메일이 발송되었습니다.\n메일함을 확인해주세요.");
+            } catch (err) {
+                console.error("비밀번호 재설정 오류:", err);
+                alert(
+                    err.message ||
+                    "비밀번호 재설정 중 오류가 발생했습니다. 다시 시도해주세요."
+                );
+            }
+        });
+    }
+
+    // 폼 제출 처리 (로그인)
+    document
         .getElementById("loginForm")
         .addEventListener("submit", async function (e) {
-          e.preventDefault();
+            e.preventDefault();
 
-          const formData = new FormData(this);
-          const email = formData.get("email");
-          const password = formData.get("password");
+            const formData = new FormData(this);
+            const email = formData.get("email");
+            const password = formData.get("password");
 
-          // 간단한 유효성 검사
-          if (!email.trim() || !password.trim()) {
-            alert("이메일과 비밀번호를 모두 입력해주세요.");
-            return;
-          }
-
-          // 로딩 애니메이션
-          const submitButton = this.querySelector('button[type="submit"]');
-          const originalText = submitButton.innerHTML;
-          submitButton.innerHTML = "로그인 중...";
-          submitButton.disabled = true;
-
-          try {
-            // 1. 로그인 API 호출
-            const loginResponse = await fetch("/api/auth/login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: email,
-                password: password,
-              }),
-            });
-
-            if (!loginResponse.ok) {
-              const errorData = await loginResponse.text();
-              throw new Error(errorData || "로그인에 실패했습니다.");
+            if (!email.trim() || !password.trim()) {
+                alert("이메일과 비밀번호를 모두 입력해주세요.");
+                return;
             }
 
-            const tokenData = await loginResponse.json();
-            setToken(tokenData.accessToken);
-            // 2. AuthUtils를 사용하여 액세스 토큰 저장 (표준 키 사용 + 호환성 키)
-            AuthUtils.setToken(tokenData.accessToken);
-            // 리프레시 토큰은 별도로 저장
-            localStorage.setItem("refreshToken", tokenData.refreshToken);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = "로그인 중...";
+            submitButton.disabled = true;
 
-            // 3. 사용자 정보 가져오기
-            const userResponse = await fetch("/api/users/me", {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${tokenData.accessToken}`,
-                "Content-Type": "application/json",
-              },
-            });
+            try {
+                const loginResponse = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                    }),
+                });
 
-            if (!userResponse.ok) {
-              throw new Error("사용자 정보를 가져올 수 없습니다.");
+                if (!loginResponse.ok) {
+                    const errorData = await loginResponse.text();
+                    throw new Error(errorData || "로그인에 실패했습니다.");
+                }
+
+                const tokenData = await loginResponse.json();
+                setToken(tokenData.accessToken);
+                AuthUtils.setToken(tokenData.accessToken);
+                localStorage.setItem("refreshToken", tokenData.refreshToken);
+
+                const userResponse = await fetch("/api/users/me", {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${tokenData.accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!userResponse.ok) {
+                    throw new Error("사용자 정보를 가져올 수 없습니다.");
+                }
+
+                const userData = await userResponse.json();
+
+                localStorage.setItem(
+                    "currentUser",
+                    JSON.stringify({
+                        userId: userData.id,
+                        email: userData.email,
+                        username: userData.username,
+                        role: userData.role,
+                    })
+                );
+
+                console.log("로그인 사용자 정보:", userData);
+
+                switch (userData.role) {
+                    case "regular":
+                        window.location.href = "loginO.html";
+                        break;
+                    case "broker":
+                        window.location.href = "intermediary.html";
+                        break;
+                    case "admin":
+                        window.location.href = "admin.html";
+                        break;
+                    default:
+                        window.location.href = "loginO.html";
+                        break;
+                }
+            } catch (error) {
+                console.error("로그인 오류:", error);
+                alert(
+                    error.message ||
+                    "로그인 중 오류가 발생했습니다. 다시 시도해주세요."
+                );
+
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
             }
-
-            const userData = await userResponse.json();
-
-            // 사용자 정보도 localStorage에 저장 (필요시 사용)
-            localStorage.setItem(
-              "currentUser",
-              JSON.stringify({
-                userId: userData.id,
-                email: userData.email,
-                username: userData.username,
-                role: userData.role,
-              })
-            );
-
-            console.log("로그인 사용자 정보:", userData); // 디버깅용
-
-            // 4. 역할별 페이지 리다이렉트
-            switch (userData.role) {
-              case "regular":
-                window.location.href = "loginO.html";
-                break;
-              case "broker":
-                window.location.href = "intermediary.html";
-                break;
-              case "admin":
-                window.location.href = "admin.html";
-                break;
-              default:
-                window.location.href = "loginO.html";
-                break;
-            }
-          } catch (error) {
-            console.error("로그인 오류:", error);
-            alert(
-              error.message ||
-                "로그인 중 오류가 발생했습니다. 다시 시도해주세요."
-            );
-
-            // 버튼 상태 복원
-            submitButton.innerHTML = originalText;
-            submitButton.disabled = false;
-          }
         });
-    </script>
-  </body>
+</script>
+</body>
 </html>
