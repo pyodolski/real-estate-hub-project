@@ -4,32 +4,32 @@ const RightSidePanels = {
    * 채팅 패널 HTML 생성
    */
   async loadFavoriteList() {
-     const listEl = document.getElementById("favorite-list");
-     const totalSpan = document.getElementById("favorite-total-count");
-     if (!listEl || !totalSpan) return;
+    const listEl = document.getElementById("favorite-list");
+    const totalSpan = document.getElementById("favorite-total-count");
+    if (!listEl || !totalSpan) return;
 
-     const token = localStorage.getItem("accessToken") || "";
+    const token = localStorage.getItem("accessToken") || "";
 
-     try {
-       const res = await fetch("/api/properties/favorites?limit=100&offset=0", {
-         headers: {
-           "Authorization": `Bearer ${token}`,
-           "Content-Type": "application/json",
-         },
-       });
+    try {
+      const res = await fetch("/api/properties/favorites?limit=100&offset=0", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-       if (!res.ok) throw new Error("즐겨찾기 불러오기 실패");
+      if (!res.ok) throw new Error("즐겨찾기 불러오기 실패");
 
-       const favorites = await res.json();
+      const favorites = await res.json();
 
-       totalSpan.textContent = `총 ${favorites.length}개 매물`;
-       listEl.innerHTML = "";
+      totalSpan.textContent = `총 ${favorites.length}개 매물`;
+      listEl.innerHTML = "";
 
-       favorites.forEach((f) => {
-         const img = f.thumbnailUrl ??
-           "https://via.placeholder.com/150?text=No+Image";
+      favorites.forEach((f) => {
+        const img = f.thumbnailUrl ??
+          "https://via.placeholder.com/150?text=No+Image";
 
-         const card = `
+        const card = `
            <div class="bg-white rounded-lg shadow p-3 flex gap-3 cursor-pointer"
                 data-property-id="${f.propertyId}">
              <img src="${img}" class="w-24 h-20 rounded object-cover" />
@@ -54,34 +54,34 @@ const RightSidePanels = {
            </div>
          `;
 
-         listEl.insertAdjacentHTML("beforeend", card);
-       });
+        listEl.insertAdjacentHTML("beforeend", card);
+      });
 
-       // 삭제(토글) 처리
-       listEl.addEventListener("click", async (e) => {
-         const btn = e.target.closest(".favorite-remove-btn");
-         if (!btn) return;
+      // 삭제(토글) 처리
+      listEl.addEventListener("click", async (e) => {
+        const btn = e.target.closest(".favorite-remove-btn");
+        if (!btn) return;
 
-         const pid = btn.getAttribute("data-property-id");
+        const pid = btn.getAttribute("data-property-id");
 
-         const toggleRes = await fetch(`/api/properties/${pid}/favorite`, {
-           method: "POST",
-           headers: {
-             "Authorization": `Bearer ${token}`,
-             "Content-Type": "application/json",
-           },
-         });
+        const toggleRes = await fetch(`/api/properties/${pid}/favorite`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-         if (!toggleRes.ok) return alert("해제 실패");
+        if (!toggleRes.ok) return alert("해제 실패");
 
-         this.loadFavoriteList();
-       });
-     } catch (e) {
-       console.error(e);
-       totalSpan.textContent = "불러오기 실패";
-       listEl.innerHTML = "<p>목록을 불러올 수 없습니다.</p>";
-     }
-   },
+        this.loadFavoriteList();
+      });
+    } catch (e) {
+      console.error(e);
+      totalSpan.textContent = "불러오기 실패";
+      listEl.innerHTML = "<p>목록을 불러올 수 없습니다.</p>";
+    }
+  },
   renderChatPanel() {
     return `
       <!-- =================================================================== -->
@@ -854,6 +854,348 @@ const RightSidePanels = {
   },
 
   /**
+   * 커뮤니티 패널 HTML 생성 (인스타그램 피드 스타일)
+   */
+  renderCommunityPanel() {
+    const dummyPosts = [
+      {
+        id: 1,
+        author: '김철수',
+        avatar: 'https://i.pravatar.cc/40?img=1',
+        location: '강남구 역삼동',
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=400&fit=crop',
+        likes: 128,
+        comments: 24,
+        content: '드디어 새 아파트로 이사했어요! 전망이 정말 좋네요 🏠',
+        time: '2시간 전'
+      },
+      {
+        id: 2,
+        author: '이영희',
+        avatar: 'https://i.pravatar.cc/40?img=2',
+        location: '서초구 반포동',
+        image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=400&fit=crop',
+        likes: 256,
+        comments: 42,
+        content: '인테리어 리모델링 완료! 거실이 완전 달라졌어요 ✨',
+        time: '5시간 전'
+      },
+      {
+        id: 3,
+        author: '박민수',
+        avatar: 'https://i.pravatar.cc/40?img=3',
+        location: '마포구 연남동',
+        image: 'https://images.unsplash.com/photo-1484154218962-a197022b25ba?w=400&h=400&fit=crop',
+        likes: 89,
+        comments: 15,
+        content: '연남동 숨은 루프탑 카페 발견! 동네 분위기 최고예요 ☕',
+        time: '1일 전'
+      },
+      {
+        id: 4,
+        author: '최수진',
+        avatar: 'https://i.pravatar.cc/40?img=4',
+        location: '용산구 한남동',
+        image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=400&fit=crop',
+        likes: 342,
+        comments: 67,
+        content: '한남동 신축 빌라 구경 왔어요. 테라스가 넓어서 좋네요!',
+        time: '2일 전'
+      },
+      {
+        id: 5,
+        author: '정우성',
+        avatar: 'https://i.pravatar.cc/40?img=5',
+        location: '송파구 잠실동',
+        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=400&fit=crop',
+        likes: 512,
+        comments: 89,
+        content: '잠실 한강뷰 아파트에서 바라본 야경입니다 🌃',
+        time: '3일 전'
+      }
+    ];
+
+    const postsHTML = dummyPosts.map(post => `
+      <div class="bg-white border border-gray-200 rounded-lg mb-4">
+        <!-- 포스트 헤더 -->
+        <div class="flex items-center p-3">
+          <img src="${post.avatar}" alt="${post.author}" class="w-10 h-10 rounded-full object-cover" />
+          <div class="ml-3 flex-1">
+            <p class="font-semibold text-sm text-gray-800">${post.author}</p>
+            <p class="text-xs text-gray-500">${post.location}</p>
+          </div>
+          <button class="p-1 hover:bg-gray-100 rounded-full">
+            <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <circle cx="4" cy="10" r="2" />
+              <circle cx="10" cy="10" r="2" />
+              <circle cx="16" cy="10" r="2" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- 포스트 이미지 -->
+        <img src="${post.image}" alt="Post" class="w-full aspect-square object-cover" />
+        
+        <!-- 액션 버튼 -->
+        <div class="flex items-center justify-between p-3">
+          <div class="flex items-center space-x-4">
+            <button class="hover:text-red-500 transition-colors">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+            <button class="hover:text-blue-500 transition-colors">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
+            <button class="hover:text-blue-500 transition-colors">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+            </button>
+          </div>
+          <button class="hover:text-yellow-500 transition-colors">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- 좋아요 수 -->
+        <div class="px-3 pb-1">
+          <p class="font-semibold text-sm">좋아요 ${post.likes.toLocaleString()}개</p>
+        </div>
+        
+        <!-- 콘텐츠 -->
+        <div class="px-3 pb-2">
+          <p class="text-sm"><span class="font-semibold">${post.author}</span> ${post.content}</p>
+        </div>
+        
+        <!-- 댓글 보기 -->
+        <div class="px-3 pb-2">
+          <button class="text-sm text-gray-500 hover:text-gray-700">댓글 ${post.comments}개 모두 보기</button>
+        </div>
+        
+        <!-- 시간 -->
+        <div class="px-3 pb-3">
+          <p class="text-xs text-gray-400">${post.time}</p>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <!-- =================================================================== -->
+      <!-- 커뮤니티 패널 (인스타그램 피드 스타일)                                  -->
+      <!-- =================================================================== -->
+      <aside
+        id="community-panel"
+        class="absolute top-0 w-[450px] bg-gray-50 p-0 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+        style="right: 75px"
+      >
+        <!-- 커뮤니티 패널 헤더 -->
+        <div
+          class="flex justify-between items-center p-4 bg-white border-b flex-shrink-0 sticky top-0 z-10"
+        >
+          <h2 class="text-xl font-bold text-gray-800">커뮤니티</h2>
+          <button
+            id="close-community-panel"
+            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            title="커뮤니티 패널 닫기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 스토리 영역 -->
+        <div class="bg-white border-b p-4 flex-shrink-0">
+          <div class="flex space-x-4 overflow-x-auto pb-2">
+            <div class="flex flex-col items-center space-y-1 flex-shrink-0">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-0.5">
+                <div class="w-full h-full rounded-full bg-white p-0.5">
+                  <img src="https://i.pravatar.cc/60?img=10" class="w-full h-full rounded-full object-cover" />
+                </div>
+              </div>
+              <span class="text-xs">내 스토리</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1 flex-shrink-0">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-0.5">
+                <div class="w-full h-full rounded-full bg-white p-0.5">
+                  <img src="https://i.pravatar.cc/60?img=11" class="w-full h-full rounded-full object-cover" />
+                </div>
+              </div>
+              <span class="text-xs">강남맘</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1 flex-shrink-0">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-0.5">
+                <div class="w-full h-full rounded-full bg-white p-0.5">
+                  <img src="https://i.pravatar.cc/60?img=12" class="w-full h-full rounded-full object-cover" />
+                </div>
+              </div>
+              <span class="text-xs">부동산팁</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1 flex-shrink-0">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-0.5">
+                <div class="w-full h-full rounded-full bg-white p-0.5">
+                  <img src="https://i.pravatar.cc/60?img=13" class="w-full h-full rounded-full object-cover" />
+                </div>
+              </div>
+              <span class="text-xs">인테리어</span>
+            </div>
+            <div class="flex flex-col items-center space-y-1 flex-shrink-0">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 p-0.5">
+                <div class="w-full h-full rounded-full bg-white p-0.5">
+                  <img src="https://i.pravatar.cc/60?img=14" class="w-full h-full rounded-full object-cover" />
+                </div>
+              </div>
+              <span class="text-xs">이사후기</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 스크롤 가능한 피드 영역 -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4">
+          <div id="community-feed">
+            ${postsHTML}
+          </div>
+        </div>
+      </aside>
+    `;
+  },
+
+  /**
+   * 경매 패널 HTML 생성
+   */
+  renderAuctionPanel() {
+    const dummyAuctions = [
+      {
+        id: 1,
+        title: '강남구 역삼동 아파트 경매',
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+        currentBid: '12억 5,000만원',
+        timeLeft: '2시간 30분',
+        bidders: 15,
+        status: '진행중'
+      },
+      {
+        id: 2,
+        title: '서초구 반포동 빌라 경매',
+        image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
+        currentBid: '8억 2,000만원',
+        timeLeft: '5시간 10분',
+        bidders: 8,
+        status: '진행중'
+      },
+      {
+        id: 3,
+        title: '마포구 연남동 상가 경매',
+        image: 'https://images.unsplash.com/photo-1484154218962-a197022b25ba?w=400&h=300&fit=crop',
+        currentBid: '25억 1,000만원',
+        timeLeft: '1일 4시간',
+        bidders: 24,
+        status: '진행중'
+      }
+    ];
+
+    const auctionsHTML = dummyAuctions.map(auction => `
+      <div class="bg-white border border-gray-200 rounded-lg mb-4 overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+        <div class="relative h-40">
+          <img src="${auction.image}" alt="${auction.title}" class="w-full h-full object-cover" />
+          <div class="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+            ${auction.timeLeft} 남음
+          </div>
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-gray-800 mb-1 truncate">${auction.title}</h3>
+          <div class="flex justify-between items-end mt-2">
+            <div>
+              <p class="text-xs text-gray-500">현재 최고가</p>
+              <p class="text-lg font-bold text-blue-600">${auction.currentBid}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-gray-500">입찰자</p>
+              <p class="text-sm font-medium text-gray-700">${auction.bidders}명</p>
+            </div>
+          </div>
+          <button class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors text-sm">
+            입찰하기
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <!-- =================================================================== -->
+      <!-- 경매 패널                                                          -->
+      <!-- =================================================================== -->
+      <aside
+        id="auction-panel"
+        class="absolute top-0 w-[450px] bg-gray-50 p-0 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+        style="right: 75px"
+      >
+        <!-- 경매 패널 헤더 -->
+        <div
+          class="flex justify-between items-center p-4 bg-white border-b flex-shrink-0 sticky top-0 z-10"
+        >
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-800">실시간 경매</h2>
+            <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">LIVE</span>
+          </div>
+          <button
+            id="close-auction-panel"
+            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            title="경매 패널 닫기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 필터 영역 -->
+        <div class="bg-white border-b p-3 flex-shrink-0 flex gap-2 overflow-x-auto">
+          <button class="px-3 py-1 bg-gray-800 text-white text-sm rounded-full whitespace-nowrap">전체</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">아파트</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">빌라</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">상가</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">토지</button>
+        </div>
+
+        <!-- 스크롤 가능한 경매 목록 영역 -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4">
+          <div id="auction-list">
+            ${auctionsHTML}
+          </div>
+        </div>
+      </aside>
+    `;
+  },
+
+  /**
    * 전체 패널 HTML 생성
    */
   render() {
@@ -863,6 +1205,8 @@ const RightSidePanels = {
       ${this.renderNotificationPanel()}
       ${this.renderFavoritePanel()}
       ${this.renderComparePanel()}
+      ${this.renderCommunityPanel()}
+      ${this.renderAuctionPanel()}
       ${this.renderMyPropertyPanel()}
       ${this.renderBrokerListPanel()}
     `;
@@ -881,6 +1225,8 @@ const RightSidePanels = {
       "notification-panel",
       "favorite-panel",
       "compare-panel",
+      "community-panel",
+      "auction-panel",
       "my-property-panel",
       "broker-list-panel",
     ];

@@ -215,7 +215,7 @@ public class PriceEstimationService {
      */
     private String getDongFromCoordinates(Double longitude, Double latitude) {
         try {
-            // 반경 500m 이내의 거래에서 가장 많이 나타나는 동 찾기
+            
             String sql = """
                 SELECT dong, COUNT(*) as cnt
                 FROM realestate_deals
@@ -227,8 +227,7 @@ public class PriceEstimationService {
                 LIMIT 1
                 """;
             
-            // 좌표 기반 검색이 복잡하므로, 시군구 내에서 가장 흔한 동 사용
-            // 더 간단한 방법: 주소 문자열에서 동 추출 시도
+    
             return "";
             
         } catch (Exception e) {
