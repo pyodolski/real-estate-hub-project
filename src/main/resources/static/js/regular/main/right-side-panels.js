@@ -161,183 +161,214 @@ const RightSidePanels = {
    */
   renderProfilePanel() {
     return `
-      <!-- =================================================================== -->
-      <!-- 프로필 패널                                                        -->
-      <!-- =================================================================== -->
-      <aside
-        id="profile-panel"
-        class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
-        style="right: 75px"
-      >
-        <!-- 프로필 패널 헤더 -->
-        <div
-          class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0"
+        <!-- =================================================================== -->
+        <!-- 프로필 패널                                                        -->
+        <!-- =================================================================== -->
+        <aside
+          id="profile-panel"
+          class="absolute top-0 w-[450px] bg-white p-6 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+          style="right: 75px"
         >
-          <h2 class="text-xl font-bold text-gray-800">프로필 수정</h2>
-          <button
-            id="close-profile-panel"
-            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
-            title="프로필 패널 닫기"
+          <!-- 프로필 패널 헤더 -->
+          <div
+            class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
+            <h2 class="text-xl font-bold text-gray-800">프로필 수정</h2>
+            <button
+              id="close-profile-panel"
+              class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              title="프로필 패널 닫기"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
 
-        <!-- 스크롤 가능한 프로필 수정 영역 -->
-        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
-          <form id="profile-form" class="space-y-6">
-            <!-- 프로필 사진 -->
-            <div class="flex flex-col items-center space-y-4">
-              <div class="relative">
-                <div
-                  class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden"
-                >
-                  <img
-                    id="profile-image"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-                    alt="프로필 사진"
-                    class="w-full h-full object-cover"
+          <!-- 스크롤 가능한 프로필 수정 영역 -->
+          <div class="flex-grow overflow-y-auto custom-scrollbar pr-2 -mr-2">
+            <form id="profile-form" class="space-y-6">
+              <!-- 프로필 사진 -->
+              <div class="flex flex-col items-center space-y-4">
+                <div class="relative">
+                  <div
+                    class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden"
+                  >
+                    <img
+                      id="profile-image"
+                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
+                      alt="프로필 사진"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    id="profile-image-edit-btn"
+                    class="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="profile-image-input"
+                  accept="image/*"
+                  class="hidden"
+                />
+              </div>
+
+              <!-- 기본 정보 -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >이메일</label
+                  >
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value="user@example.com"
+                    readonly
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    이메일은 변경할 수 없습니다.
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >전화번호</label
+                  >
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value="010-1234-5678"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+
+                <!-- 프로필 수정용 현재 비밀번호 -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    현재 비밀번호
+                  </label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    placeholder="프로필 수정을 위해 현재 비밀번호를 입력하세요"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">
+                    비밀번호가 일치하면 프로필 수정이 가능합니다.
+                  </p>
+                </div>
+
+                <!-- 비밀번호 변경 영역 (회색 박스X) -->
+                <div class="border-t pt-4 space-y-3">
+                  <h3 class="text-sm font-semibold text-gray-700">비밀번호 변경</h3>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      새 비밀번호
+                    </label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      name="newPassword"
+                      placeholder="변경할 새 비밀번호를 입력하세요"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    id="pw-change-btn"
+                    class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  >
+                    비밀번호 변경
+                  </button>
+                </div>
+
+                <!-- 소개글 (회색 박스 밖) -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >소개글</label
+                  >
+                  <textarea
+                    id="intro"
+                    name="intro"
+                    rows="4"
+                    placeholder="자신을 소개하는 글을 작성해주세요..."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  ></textarea>
+                  <p class="text-xs text-gray-500 mt-1">
+                    최대 200자까지 입력할 수 있습니다.
+                  </p>
+                </div>
+              </div>
+
+              <!-- 계정 통계 (회색 박스) -->
+              <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-gray-700">활동 통계</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <p class="text-2xl font-bold text-blue-600">12</p>
+                    <p class="text-xs text-gray-500">찜한 매물</p>
+                  </div>
+                  <div>
+                    <p class="text-2xl font-bold text-green-600">3</p>
+                    <p class="text-xs text-gray-500">작성한 리뷰</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 저장/취소 버튼 -->
+              <div class="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  class="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                  id="cancel-profile-edit"
+                  class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  저장
                 </button>
               </div>
-              <input
-                type="file"
-                id="profile-image-input"
-                accept="image/*"
-                class="hidden"
-              />
-            </div>
-
-            <!-- 기본 정보 -->
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >이름/닉네임</label
-                >
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value="홍길동"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >이메일</label
-                >
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value="user@example.com"
-                  readonly
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  이메일은 변경할 수 없습니다.
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >전화번호</label
-                >
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value="010-1234-5678"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >소개글</label
-                >
-                <textarea
-                  id="intro"
-                  name="intro"
-                  rows="4"
-                  placeholder="자신을 소개하는 글을 작성해주세요..."
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                >부동산에 관심이 많은 일반 사용자입니다.</textarea
-                >
-                <p class="text-xs text-gray-500 mt-1">
-                  최대 200자까지 입력할 수 있습니다.
-                </p>
-              </div>
-            </div>
-
-            <!-- 계정 통계 -->
-            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-              <h3 class="text-sm font-semibold text-gray-700">활동 통계</h3>
-              <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p class="text-2xl font-bold text-blue-600">12</p>
-                  <p class="text-xs text-gray-500">찜한 매물</p>
-                </div>
-                <div>
-                  <p class="text-2xl font-bold text-green-600">3</p>
-                  <p class="text-xs text-gray-500">작성한 리뷰</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 저장/취소 버튼 -->
-            <div class="flex space-x-3 pt-4">
-              <button
-                type="button"
-                id="cancel-profile-edit"
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                저장
-              </button>
-            </div>
-          </form>
-        </div>
-      </aside>
-    `;
+            </form>
+          </div>
+        </aside>
+      `;
   },
 
   /**

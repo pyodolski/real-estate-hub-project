@@ -245,6 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
       window.brokerManagement.loadBrokers();
     }
 
+    if (panelName === "profile") {
+      if (typeof window.setupProfilePanel === "function") {
+        window.setupProfilePanel();
+      }
+      if (typeof window.loadMyProfile === "function") {
+        window.loadMyProfile();
+      }
+    }
+
     if (allFilterDropdown && !allFilterDropdown.classList.contains("hidden")) {
       setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     }
