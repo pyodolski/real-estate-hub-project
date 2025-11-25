@@ -80,6 +80,13 @@ document.addEventListener("DOMContentLoaded", () => {
       isOpen: false,
       width: 450,
     },
+    auction: {
+      panel: document.getElementById("auction-panel"),
+      button: document.getElementById("auction-button"),
+      closeButton: document.getElementById("close-auction-panel"),
+      isOpen: false,
+      width: 450,
+    },
     "my-property": {
       panel: document.getElementById("my-property-panel"),
       button: document.getElementById("my-property-button"),

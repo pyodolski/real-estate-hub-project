@@ -1077,6 +1077,125 @@ const RightSidePanels = {
   },
 
   /**
+   * 경매 패널 HTML 생성
+   */
+  renderAuctionPanel() {
+    const dummyAuctions = [
+      {
+        id: 1,
+        title: '강남구 역삼동 아파트 경매',
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+        currentBid: '12억 5,000만원',
+        timeLeft: '2시간 30분',
+        bidders: 15,
+        status: '진행중'
+      },
+      {
+        id: 2,
+        title: '서초구 반포동 빌라 경매',
+        image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
+        currentBid: '8억 2,000만원',
+        timeLeft: '5시간 10분',
+        bidders: 8,
+        status: '진행중'
+      },
+      {
+        id: 3,
+        title: '마포구 연남동 상가 경매',
+        image: 'https://images.unsplash.com/photo-1484154218962-a197022b25ba?w=400&h=300&fit=crop',
+        currentBid: '25억 1,000만원',
+        timeLeft: '1일 4시간',
+        bidders: 24,
+        status: '진행중'
+      }
+    ];
+
+    const auctionsHTML = dummyAuctions.map(auction => `
+      <div class="bg-white border border-gray-200 rounded-lg mb-4 overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+        <div class="relative h-40">
+          <img src="${auction.image}" alt="${auction.title}" class="w-full h-full object-cover" />
+          <div class="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+            ${auction.timeLeft} 남음
+          </div>
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-gray-800 mb-1 truncate">${auction.title}</h3>
+          <div class="flex justify-between items-end mt-2">
+            <div>
+              <p class="text-xs text-gray-500">현재 최고가</p>
+              <p class="text-lg font-bold text-blue-600">${auction.currentBid}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-gray-500">입찰자</p>
+              <p class="text-sm font-medium text-gray-700">${auction.bidders}명</p>
+            </div>
+          </div>
+          <button class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors text-sm">
+            입찰하기
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <!-- =================================================================== -->
+      <!-- 경매 패널                                                          -->
+      <!-- =================================================================== -->
+      <aside
+        id="auction-panel"
+        class="absolute top-0 w-[450px] bg-gray-50 p-0 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+        style="right: 75px"
+      >
+        <!-- 경매 패널 헤더 -->
+        <div
+          class="flex justify-between items-center p-4 bg-white border-b flex-shrink-0 sticky top-0 z-10"
+        >
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-800">실시간 경매</h2>
+            <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">LIVE</span>
+          </div>
+          <button
+            id="close-auction-panel"
+            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            title="경매 패널 닫기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 필터 영역 -->
+        <div class="bg-white border-b p-3 flex-shrink-0 flex gap-2 overflow-x-auto">
+          <button class="px-3 py-1 bg-gray-800 text-white text-sm rounded-full whitespace-nowrap">전체</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">아파트</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">빌라</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">상가</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm rounded-full whitespace-nowrap">토지</button>
+        </div>
+
+        <!-- 스크롤 가능한 경매 목록 영역 -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4">
+          <div id="auction-list">
+            ${auctionsHTML}
+          </div>
+        </div>
+      </aside>
+    `;
+  },
+
+  /**
    * 전체 패널 HTML 생성
    */
   render() {
@@ -1087,6 +1206,7 @@ const RightSidePanels = {
       ${this.renderFavoritePanel()}
       ${this.renderComparePanel()}
       ${this.renderCommunityPanel()}
+      ${this.renderAuctionPanel()}
       ${this.renderMyPropertyPanel()}
       ${this.renderBrokerListPanel()}
     `;
@@ -1106,6 +1226,7 @@ const RightSidePanels = {
       "favorite-panel",
       "compare-panel",
       "community-panel",
+      "auction-panel",
       "my-property-panel",
       "broker-list-panel",
     ];
