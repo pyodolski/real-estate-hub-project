@@ -269,8 +269,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (emailInput)    emailInput.value    = data.email ?? "";
           if (phoneInput)    phoneInput.value    = data.phoneNumber ?? "";
           if (introTextarea) introTextarea.value = data.intro ?? "";
-          if (profileImageEl && data.profileImageUrl) {
-            profileImageEl.src = data.profileImageUrl;
+          if (profileImageEl) {
+            profileImageEl.src = data.profileImageUrl
+              || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
           }
         } catch (e) {
           console.error("프로필 조회 에러", e);
