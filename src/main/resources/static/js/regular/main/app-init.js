@@ -102,6 +102,8 @@ function formatPriceFromSearchDto(prop) {
 
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  let profileImageFile = null;
   // --- DOM 요소 ---
   const propertyList = document.getElementById("property-list");
   const recommendedList = document.getElementById("recommended-list");
@@ -225,43 +227,205 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   // 내 매물: 새 매물 등록
-  document
-    .getElementById("add-new-property-button")
-    ?.addEventListener("click", () => {
-      alert("새 매물 등록 페이지로 이동합니다.");
-    });
-
-  // 프로필 패널 기능
-  if (profilePanel) {
-    profilePanel
-      .querySelector('button[type="button"]')
+    document
+      .getElementById("add-new-property-button")
       ?.addEventListener("click", () => {
-        document.getElementById("profile-image-input")?.click();
+        alert("새 매물 등록 페이지로 이동합니다.");
       });
 
-    document
-      .getElementById("profile-image-input")
-      ?.addEventListener("change", function (e) {
-        if (e.target.files && e.target.files[0]) {
+    // 🔹 프로필 패널 기능
+    if (profilePanel) {
+      const profileForm     = document.getElementById("profile-form");
+      const profileImageEl  = document.getElementById("profile-image");
+      const profileImageBtn = document.getElementById("profile-image-edit-btn");
+      const profileImageInp = document.getElementById("profile-image-input");
+
+      const emailInput      = document.getElementById("email");
+      const phoneInput      = document.getElementById("phone");
+      const introTextarea   = document.getElementById("intro");
+      const currentPwInput  = document.getElementById("currentPassword");
+      const newPwInput      = document.getElementById("newPassword");
+      const pwChangeBtn     = document.getElementById("pw-change-btn");
+
+      // 1) /api/users/me 에서 내 프로필 가져오기
+      async function loadMyProfile() {
+        try {
+          const token = localStorage.getItem("accessToken") || "";
+
+          const res = await fetch("/api/users/me", {
+            headers: {
+              "Authorization": token ? `Bearer ${token}` : undefined,
+            },
+          });
+
+          if (!res.ok) {
+            console.error("프로필 조회 실패", await res.text());
+            return;
+          }
+
+          const data = await res.json();
+          console.log("[PROFILE] /api/users/me =", data);
+
+          if (emailInput)    emailInput.value    = data.email ?? "";
+          if (phoneInput)    phoneInput.value    = data.phoneNumber ?? "";
+          if (introTextarea) introTextarea.value = data.intro ?? "";
+          if (profileImageEl && data.profileImageUrl) {
+            profileImageEl.src = data.profileImageUrl;
+          }
+        } catch (e) {
+          console.error("프로필 조회 에러", e);
+        }
+      }
+
+      // 처음 한 번 로딩
+      loadMyProfile();
+      window.loadMyProfile = loadMyProfile;
+
+      // 프로필 사진 선택 & 미리보기
+      if (profileImageBtn && profileImageInp) {
+        // 연필 버튼 눌렀을 때 파일 선택창 열기
+        profileImageBtn.addEventListener("click", () => {
+          profileImageInp.click();
+        });
+
+        // 파일 선택 시 미리보기 + 업로드용 파일 저장
+        profileImageInp.addEventListener("change", (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+
+          // 전역 변수에 파일 저장 (위에서 let profileImageFile = null; 선언한 거)
+          profileImageFile = file;
+
+          // 로컬 미리보기
           const reader = new FileReader();
           reader.onload = (event) => {
-            const profileImage = document.getElementById("profile-image");
-            if (profileImage) profileImage.src = event.target.result;
+            if (profileImageEl) {
+              profileImageEl.src = event.target.result;
+            }
           };
-          reader.readAsDataURL(e.target.files[0]);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // 프로필 저장 → PUT /api/users/me
+      profileForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const token = localStorage.getItem("accessToken") || "";
+
+        try {
+          // 1) 이미지 파일이 선택돼 있으면 먼저 업로드해서 URL 받기
+          let imageUrl = profileImageEl?.src ?? null;
+
+          if (profileImageFile) {
+            const formData = new FormData();
+            formData.append("file", profileImageFile);
+
+            const uploadRes = await fetch("/api/users/me/profile-image", {
+              method: "POST",
+              headers: {
+                // ⚠️ Content-Type 넣지 말고 Authorization 만
+                "Authorization": token ? `Bearer ${token}` : undefined,
+              },
+              body: formData,
+            });
+
+            if (!uploadRes.ok) {
+              const txt = await uploadRes.text();
+              console.error("프로필 이미지 업로드 실패", txt);
+              alert("프로필 이미지 업로드에 실패했습니다.\n" + txt);
+              return;
+            }
+
+            const uploadJson = await uploadRes.json(); // { imageUrl: "..." }
+                  console.log("[PROFILE] uploadJson =", uploadJson);
+                  imageUrl = uploadJson.imageUrl;
+          }
+
+          // 2) 프로필 정보 업데이트
+          const payload = {
+            currentPassword:  currentPwInput?.value || "",
+            intro:            introTextarea?.value ?? null,
+            phoneNumber:      phoneInput?.value ?? null,   // ← 전화번호도 같이 보낼거면
+            profileImageUrl:  imageUrl,
+            // tags 는 건드리지 않을거면 생략
+          };
+
+          const res = await fetch("/api/users/me", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": token ? `Bearer ${token}` : undefined,
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const text = await res.text();
+            console.error("프로필 수정 실패", text);
+            alert("프로필 수정에 실패했습니다.\n" + text);
+            return;
+          }
+
+          const updated = await res.json();
+          console.log("[PROFILE] 업데이트 결과 =", updated);
+
+          if (introTextarea)  introTextarea.value  = updated.intro ?? "";
+          if (phoneInput)     phoneInput.value     = updated.phoneNumber ?? "";
+          if (profileImageEl && updated.profileImageUrl) {
+            profileImageEl.src = updated.profileImageUrl;
+          }
+
+          // 사용한 비밀번호는 다시 비우기
+          if (currentPwInput) currentPwInput.value = "";
+          profileImageFile = null;
+
+          alert("프로필이 성공적으로 업데이트되었습니다.");
+        } catch (err) {
+          console.error("프로필 수정 에러", err);
+          alert("프로필 수정 중 오류가 발생했습니다.");
         }
       });
 
-    document
-      .getElementById("profile-form")
-      ?.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const profileData = Object.fromEntries(formData.entries());
-        console.log("프로필 업데이트:", profileData);
-        alert("프로필이 성공적으로 업데이트되었습니다.");
+      // 2) 비밀번호 변경 → POST /api/users/me/change-password
+      pwChangeBtn?.addEventListener("click", async () => {
+        const token   = localStorage.getItem("accessToken") || "";
+        const current = currentPwInput?.value || "";
+        const nextPw  = newPwInput?.value || "";
+
+        if (!current || !nextPw) {
+          alert("현재 비밀번호와 새 비밀번호를 모두 입력하세요.");
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/users/me/change-password", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": token ? `Bearer ${token}` : undefined,
+            },
+            body: JSON.stringify({
+              currentPassword: current,
+              newPassword: nextPw,
+            }),
+          });
+
+          if (!res.ok) {
+            const txt = await res.text();
+            alert("비밀번호 변경 실패:\n" + txt);
+            return;
+          }
+
+          alert("비밀번호가 변경되었습니다.");
+          if (currentPwInput) currentPwInput.value = "";
+          if (newPwInput)     newPwInput.value = "";
+        } catch (err) {
+          console.error("비밀번호 변경 에러", err);
+          alert("비밀번호 변경 중 오류가 발생했습니다.");
+        }
       });
-  }
+    }
 
   // --- 기타 이벤트 리스너 ---
 

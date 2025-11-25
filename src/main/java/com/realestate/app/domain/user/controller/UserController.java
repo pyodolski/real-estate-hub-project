@@ -13,6 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -44,4 +48,12 @@ public class UserController {
         userService.changePassword(me.getId(), req);
     }
 
+    @PostMapping("/me/profile-image")
+    public Map<String, String> uploadProfileImage(
+            @AuthenticationPrincipal AuthUser me,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        String url = userService.uploadProfileImage(me.getId(), file);
+        return Map.of("imageUrl", url);
+    }
 }

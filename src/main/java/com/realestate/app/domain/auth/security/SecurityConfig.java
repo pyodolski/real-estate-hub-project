@@ -47,7 +47,7 @@ public class SecurityConfig {
                         // 루트 & 정적 리소스 & 헬스체크 열기
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico",
-                                "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**", "/api/properties/search", "/api/search/**", "/api/naver-local/**"
+                                "/static/**", "/assets/**", "/css/**", "/js/**", "/files/**", "/images/**", "/webjars/**", "/api/properties/search", "/api/search/**", "/api/naver-local/**"
                         ).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/ws-stomp/**").permitAll()
