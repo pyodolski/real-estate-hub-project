@@ -12,6 +12,7 @@ import com.realestate.app.domain.broker_profile.BrokerProfileRepository;
 import com.realestate.app.domain.user.entity.Tag;
 import com.realestate.app.domain.user.entity.User;
 import com.realestate.app.domain.user.entity.UserTag;
+import com.realestate.app.domain.user.file.UserFileStorage;
 import com.realestate.app.domain.user.repository.TagRepository;
 import com.realestate.app.domain.user.repository.UserRepository;
 import com.realestate.app.domain.user.repository.UserTagRepository;
@@ -40,6 +41,7 @@ public class AuthService {
     private final PasswordResetMailer resetMailer;
     private final TagRepository tagRepository;
     private final UserTagRepository userTagRepository;
+    private final UserFileStorage userFileStorage;
 
     private static final int MAX_TAGS_PER_USER = 30;
     private static final int MAX_GROUP_LEN = 64;
@@ -50,14 +52,28 @@ public class AuthService {
         if (userRepo.existsByEmail(req.email()))
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
 
+        String profileUrl;
+
+        String requested = req.profileImageUrl();
+        if (requested != null && requested.startsWith("data:")) {
+            // 🔵 프론트에서 보낸 data URL (Base64 이미지)라면 파일로 저장
+            profileUrl = userFileStorage.saveBase64Image(requested, null);
+        } else if (requested != null && !requested.isBlank()) {
+            // 혹시 절대 URL/String 이 직접 들어오는 경우 그대로 사용
+            profileUrl = requested;
+        } else {
+            // 아무것도 안 보냈으면 기본 이미지
+            profileUrl = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
+        }
+
         User user = User.builder()
                 .email(req.email())
                 .username(req.username())
                 .passwordHash(encoder.encode(req.password()))
-                .roleId(req.role()) // "regular" | "broker" | "admin"
+                .roleId(req.role())
                 .isActive(true)
                 .intro(req.intro())
-                .profileImageUrl(req.profileImageUrl())
+                .profileImageUrl(profileUrl)
                 .phoneNumber(req.phoneNumber())
                 .propertyCnt(0)
                 .build();
@@ -70,7 +86,7 @@ public class AuthService {
                     .licenseNumber(req.licenseNumber())
                     .agencyName(req.agencyName())
                     .intro(req.intro())
-                    .profileImageUrl(req.profileImageUrl())
+                    .profileImageUrl(profileUrl)
                     .build();
             brokerRepo.save(bp);
         }
