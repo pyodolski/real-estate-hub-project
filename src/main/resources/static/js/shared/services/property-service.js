@@ -38,7 +38,7 @@ export class PropertyService {
       neLat,
       neLng,
       page: filters.page ?? 0,
-      size: filters.size ?? 500
+      size: filters.size ?? 500,
     };
 
     try {
@@ -46,9 +46,9 @@ export class PropertyService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...this._authHeaders()
+          ...this._authHeaders(),
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (response.status === 401) {
@@ -63,7 +63,7 @@ export class PropertyService {
       const data = await response.json();
 
       // Page 형식 또는 배열 형식 모두 지원
-      return Array.isArray(data) ? data : (data?.content ?? []);
+      return Array.isArray(data) ? data : data?.content ?? [];
     } catch (error) {
       console.error('매물 조회 오류:', error);
       throw error;
@@ -81,8 +81,8 @@ export class PropertyService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...this._authHeaders()
-        }
+          ...this._authHeaders(),
+        },
       });
 
       if (response.status === 401) {
@@ -111,14 +111,17 @@ export class PropertyService {
    */
   async searchProperties(searchParams) {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/properties/search`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this._authHeaders()
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/properties/search`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this._authHeaders(),
+          },
+          body: JSON.stringify(searchParams),
         },
-        body: JSON.stringify(searchParams)
-      });
+      );
 
       if (response.status === 401) {
         throw new Error('Unauthorized');
@@ -129,7 +132,7 @@ export class PropertyService {
       }
 
       const data = await response.json();
-      return Array.isArray(data) ? data : (data?.content ?? []);
+      return Array.isArray(data) ? data : data?.content ?? [];
     } catch (error) {
       console.error('매물 검색 오류:', error);
       throw error;
@@ -146,8 +149,8 @@ export class PropertyService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...this._authHeaders()
-        }
+          ...this._authHeaders(),
+        },
       });
 
       if (response.status === 401) {
@@ -172,13 +175,16 @@ export class PropertyService {
    */
   async addFavorite(propertyId) {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/favorites/${propertyId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this._authHeaders()
-        }
-      });
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/favorites/${propertyId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this._authHeaders(),
+          },
+        },
+      );
 
       if (response.status === 401) {
         throw new Error('Unauthorized');
@@ -202,13 +208,16 @@ export class PropertyService {
    */
   async removeFavorite(propertyId) {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/favorites/${propertyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this._authHeaders()
-        }
-      });
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/favorites/${propertyId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this._authHeaders(),
+          },
+        },
+      );
 
       if (response.status === 401) {
         throw new Error('Unauthorized');
@@ -230,13 +239,16 @@ export class PropertyService {
    */
   async checkPropertyStatus(propertyId) {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/api/properties/${propertyId}/status`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this._authHeaders()
-        }
-      });
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/properties/${propertyId}/status`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this._authHeaders(),
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error('매물 상태 확인 실패');
@@ -245,6 +257,39 @@ export class PropertyService {
       return await response.json();
     } catch (error) {
       console.error('매물 상태 확인 오류:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ 브로커 전용: 내가 관리중인 매물 (지도용)
+   */
+  async getBrokerMapProperties() {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/api/broker/dashboard/map-properties`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this._authHeaders(),
+          },
+        },
+      );
+
+      if (response.status === 401) {
+        throw new Error('Unauthorized');
+      }
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('getBrokerMapProperties 오류:', text);
+        throw new Error(text || '브로커 지도용 매물 조회 실패');
+      }
+
+      return await response.json(); // [{id,title,address,locationX,locationY,status}, ...]
+    } catch (error) {
+      console.error('브로커 지도용 매물 조회 오류:', error);
       throw error;
     }
   }
