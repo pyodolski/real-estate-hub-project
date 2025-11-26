@@ -1,8 +1,3 @@
-// broker-delegation-management.js
-
-// AuthUtils 는 /js/utils/auth-utils.js 에서 전역으로 로드된다고 가정
-// import { AuthUtils } from "/js/utils/auth-utils.js";  // 전역이면 필요 없음
-
 class BrokerDelegationManagement {
   constructor() {
     this.currentFilter = "PENDING";
@@ -156,6 +151,10 @@ class BrokerDelegationManagement {
 
         console.log("변환된 delegationRequests:", this.delegationRequests);
         console.log("변환된 데이터 길이:", this.delegationRequests.length);
+
+        await this.updateStatistics();
+        this.renderDelegationRequests();
+        console.log("=== 렌더링 완료 ===");
       } else {
         const errorText = await response.text();
         console.error("API 오류:", errorText);
@@ -163,6 +162,8 @@ class BrokerDelegationManagement {
 
         // 빈 배열로 초기화
         this.delegationRequests = [];
+        this.updateStatistics();
+        this.renderDelegationRequests();
       }
     } catch (error) {
       console.error("위임 요청 로드 오류:", error);

@@ -15,10 +15,18 @@ import com.realestate.app.domain.broker_profile.BrokerProfile;
 import com.realestate.app.domain.broker_profile.BrokerProfileRepository;
 import com.realestate.app.domain.user.dto.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -77,9 +85,18 @@ public class UserService {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
 
+        // 전화번호 업데이트
+        if (req.phoneNumber() != null && !req.phoneNumber().isBlank()) {
+            user.setPhoneNumber(req.phoneNumber().trim());
+        }
+
         // 사진/소개
-        if (req.profileImageUrl() != null) user.setProfileImageUrl(req.profileImageUrl());
-        if (req.intro() != null)            user.setIntro(req.intro());
+        if (StringUtils.hasText(req.profileImageUrl())) {
+            user.setProfileImageUrl(req.profileImageUrl());
+        }
+        if (req.intro() != null) {
+            user.setIntro(req.intro());
+        }
 
         // ===== 태그 교체 =====
         if (req.tags() != null) {
@@ -156,5 +173,37 @@ public class UserService {
         if (s == null) return "";
         String t = s.trim();
         return t.length() > max ? t.substring(0, max) : t;
+    }
+
+    @Value("${app.profile-image-dir:uploads/profile-images}")
+    private String profileImageDir;
+
+    /**
+     * 프로필 이미지 업로드 후 접근 가능한 URL 반환
+     */
+    public String uploadProfileImage(Long userId, MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("업로드할 파일이 없습니다.");
+        }
+
+        // 확장자
+        String original = file.getOriginalFilename();
+        String ext = "";
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf("."));
+        }
+
+        // 파일명: user-<id>-<uuid>.<ext>
+        String filename = "user-" + userId + "-" + UUID.randomUUID() + ext;
+
+        Path dirPath = Paths.get(profileImageDir).toAbsolutePath().normalize();
+        Files.createDirectories(dirPath);
+
+        Path target = dirPath.resolve(filename);
+
+        file.transferTo(target.toFile());
+
+        // 브라우저가 접근할 URL (WebConfig랑 세트)
+        return "/files/profile-images/" + filename;
     }
 }

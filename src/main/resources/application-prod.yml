@@ -26,6 +26,7 @@ spring:
 
 # 파일 업로드 설정 (운영 환경)
 app:
+  profile-image-dir: uploads/profile-images
   file:
     upload-dir: ${FILE_UPLOAD_DIR:uploads/ownership}
 

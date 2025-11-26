@@ -7,7 +7,7 @@ import java.util.List;
 public record UpdateProfileRequest(
         String intro,
         String profileImageUrl,
-
+        String phoneNumber,
         @NotBlank String currentPassword,
         List<TagSelection> tags
 ) {}

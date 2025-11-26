@@ -55,21 +55,6 @@ public class NotificationEventListener {
         }
     }
 
-    /** 2) 찜한 매물 거래완료 → 해당 매물을 찜한 모든 사용자에게 알림 */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onPropertySold(PropertySoldEvent e) {
-        // 찜 사용자 리스트
-        List<Long> userIds = favoriteRepo.findUserIdsByPropertyId(e.propertyId());
-        if (userIds.isEmpty()) return;
-
-        String title = "찜한 매물 거래 완료";
-        String body  = (e.propertyTitle() != null ? e.propertyTitle() : "매물") + " 거래가 완료되었습니다.";
-
-        for (Long uid : userIds) {
-            notifications.createNotification(uid, NotificationType.PROPERTY_SOLD,
-                    title, body, e.propertyId());
-        }
-    }
 
     /** 3) 구매 완료 → 구매자 1명에게 알림 */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

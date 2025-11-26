@@ -47,7 +47,7 @@ public class SecurityConfig {
                         // 루트 & 정적 리소스 & 헬스체크 열기
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico",
-                                "/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/webjars/**", "/api/properties/search", "/api/search/**", "/api/naver-local/**"
+                                "/static/**", "/assets/**", "/css/**", "/js/**", "/files/**", "/images/**", "/webjars/**", "/api/properties/search", "/api/search/**", "/api/naver-local/**"
                         ).permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/ws-stomp/**").permitAll()
@@ -72,6 +72,9 @@ public class SecurityConfig {
 
                         // 알림 API (인증 필요)
                         .requestMatchers("/api/notifications/**").authenticated()
+
+                        // 🔹 비밀번호 재설정 뷰 컨트롤러 허용
+                        .requestMatchers("/reset-password").permitAll()
 
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()

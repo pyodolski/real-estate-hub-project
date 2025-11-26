@@ -152,7 +152,7 @@
               전체필터
             </button>
           </div>
-        </div>
+           </div>
       </main>
 
       <!-- =================================================================== -->
@@ -319,7 +319,7 @@
       <!-- =================================================================== -->
       <aside
         id="right-side-panel"
-        class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-40 transition-transform duration-300 ease-in-out"
+        class="absolute top-0 right-0 w-[75px] bg-white pt-4 px-2 pb-2 flex flex-col justify-between h-full shadow-lg z-[60] transition-transform duration-300 ease-in-out"
       >
         <div class="flex flex-col items-center space-y-2">
           <!-- 상단 아이콘 버튼들 -->
@@ -359,6 +359,7 @@
               />
             </svg>
           </button>
+          <!--
           <button
             class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center"
           >
@@ -377,6 +378,7 @@
               />
             </svg>
           </button>
+          -->
           <!-- 위임 요청함 버튼 -->
           <button
             id="delegation-request-button"
@@ -394,7 +396,7 @@
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
           </button>
@@ -577,5 +579,8 @@
     <!-- 채팅 기능 스크립트 -->
     <script type="module" src="js/regular/main/chat-panel.js"></script>
     <script type="module" src="js/regular/main/chat-controller.js"></script>
+
+    <!-- 위임 요청 관리 스크립트 -->
+    <script src="js/broker/delegation/broker-delegation-management.js"></script>
   </body>
 </html>

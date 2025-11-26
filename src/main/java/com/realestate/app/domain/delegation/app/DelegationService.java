@@ -33,6 +33,8 @@ public class DelegationService {
     private final BrokerProfileRepository brokerProfileRepo;
     private final PropertyOfferRepository propertyOfferRepo;
 
+    private final com.realestate.app.recproperty.service.RecommendationService recommendationService;
+
     /** 위임요청 생성 (+ 옵션: PropertyOffer 저장). 응답은 기존 6필드(offerId 미포함) */
     @Transactional
     public DelegationResponse create(Long ownerUserId, Long propertyId, CreateDelegationRequest body) {
@@ -62,7 +64,7 @@ public class DelegationService {
                 .build();
         reqRepo.save(req);
 
-        // 2) (옵션) 오퍼 저장 — 응답엔 포함하지 않음(기존 DTO 6필드 유지)
+        // 2) (옵션) 오퍼 저장
         PropertyOfferCreateRequest offer = body.offer();
         if (offer != null) {
             validateOffer(offer);
@@ -81,6 +83,21 @@ public class DelegationService {
                     .isActive(offer.isActive() == null ? true : offer.isActive())
                     .build();
             propertyOfferRepo.save(po);
+
+            // 오퍼가 활성 상태라면 추천 매물 알림 보내기
+            if (po.getIsActive() == null || po.getIsActive()) {
+                try {
+                    recommendationService.notifyRecommendedUsersForNewOffer(
+                            property,
+                            po,
+                            0.7 // threshold
+                    );
+                } catch (Exception e) {
+                    // 위임 자체는 롤백하지 않도록 방어
+                    // 필요하면 logger 사용
+                    System.err.println("[RECOMMEND] failed to send recommended notifications on delegation create: " + e.getMessage());
+                }
+            }
         }
 
         return toDto(req);
