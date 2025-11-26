@@ -1,22 +1,29 @@
+// broker-delegation-management.js
+
+// AuthUtils 는 /js/utils/auth-utils.js 에서 전역으로 로드된다고 가정
+// import { AuthUtils } from "/js/utils/auth-utils.js";  // 전역이면 필요 없음
+
 class BrokerDelegationManagement {
   constructor() {
     this.currentFilter = "PENDING";
     this.delegationRequests = [];
-    this.init();
+    // ❌ 여기서 init() 호출하지 않는다. (window.brokerDelegation 세팅 전에 실행되면 꼬임)
+    // this.init();
   }
 
-  init() {
+  // ✅ 초기화는 async로 따로 호출
+  async init() {
     this.setupEventListeners();
-    this.loadDelegationRequests();
     this.initDetailPanel();
+    await this.loadDelegationRequests();
   }
 
   // 상세 패널 초기화
   initDetailPanel() {
-    if (typeof window.initDelegationDetailPanel === 'function') {
+    if (typeof window.initDelegationDetailPanel === "function") {
       window.initDelegationDetailPanel({
         onApprove: (delegationId) => this.approveRequest(delegationId),
-        onReject: (delegationId) => this.rejectRequest(delegationId)
+        onReject: (delegationId) => this.rejectRequest(delegationId),
       });
     }
   }
@@ -139,7 +146,7 @@ class BrokerDelegationManagement {
           propertyAddress: item.propertyAddress,
           ownerId: item.ownerId,
           ownerName: item.ownerName,
-          brokerId: item.brokerId,
+          brokerId: item.brokerUserId,
           brokerName: item.brokerName,
           status: item.status,
           rejectionReason: item.rejectionReason,
@@ -149,10 +156,6 @@ class BrokerDelegationManagement {
 
         console.log("변환된 delegationRequests:", this.delegationRequests);
         console.log("변환된 데이터 길이:", this.delegationRequests.length);
-
-        await this.updateStatistics();
-        this.renderDelegationRequests();
-        console.log("=== 렌더링 완료 ===");
       } else {
         const errorText = await response.text();
         console.error("API 오류:", errorText);
@@ -160,8 +163,6 @@ class BrokerDelegationManagement {
 
         // 빈 배열로 초기화
         this.delegationRequests = [];
-        this.updateStatistics();
-        this.renderDelegationRequests();
       }
     } catch (error) {
       console.error("위임 요청 로드 오류:", error);
@@ -169,9 +170,18 @@ class BrokerDelegationManagement {
 
       // 빈 배열로 초기화
       this.delegationRequests = [];
-      this.updateStatistics();
-      this.renderDelegationRequests();
     }
+
+    // 통계/오른쪽 패널/왼쪽 패널 모두 갱신
+    await this.updateStatistics();
+    this.renderDelegationRequests();
+
+    // ✅ 왼쪽 "새로운 등록 요청" 섹션도 갱신
+    if (typeof window.renderRegistrationRequestsFromDelegations === "function") {
+      window.renderRegistrationRequestsFromDelegations();
+    }
+
+    console.log("=== 위임 요청 렌더링 & 왼쪽 패널 갱신 완료 ===");
   }
 
   // 통계 업데이트
@@ -204,12 +214,13 @@ class BrokerDelegationManagement {
         }
       }
 
-      document.getElementById("pending-count").textContent =
-        counts.PENDING || 0;
-      document.getElementById("approved-count").textContent =
-        counts.APPROVED || 0;
-      document.getElementById("rejected-count").textContent =
-        counts.REJECTED || 0;
+      const pendingEl = document.getElementById("pending-count");
+      const approvedEl = document.getElementById("approved-count");
+      const rejectedEl = document.getElementById("rejected-count");
+
+      if (pendingEl) pendingEl.textContent = counts.PENDING || 0;
+      if (approvedEl) approvedEl.textContent = counts.APPROVED || 0;
+      if (rejectedEl) rejectedEl.textContent = counts.REJECTED || 0;
     } catch (error) {
       console.error("통계 업데이트 오류:", error);
       // 에러 발생 시 현재 로드된 데이터로 통계 표시
@@ -223,13 +234,17 @@ class BrokerDelegationManagement {
         (req) => req.status === "REJECTED"
       ).length;
 
-      document.getElementById("pending-count").textContent = pendingCount;
-      document.getElementById("approved-count").textContent = approvedCount;
-      document.getElementById("rejected-count").textContent = rejectedCount;
+      const pendingEl = document.getElementById("pending-count");
+      const approvedEl = document.getElementById("approved-count");
+      const rejectedEl = document.getElementById("rejected-count");
+
+      if (pendingEl) pendingEl.textContent = pendingCount;
+      if (approvedEl) approvedEl.textContent = approvedCount;
+      if (rejectedEl) rejectedEl.textContent = rejectedCount;
     }
   }
 
-  // 위임 요청 목록 렌더링
+  // 오른쪽 위임 요청 패널 렌더링
   renderDelegationRequests() {
     const container = document.getElementById("delegation-request-list");
     if (!container) return;
@@ -261,7 +276,7 @@ class BrokerDelegationManagement {
     });
   }
 
-  // 요청 카드 생성
+  // 요청 카드 생성 (오른쪽 패널)
   createRequestCard(request) {
     const card = document.createElement("div");
     card.className =
@@ -452,7 +467,12 @@ class BrokerDelegationManagement {
 
       if (response.ok) {
         this.showSuccess("요청이 성공적으로 승인되었습니다.");
-        this.loadDelegationRequests();
+
+        // 오른쪽 위임요청 패널 + 왼쪽 패널 + 관리중 매물 모두 갱신
+        await this.loadDelegationRequests();
+        if (typeof window.loadManagedProperties === "function") {
+          window.loadManagedProperties();
+        }
       } else {
         const errorText = await response.text();
         throw new Error(errorText || "요청 승인에 실패했습니다.");
@@ -496,7 +516,7 @@ class BrokerDelegationManagement {
 
       if (response.ok) {
         this.showSuccess("요청이 거절되었습니다.");
-        this.loadDelegationRequests();
+        await this.loadDelegationRequests();
       } else {
         const errorText = await response.text();
         throw new Error(errorText || "요청 거절에 실패했습니다.");
@@ -515,7 +535,7 @@ class BrokerDelegationManagement {
     if (!request) return;
 
     // 상세 패널 열기
-    if (typeof window.openDelegationDetail === 'function') {
+    if (typeof window.openDelegationDetail === "function") {
       window.openDelegationDetail(requestId, request);
     }
   }
@@ -567,5 +587,10 @@ let brokerDelegation;
 
 // DOM 로드 완료 후 초기화
 document.addEventListener("DOMContentLoaded", () => {
+  // 1) 인스턴스 생성
   brokerDelegation = new BrokerDelegationManagement();
+  // 2) window에 올리기
+  window.brokerDelegation = brokerDelegation;
+  // 3) 그 다음 init 실행
+  brokerDelegation.init();
 });

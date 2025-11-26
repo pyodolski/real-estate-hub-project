@@ -54,4 +54,27 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             @Param("propertyId") Long propertyId,
             @Param("brokerUserId") Long brokerUserId
     );
+
+    @Query("""
+        select p
+        from Property p
+        where p.listingType = com.realestate.app.domain.property.table.Property.ListingType.BROKER
+          and p.broker.userId = :brokerUserId
+          and p.status in (
+            com.realestate.app.domain.property.table.Property.Status.AVAILABLE,
+            com.realestate.app.domain.property.table.Property.Status.PENDING
+          )
+        order by p.updatedAt desc nulls last, p.createdAt desc
+        """)
+    List<Property> findManagedByBroker(@Param("brokerUserId") Long brokerUserId);
+
+    @Query("""
+    select p
+    from Property p
+    where p.broker.userId = :brokerUserId
+      and p.status in (com.realestate.app.domain.property.table.Property$Status.AVAILABLE,
+                       com.realestate.app.domain.property.table.Property$Status.PENDING)
+""")
+    List<Property> findManagedForBroker(@Param("brokerUserId") Long brokerUserId);
+
 }

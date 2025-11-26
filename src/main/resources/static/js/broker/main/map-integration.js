@@ -3,7 +3,8 @@
  * 공통 MapManager를 활용한 지도 초기화 및 매물 마커 표시
  */
 
-import { debounce } from '../../shared/utils/debounce.js';
+// ⛔️ 이제 bounds 기반 디바운스 로직 안 쓸 거면 import 필요 없음
+// import { debounce } from '../../shared/utils/debounce.js';
 
 export class MapIntegration {
   /**
@@ -23,24 +24,23 @@ export class MapIntegration {
       onPropertyClick: [],
       onPropertiesLoad: []
     };
+
+    // 브로커 전용 매물 캐시
+    this.properties = [];
   }
 
   /**
    * 초기화
+   * ✅ 이제는 bounds 기준이 아니라,
+   *   "현재 브로커가 관리중인 매물"만 로드
    */
   async initialize() {
     try {
-      // 지도 idle 이벤트 리스너 (디바운싱 적용)
-      const debouncedLoadProperties = debounce(async () => {
-        await this.loadPropertiesInBounds();
-      }, 300);
+      // 예전: idle 이벤트 + loadPropertiesInBounds()
+      // 지금: 한 번 브로커 매물 로드해서 마커 뿌리기
+      await this.loadBrokerProperties();
 
-      this.mapManager.addEventListener('idle', debouncedLoadProperties);
-
-      // 초기 매물 로드
-      await this.loadPropertiesInBounds();
-
-      console.log('지도 통합 모듈 초기화 완료');
+      console.log('지도 통합 모듈 초기화 완료 (브로커 전용)');
     } catch (error) {
       console.error('지도 통합 모듈 초기화 실패:', error);
       throw error;
@@ -48,35 +48,26 @@ export class MapIntegration {
   }
 
   /**
-   * 지도 영역 내 매물 조회 및 마커 표시
+   * ✅ 브로커 전용 매물 로드
+   *  - /api/broker/dashboard/map-properties (백엔드에서 구현)
+   *  - PropertyService.getBrokerMapProperties()에서 호출
    */
-  async loadPropertiesInBounds() {
+  async loadBrokerProperties() {
     try {
-      const bounds = this.mapManager.getBounds();
-      if (!bounds) {
-        console.warn('지도 경계를 가져올 수 없습니다.');
-        return [];
-      }
-
-      // 매물 조회
-      const properties = await this.propertyService.fetchPropertiesInBounds({
-        swLat: bounds.swLat,
-        swLng: bounds.swLng,
-        neLat: bounds.neLat,
-        neLng: bounds.neLng,
-        filters: this.currentFilters
-      });
+      // PropertyService 안에서 AuthUtils 써서 토큰 처리하도록 구현했다고 가정
+      const properties = await this.propertyService.getBrokerMapProperties();
+      this.properties = properties || [];
 
       // 마커 렌더링
-      this.displayProperties(properties);
+      this.displayProperties(this.properties);
 
       // 콜백 실행
-      this._triggerCallbacks('onPropertiesLoad', properties);
+      this._triggerCallbacks('onPropertiesLoad', this.properties);
 
-      console.log(`매물 ${properties.length}개 로드됨 (Intermediary)`);
-      return properties;
+      console.log(`브로커 매물 ${this.properties.length}개 로드됨`);
+      return this.properties;
     } catch (error) {
-      console.error('매물 조회 실패:', error);
+      console.error('브로커 매물 조회 실패:', error);
 
       if (error.message === 'Unauthorized') {
         alert('로그인이 필요합니다. 다시 로그인해주세요.');
@@ -85,6 +76,15 @@ export class MapIntegration {
 
       return [];
     }
+  }
+
+  /**
+   * ❌ (예전 방식) 지도 영역 내 매물 조회 및 마커 표시
+   *   - 지금은 안 쓸 거면 남겨두고 안 쓰거나, 필요 없으면 통째로 삭제해도 됨
+   */
+  async loadPropertiesInBounds() {
+    console.warn('[MapIntegration] loadPropertiesInBounds는 브로커 화면에서는 사용하지 않습니다.');
+    return [];
   }
 
   /**
@@ -97,8 +97,16 @@ export class MapIntegration {
       return;
     }
 
+    // ⚠️ 백엔드 DTO가 locationX/locationY면,
+    // MarkerManager가 lat/lng를 기대한다면 여기서 변환
+    const normalized = properties.map(p => ({
+      ...p,
+      lat: p.lat ?? p.locationY,   // 위도
+      lng: p.lng ?? p.locationX    // 경도
+    }));
+
     // 마커 렌더링 (클릭 콜백 포함)
-    this.markerManager.renderMarkers(properties, (propertyId, property) => {
+    this.markerManager.renderMarkers(normalized, (propertyId, property) => {
       this.handlePropertyClick(propertyId, property);
     });
   }
@@ -149,7 +157,11 @@ export class MapIntegration {
    */
   async applyFilters(filters) {
     this.currentFilters = filters || {};
-    await this.loadPropertiesInBounds();
+
+    // 지금은 서버 필터까지는 안 걸고,
+    // 필요하면 여기서 this.properties 필터링 후 displayProperties 호출하는 식으로 확장 가능
+    // 일단은 브로커 매물 전체 다시 로드
+    await this.loadBrokerProperties();
   }
 
   /**
@@ -157,7 +169,7 @@ export class MapIntegration {
    */
   async resetFilters() {
     this.currentFilters = {};
-    await this.loadPropertiesInBounds();
+    await this.loadBrokerProperties();
   }
 
   /**
@@ -265,6 +277,7 @@ export class MapIntegration {
   destroy() {
     this.currentPropertyId = null;
     this.currentFilters = {};
+    this.properties = [];
     this.callbacks = {
       onPropertyClick: [],
       onPropertiesLoad: []
