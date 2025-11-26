@@ -30,6 +30,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -46,6 +49,7 @@ public class AuctionService {
 
     private final com.realestate.app.domain.notification.NotificationService notificationService;
     private final com.realestate.app.recproperty.service.RecommendationService recommendationService;
+
     /**
      * 오너가 새 경매 생성
      */
@@ -53,8 +57,7 @@ public class AuctionService {
     public PropertyAuction createAuction(
             Long ownerUserId,
             Long propertyId,
-            AuctionController.CreateAuctionRequest body
-    ) {
+            AuctionController.CreateAuctionRequest body) {
         if (body == null || body.getDealType() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dealType is required");
         }
@@ -83,17 +86,14 @@ public class AuctionService {
 
         // 최근 30일 이내 ONGOING 경매 존재 여부 체크
         LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
-        boolean hasActiveAuction =
-                auctionRepo.existsByPropertyAndStatusAndCreatedAtAfter(
-                        property,
-                        AuctionStatus.ONGOING,
-                        cutoff
-                );
+        boolean hasActiveAuction = auctionRepo.existsByPropertyAndStatusAndCreatedAtAfter(
+                property,
+                AuctionStatus.ONGOING,
+                cutoff);
         if (hasActiveAuction) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "property already has an active auction within last 30 days"
-            );
+                    "property already has an active auction within last 30 days");
         }
 
         PropertyAuction auction = PropertyAuction.builder()
@@ -162,8 +162,7 @@ public class AuctionService {
                     ownerUserId,
                     auction.getId(),
                     amount,
-                    brokerName
-            );
+                    brokerName);
         }
 
         // 2) 직전 최고 입찰자에게 "내 입찰 상회됨" 알림
@@ -177,8 +176,7 @@ public class AuctionService {
                 notificationService.createAuctionOutbidNotification(
                         prevBrokerUserId,
                         auction.getId(),
-                        amount
-                );
+                        amount);
             }
         }
 
@@ -193,11 +191,11 @@ public class AuctionService {
      * - 매물 broker / listingType 갱신
      * - property_offers 에 최종 조건 저장
      *
-     * offerType     SALE / JEONSE / WOLSE
-     * housetype     APART / BILLA / ONE
+     * offerType SALE / JEONSE / WOLSE
+     * housetype APART / BILLA / ONE
      * availableFrom 입주 가능일 (없으면 null)
-     * deposit       월세일 때 보증금 (JEONSE/WOLSE 용)
-     * monthlyRent   월세 (WOLSE 용)
+     * deposit 월세일 때 보증금 (JEONSE/WOLSE 용)
+     * monthlyRent 월세 (WOLSE 용)
      */
     @Transactional
     public void acceptOffer(Long ownerUserId, Long offerId) {
@@ -267,7 +265,7 @@ public class AuctionService {
             recommendationService.notifyRecommendedUsersForNewOffer(
                     property,
                     po,
-                    0.7   // 코사인 유사도 임계값 (튜닝 가능)
+                    0.7 // 코사인 유사도 임계값 (튜닝 가능)
             );
         } catch (Exception e) {
             // 추천/알림 실패해도 경매 수락 자체는 롤백하지 않도록 방어
@@ -276,7 +274,7 @@ public class AuctionService {
         }
 
         // 6) 참여한 모든 브로커에게 "경매 종료" 알림 보내기
-        //    - winner: true / loser: false 로 구분
+        // - winner: true / loser: false 로 구분
         var allOffers = offerRepo.findByAuction(auction);
         Long winnerBrokerUserId = (offer.getBroker() != null && offer.getBroker().getUser() != null)
                 ? offer.getBroker().getUser().getId()
@@ -286,16 +284,68 @@ public class AuctionService {
         java.util.Set<Long> notified = new java.util.HashSet<>();
 
         for (AuctionOffer ao : allOffers) {
-            if (ao.getBroker() == null || ao.getBroker().getUser() == null) continue;
+            if (ao.getBroker() == null || ao.getBroker().getUser() == null)
+                continue;
             Long brokerUserId = ao.getBroker().getUser().getId();
-            if (!notified.add(brokerUserId)) continue; // 이미 알림 보낸 브로커는 스킵
+            if (!notified.add(brokerUserId))
+                continue; // 이미 알림 보낸 브로커는 스킵
 
             boolean isWinner = (winnerBrokerUserId != null && winnerBrokerUserId.equals(brokerUserId));
             notificationService.createAuctionCompletedNotification(
                     brokerUserId,
                     auction.getId(),
-                    isWinner
-            );
+                    isWinner);
         }
+    }
+
+    /**
+     * 브로커: 진행중인 경매 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<PropertyAuction> getOngoingAuctions() {
+        return auctionRepo.findByStatus(AuctionStatus.ONGOING);
+    }
+
+    /**
+     * 경매 상세 조회
+     */
+    @Transactional(readOnly = true)
+    public PropertyAuction getAuction(Long auctionId) {
+        return auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "auction not found"));
+    }
+
+    /**
+     * 오너: 특정 경매의 입찰 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AuctionOffer> getOffersByAuction(Long auctionId, Long ownerUserId) {
+        PropertyAuction auction = auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "auction not found"));
+
+        Property property = auction.getProperty();
+
+        // 오너 권한 체크
+        if (property.getOwner() == null || !property.getOwner().getId().equals(ownerUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "you are not the owner of this auction");
+        }
+
+        return offerRepo.findByAuction(auction);
+    }
+
+    /**
+     * 오너: 본인 경매 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<PropertyAuction> getMyAuctions(Long ownerUserId) {
+        return auctionRepo.findByProperty_Owner_IdOrderByCreatedAtDesc(ownerUserId);
+    }
+
+    /**
+     * 오너: 경매 등록 가능한 매물 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<Property> getAvailablePropertiesForAuction(Long ownerUserId) {
+        return propertyRepo.findAuctionAvailableProperties(ownerUserId);
     }
 }
