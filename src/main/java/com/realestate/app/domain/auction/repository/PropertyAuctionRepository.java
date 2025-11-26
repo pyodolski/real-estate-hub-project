@@ -10,21 +10,20 @@ import java.util.List;
 
 public interface PropertyAuctionRepository extends JpaRepository<PropertyAuction, Long> {
 
-    List<PropertyAuction> findByProperty(Property property);
+        List<PropertyAuction> findByProperty(Property property);
 
-    List<PropertyAuction> findByStatus(AuctionStatus status);
+        List<PropertyAuction> findByStatus(AuctionStatus status);
 
-    List<PropertyAuction> findByProperty_Owner_Id(Long ownerUserId);
+        List<PropertyAuction> findByStatusAndCreatedAtAfter(
+                        AuctionStatus status, LocalDateTime createdAfter);
 
-    List<PropertyAuction> findByStatusAndCreatedAtAfter(
-            AuctionStatus status, LocalDateTime createdAfter);
+        List<PropertyAuction> findByStatusAndCreatedAtBefore(
+                        AuctionStatus status, LocalDateTime createdBefore);
 
-    List<PropertyAuction> findByStatusAndCreatedAtBefore(
-            AuctionStatus status, LocalDateTime createdBefore);
+        boolean existsByPropertyAndStatusAndCreatedAtAfter(
+                        Property property,
+                        AuctionStatus status,
+                        LocalDateTime createdAfter);
 
-    boolean existsByPropertyAndStatusAndCreatedAtAfter(
-            Property property,
-            AuctionStatus status,
-            LocalDateTime createdAfter
-    );
+        List<PropertyAuction> findByProperty_Owner_IdOrderByCreatedAtDesc(Long ownerId);
 }
