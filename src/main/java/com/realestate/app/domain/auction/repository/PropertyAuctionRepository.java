@@ -14,6 +14,8 @@ public interface PropertyAuctionRepository extends JpaRepository<PropertyAuction
 
     List<PropertyAuction> findByStatus(AuctionStatus status);
 
+    List<PropertyAuction> findByProperty_Owner_Id(Long ownerUserId);
+
     List<PropertyAuction> findByStatusAndCreatedAtAfter(
             AuctionStatus status, LocalDateTime createdAfter);
 

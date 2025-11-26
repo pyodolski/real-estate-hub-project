@@ -54,4 +54,18 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             @Param("propertyId") Long propertyId,
             @Param("brokerUserId") Long brokerUserId
     );
+
+    @Query("""
+        select p from Property p
+        inner join p.claim oc
+        where p.owner.id = :ownerUserId
+          and oc.status = com.realestate.app.domain.ownership.OwnershipClaim$Status.APPROVED
+          and p.broker is null
+          and not exists (
+            select 1 from PropertyOffer po
+            where po.property.id = p.id
+            and po.isActive = true
+          )
+        """)
+    List<Property> findAuctionAvailableProperties(@Param("ownerUserId") Long ownerUserId);
 }

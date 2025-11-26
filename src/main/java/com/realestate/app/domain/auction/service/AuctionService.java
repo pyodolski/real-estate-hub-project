@@ -30,6 +30,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -297,5 +300,71 @@ public class AuctionService {
                     isWinner
             );
         }
+    }
+
+    /**
+     * 진행중인 경매 목록 조회 (브로커용)
+     */
+    @Transactional(readOnly = true)
+    public List<PropertyAuction> getOngoingAuctions() {
+        return auctionRepo.findByStatus(AuctionStatus.ONGOING);
+    }
+
+    /**
+     * 경매 상세 조회
+     */
+    @Transactional(readOnly = true)
+    public PropertyAuction getAuction(Long auctionId) {
+        return auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "auction not found"));
+    }
+
+    /**
+     * 특정 경매의 입찰 목록 조회 (집주인용)
+     */
+    @Transactional(readOnly = true)
+    public List<AuctionOffer> getOffersByAuction(Long auctionId, Long ownerUserId) {
+        PropertyAuction auction = auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "auction not found"));
+
+        Property property = auction.getProperty();
+        if (property.getOwner() == null || !property.getOwner().getId().equals(ownerUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "you are not the owner of this property");
+        }
+
+        return offerRepo.findByAuction(auction);
+    }
+
+    /**
+     * 집주인 본인의 경매 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<PropertyAuction> getMyAuctions(Long ownerUserId) {
+        return auctionRepo.findByProperty_Owner_Id(ownerUserId);
+    }
+
+    /**
+     * 경매 등록 가능한 매물 목록 조회 (집주인용)
+     * - 관리자 승인된 실매물 (OwnershipClaim APPROVED)
+     * - PropertyOffer가 없음 (판매 등록 안 됨)
+     * - 브로커에게 위임 안 됨
+     * - 진행중인 경매가 없음
+     */
+    @Transactional(readOnly = true)
+    public List<Property> getAvailablePropertiesForAuction(Long ownerUserId) {
+        List<Property> candidates = propertyRepo.findAuctionAvailableProperties(ownerUserId);
+
+        // 진행중인 경매가 있는 매물 ID 조회
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
+        List<PropertyAuction> ongoingAuctions = auctionRepo.findByStatusAndCreatedAtAfter(
+                AuctionStatus.ONGOING, cutoff);
+        Set<Long> auctionPropertyIds = ongoingAuctions.stream()
+                .map(a -> a.getProperty().getId())
+                .collect(Collectors.toSet());
+
+        // 진행중인 경매가 없는 매물만 반환
+        return candidates.stream()
+                .filter(p -> !auctionPropertyIds.contains(p.getId()))
+                .collect(Collectors.toList());
     }
 }
