@@ -55,6 +55,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             @Param("brokerUserId") Long brokerUserId
     );
 
+    // [1126school 브랜치 내용 반영] 집주인용 경매 가능 매물 조회
     @Query("""
         select p from Property p
         inner join p.claim oc
@@ -68,4 +69,18 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
           )
         """)
     List<Property> findAuctionAvailableProperties(@Param("ownerUserId") Long ownerUserId);
+
+    // [main 브랜치 내용 반영] 중개인용 관리 매물 조회 (정렬 포함된 버전 선택)
+    @Query("""
+        select p
+        from Property p
+        where p.listingType = com.realestate.app.domain.property.table.Property$ListingType.BROKER
+          and p.broker.userId = :brokerUserId
+          and p.status in (
+            com.realestate.app.domain.property.table.Property$Status.AVAILABLE,
+            com.realestate.app.domain.property.table.Property$Status.PENDING
+          )
+        order by p.updatedAt desc nulls last, p.createdAt desc
+        """)
+    List<Property> findManagedByBroker(@Param("brokerUserId") Long brokerUserId);
 }

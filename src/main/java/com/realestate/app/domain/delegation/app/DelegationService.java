@@ -167,6 +167,10 @@ public class DelegationService {
         p.setBroker(req.getBroker());
         p.setListingType(ListingType.BROKER);
 
+        if (p.getStatus() != Property.Status.SOLD) {
+            p.setStatus(Property.Status.AVAILABLE);
+        }
+
         req.setStatus(Status.APPROVED);
         return toDto(req);
     }
@@ -217,7 +221,8 @@ public class DelegationService {
                 r.getRejectReason(),
                 null,
                 r.getProperty().getLocationX(),
-                r.getProperty().getLocationY()
+                r.getProperty().getLocationY(),
+                r.getCreatedAt()
         );
     }
 
@@ -235,7 +240,8 @@ public class DelegationService {
                 r.getRejectReason(),
                 com.realestate.app.domain.property.dto.PropertyOfferDto.from(offer),
                 r.getProperty().getLocationX(),
-                r.getProperty().getLocationY()
+                r.getProperty().getLocationY(),
+                r.getCreatedAt()
         );
     }
 
