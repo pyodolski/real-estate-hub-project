@@ -22,15 +22,31 @@ const RightSidePanels = {
 
       const favorites = await res.json();
 
+      // 썸네일 이미지 병렬 로드
+      const favoritesWithImages = await Promise.all(favorites.map(async (f) => {
+          let img = f.thumbnailUrl || "https://via.placeholder.com/150?text=No+Image";
+          try {
+              const imgRes = await fetch(`/api/properties/${f.propertyId}/images`, {
+                  headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (imgRes.ok) {
+                  const images = await imgRes.json();
+                  if (images && images.length > 0) {
+                      img = images[0].imageUrl || images[0].url;
+                  }
+              }
+          } catch (e) { /* ignore */ }
+          return { ...f, thumbnail: img };
+      }));
+
       totalSpan.textContent = `총 ${favorites.length}개 매물`;
       listEl.innerHTML = "";
 
-      favorites.forEach((f) => {
-        const img = f.thumbnailUrl ??
-          "https://via.placeholder.com/150?text=No+Image";
+      favoritesWithImages.forEach((f) => {
+        const img = f.thumbnail;
 
         const card = `
-           <div class="bg-white rounded-lg shadow p-3 flex gap-3 cursor-pointer"
+           <div class="bg-white rounded-lg shadow p-3 flex gap-3 cursor-pointer property-card-btn"
                 data-property-id="${f.propertyId}">
              <img src="${img}" class="w-24 h-20 rounded object-cover" />
 
@@ -539,15 +555,37 @@ const RightSidePanels = {
       const data = await res.json();
       const groups = data.content; // Page<GroupSummaryResponse>
 
-      countSpan.textContent = `비교 그룹 ${groups.length}개`;
+      // 그룹 내 아이템 이미지 로드
+      const groupsWithImages = await Promise.all(groups.map(async (g) => {
+          if (!g.items || g.items.length === 0) return g;
+          
+          const itemsWithImages = await Promise.all(g.items.map(async (item) => {
+              let imgUrl = item.thumbnailUrl || "https://via.placeholder.com/150?text=No+Image";
+              try {
+                  const imgRes = await fetch(`/api/properties/${item.propertyId}/images`, {
+                      headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (imgRes.ok) {
+                      const images = await imgRes.json();
+                      if (images && images.length > 0) {
+                          imgUrl = images[0].imageUrl || images[0].url;
+                      }
+                  }
+              } catch (e) { /* ignore */ }
+              return { ...item, thumbnailUrl: imgUrl };
+          }));
+          return { ...g, items: itemsWithImages };
+      }));
+
+      countSpan.textContent = `비교 그룹 ${groupsWithImages.length}개`;
       listEl.innerHTML = "";
 
-      groups.forEach((g) => {
+      groupsWithImages.forEach((g) => {
         // 아이템 미리보기 이미지 (최대 3개)
         let imagesHtml = "";
         if (g.items && g.items.length > 0) {
           imagesHtml = g.items.slice(0, 3).map(item => {
-             const imgUrl = item.thumbnailUrl || "https://via.placeholder.com/150?text=No+Image";
+             const imgUrl = item.thumbnailUrl;
              return `<img src="${imgUrl}" class="w-8 h-8 rounded-full border-2 border-white -ml-2 first:ml-0 object-cover">`;
           }).join("");
         } else {

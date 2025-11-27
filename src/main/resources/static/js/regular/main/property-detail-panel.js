@@ -549,10 +549,30 @@
           data.property_images ||
           data.photos ||
           data.propertyImages;
+          
         if (Array.isArray(images) && images.length > 0) {
           const img0 = images[0];
           imageUrl =
             img0.url || img0.imgUrl || img0.imageUrl || img0.image_url || imageUrl;
+        } else {
+            // 이미지가 없으면 별도 API 호출 시도
+            try {
+                const imgRes = await fetch(`/api/properties/${id}/images`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
+                    }
+                });
+                if (imgRes.ok) {
+                    const fetchedImages = await imgRes.json();
+                    if (fetchedImages && fetchedImages.length > 0) {
+                        imageUrl = fetchedImages[0].imageUrl || fetchedImages[0].url;
+                        // data 객체에도 업데이트 (나중에 images 배열 쓸 때 대비)
+                        data.images = fetchedImages; 
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to fetch additional images", e);
+            }
         }
 
         const maintenanceFee =

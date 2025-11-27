@@ -510,7 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // 🔵 PropertyFilterDto → 카드용 오브젝트로 변환
-        const loadedProperties = apiProperties.map(prop => {
+        const loadedProperties = await Promise.all(apiProperties.map(async (prop) => {
           const priceText = formatPriceFromSearchDto(prop);
           const options = prop.oftion ? parseOptions(prop.oftion) : [];
 
@@ -525,8 +525,25 @@ document.addEventListener("DOMContentLoaded", () => {
               : []),
           ];
 
-          let imageUrl =
-            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400';
+          let imageUrl = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400';
+          
+          // DB에서 이미지 가져오기
+          try {
+              const imgRes = await fetch(`/api/properties/${prop.propertyId || prop.id}/images`, {
+                  headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
+                  }
+              });
+              if (imgRes.ok) {
+                  const images = await imgRes.json();
+                  if (images && images.length > 0) {
+                      // 첫 번째 이미지를 대표 이미지로 사용
+                      imageUrl = images[0].imageUrl || images[0].url;
+                  }
+              }
+          } catch (e) {
+              console.warn(`Failed to fetch images for property ${prop.propertyId || prop.id}`, e);
+          }
 
           return {
             id: prop.propertyId || prop.id,
@@ -551,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
             maintenanceFee: null,
             _raw: prop
           };
-        });
+        }));
 
         // 전역 properties 배열 업데이트
         if (typeof properties !== 'undefined') {
