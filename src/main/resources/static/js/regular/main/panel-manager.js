@@ -272,6 +272,9 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => adjustAllFilterDropdownPosition(), 300);
     }
   }
+  
+  // 전역으로 노출
+  window.openRightPanel = openRightPanel;
 
   function toggleRightPanel(panelName) {
     const panel = allPanels[panelName];

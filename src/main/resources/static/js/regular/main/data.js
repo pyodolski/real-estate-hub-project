@@ -88,6 +88,8 @@ const favoriteProperties = [
 ];
 
 // --- 비교 그룹 데이터 (샘플) ---
+// --- 비교 그룹 데이터 (샘플) - 백엔드 API 연동으로 인해 주석 처리 ---
+/*
 const compareGroups = [
   {
     groupId: 1,
@@ -140,6 +142,7 @@ const compareGroups = [
     ],
   },
 ];
+*/
 
 // --- 메인 화면 매물 리스트 데이터 (샘플. 상세정보추가) ---
 const properties = [

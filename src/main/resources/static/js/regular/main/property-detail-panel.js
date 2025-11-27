@@ -259,7 +259,9 @@
         </svg>
       `;
       el.closeBtn.title = "전체화면 해제";
-      el.closeBtn.onclick = () => collapsePropertyDetailFromFullscreen();
+      // onclick 제거: initPropertyDetailPanel에서 등록한 리스너가 closePropertyDetail을 호출하고, 
+      // closePropertyDetail 내부에서 collapsePropertyDetailFromFullscreen을 처리함.
+      el.closeBtn.onclick = null; 
     } else {
       // 원래 X 아이콘으로 복원
       el.closeBtn.innerHTML = `
@@ -268,7 +270,8 @@
         </svg>
       `;
       el.closeBtn.title = "닫기";
-      el.closeBtn.onclick = () => closePropertyDetail();
+      // onclick 제거: initPropertyDetailPanel에서 등록한 리스너 사용
+      el.closeBtn.onclick = null;
     }
   }
 
@@ -937,11 +940,12 @@
     updatePanelButtonsForDetail(true);
   }
 
-  async function openPropertyDetail(id, data) {
+  async function openPropertyDetail(id, data, options = {}) {
     // 1) 클릭한 매물 id 정규화 (card → propertyId, compare-list 등까지 고려)
     const compareId = (data && (data._raw?.propertyId || data.id)) || id;
 
     // 같은 매물을 다시 클릭하면 토글
+    // sideBySide일 때도 이미 열려있는 패널(currentId)과 같으면 닫기
     if (currentId === compareId && isOpen) {
       closePropertyDetail();
       return;
@@ -985,10 +989,20 @@
       nextElems.overlay.style.transition = "";
       nextElems.overlay.style.opacity = "0";
       nextElems.overlay.style.pointerEvents = "none";
+      
+      // sideBySide 위치 조정
+      if (options.sideBySide && isOpen) {
+          nextElems.overlay.style.left = "900px";
+          nextElems.overlay.style.zIndex = "16"; 
+      } else {
+          nextElems.overlay.style.left = ""; 
+      }
     }
 
     setOverlayVisible(nextElems.overlay, true);
-    if (isOpen && curElems.overlay) {
+    
+    // sideBySide가 아니면 기존 패널 닫기
+    if (!options.sideBySide && isOpen && curElems.overlay) {
       curElems.overlay.classList.add("-translate-x-full");
       setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
     }
@@ -1027,25 +1041,56 @@
     }
   }
 
-  function closePropertyDetail() {
-    const curElems = getElems(currentBuffer);
-    if (curElems.overlay) {
-      if (curElems.overlay.__isFullscreen) {
+  function closePropertyDetail(targetBuf) {
+    // targetBuf가 없으면 현재 활성화된 버퍼를 닫음
+    const bufToClose = targetBuf || currentBuffer;
+    const otherBuf = bufToClose === "a" ? "b" : "a";
+    
+    const closeElems = getElems(bufToClose);
+    const otherElems = getElems(otherBuf);
+
+    // 1. 닫으려는 패널 닫기
+    if (closeElems.overlay) {
+      if (closeElems.overlay.__isFullscreen) {
         collapsePropertyDetailFromFullscreen();
       }
-      curElems.overlay.classList.add("-translate-x-full");
-      setTimeout(() => setOverlayVisible(curElems.overlay, false), 300);
-
-      const onResize = curElems.overlay.__detailOnResize;
+      closeElems.overlay.classList.add("-translate-x-full");
+      closeElems.overlay.style.opacity = "0";
+      closeElems.overlay.style.pointerEvents = "none";
+      
+      const onResize = closeElems.overlay.__detailOnResize;
       if (onResize) {
         window.removeEventListener("resize", onResize);
-        curElems.overlay.__detailOnResize = null;
+        closeElems.overlay.__detailOnResize = null;
       }
     }
-    updatePanelButtonsForDetail(false);
-    isOpen = false;
-    window.isDetailOpen = false;
-    currentId = null;
+
+    // 2. 다른 패널이 열려있는지 확인
+    const isOtherOpen = otherElems.overlay && !otherElems.overlay.classList.contains("-translate-x-full") && otherElems.overlay.style.opacity !== "0";
+
+    if (isOtherOpen) {
+        // 다른 패널이 열려있으면, 그 패널을 메인 위치(왼쪽)로 이동
+        // (만약 이미 왼쪽에 있었다면 변화 없음, 오른쪽에 있었다면 왼쪽으로 이동)
+        otherElems.overlay.style.left = ""; // CSS 기본값(왼쪽)으로 복귀
+        otherElems.overlay.style.zIndex = ""; 
+        
+        // 상태 업데이트
+        currentBuffer = otherBuf;
+        // currentId 업데이트 (다른 패널의 매물 ID로)
+        const otherId = otherElems.overlay.dataset.propertyId;
+        if (otherId) currentId = otherId;
+        
+        isOpen = true;
+        
+        // 버튼 상태 업데이트 (닫기 버튼 등)
+        updatePanelButtonsForDetail(true);
+    } else {
+        // 둘 다 닫힘
+        updatePanelButtonsForDetail(false);
+        isOpen = false;
+        window.isDetailOpen = false;
+        currentId = null;
+    }
   }
 
   // 탭 전환 함수 (전역 노출)
@@ -1157,11 +1202,23 @@
 
   function initPropertyDetailPanel() {
     ["a", "b"].forEach((buf) => {
-      const el = getElems(buf).overlay;
+      const elems = getElems(buf);
+      const el = elems.overlay;
       if (el) {
         el.classList.add("-translate-x-full");
         el.style.opacity = "0";
         el.style.pointerEvents = "none";
+      }
+      // 닫기 버튼에 개별 리스너 부착
+      if (elems.closeBtn) {
+          // 기존 리스너 제거 (중복 방지)
+          const newBtn = elems.closeBtn.cloneNode(true);
+          elems.closeBtn.parentNode.replaceChild(newBtn, elems.closeBtn);
+          
+          newBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              closePropertyDetail(buf);
+          });
       }
     });
     window.isDetailOpen = false;

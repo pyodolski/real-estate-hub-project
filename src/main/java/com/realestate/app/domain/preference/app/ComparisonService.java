@@ -2,6 +2,7 @@ package com.realestate.app.domain.preference.app;
 
 import com.realestate.app.domain.preference.infra.jpa.*;
 import com.realestate.app.domain.preference.*;
+import com.realestate.app.domain.preference.api.dto.GroupSummaryResponse;
 import com.realestate.app.domain.property.table.Property;
 import com.realestate.app.domain.user.entity.User;
 import jakarta.persistence.EntityManager;
@@ -45,6 +46,12 @@ public class ComparisonService {
         return groupRepo.findMyGroups(userId, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<GroupSummaryResponse> myGroupSummaries(Long userId, Pageable pageable) {
+        return groupRepo.findMyGroups(userId, pageable)
+                .map(GroupSummaryResponse::from);
+    }
+
     @Transactional
     public ComparisonGroup renameGroup(Long groupId, Long userId, String newName) {
         ComparisonGroup g = getOwnedGroup(groupId, userId);
@@ -71,7 +78,11 @@ public class ComparisonService {
     @Transactional
     public void addItem(Long groupId, Long userId, Long propertyId) {
         ComparisonGroup g = getOwnedGroup(groupId, userId);
-        if (itemRepo.countByGroupId(groupId) >= MAX_ITEMS_PER_GROUP) {
+        // 이미 3개 이상이면 추가 불가 (서비스 레벨 체크)
+        // itemRepo.countByGroupId(groupId)는 DB 쿼리이므로, g.getItems().size()로 체크해도 됨 (단, lazy loading 주의)
+        // 여기서는 안전하게 count 쿼리 사용
+        long currentCount = itemRepo.countByGroupId(groupId);
+        if (currentCount >= MAX_ITEMS_PER_GROUP) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "한 그룹에는 최대 " + MAX_ITEMS_PER_GROUP + "개까지만 추가할 수 있습니다.");
         }
         ComparisonItem item = ComparisonItem.builder()
