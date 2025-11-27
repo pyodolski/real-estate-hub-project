@@ -22,6 +22,71 @@
     };
   }
 
+  // 이미지 선택 핸들러
+  PropertyManagement.prototype.handleSaleImageSelect = function(input) {
+      const previewArea = document.getElementById("sale-image-preview-area");
+      if (!previewArea) return;
+
+      previewArea.innerHTML = ""; // 기존 미리보기 초기화
+
+      if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const imgDiv = document.createElement("div");
+            imgDiv.className =
+              "relative aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200";
+            imgDiv.innerHTML = `
+              <img src="${e.target.result}" class="w-full h-full object-cover" alt="Preview">
+            `;
+            previewArea.appendChild(imgDiv);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+  };
+
+  // 매물 이미지 업로드 (Part 1에 있는 것과 동일하지만 안전을 위해 여기서도 정의하거나 Part 1의 것을 사용)
+  // Part 1에 정의된 uploadPropertyImages가 있다면 그것을 사용하겠지만, 
+  // 여기서는 명시적으로 정의하여 의존성을 줄임
+  PropertyManagement.prototype.uploadSalePropertyImages = async function(propertyId, files) {
+      console.log(
+        `[PropertyManagement] Uploading ${files.length} images for property ${propertyId}`
+      );
+      
+      const uploadPromises = Array.from(files).map((file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        return fetch(`/api/properties/${propertyId}/images`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+          body: formData,
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Image upload failed: ${response.status}`);
+            }
+            return response.json();
+          })
+          .catch((error) => {
+            console.error(`Failed to upload image ${file.name}:`, error);
+            throw error;
+          });
+      });
+
+      try {
+        await Promise.all(uploadPromises);
+        console.log("[PropertyManagement] All images uploaded successfully");
+        return true;
+      } catch (error) {
+        console.error("[PropertyManagement] Some images failed to upload", error);
+        throw error;
+      }
+  };
+
   // 판매 등록 시작 메서드
   PropertyManagement.prototype.registerForSale = async function (claimId) {
     console.log(
@@ -618,6 +683,29 @@
         );
 
         this.showSuccess("판매 매물이 수정되었습니다.");
+
+        // 이미지 업로드 처리
+        const imageInput = document.getElementById("sale-property-images");
+        if (imageInput && imageInput.files.length > 0) {
+            // 수정 모드에서는 propertyId를 알아내야 함
+            // offerId로 propertyId를 알 수 없으므로, 현재 상태의 claimId 등을 통해 찾아야 함
+            // 하지만 updateSaleOffer는 offerId만 받음.
+            // 다행히 saleRegistrationState.currentClaimId가 설정되어 있을 것임 (수정 모드 진입 시 설정됨)
+             const claimId = PropertyManagement.saleRegistrationState.currentClaimId;
+             if (claimId) {
+                 const property = this.myProperties.find(p => p.claimId === claimId);
+                 if (property && property.propertyId) {
+                     try {
+                         await this.uploadSalePropertyImages(property.propertyId, imageInput.files);
+                         console.log("[PropertyManagement] Images uploaded after update");
+                     } catch (imgError) {
+                         console.error("이미지 업로드 실패:", imgError);
+                         alert("매물 정보는 수정되었으나, 이미지 업로드에 실패했습니다.");
+                     }
+                 }
+             }
+        }
+
         this.hideSaleRegistrationPanel();
 
         // 판매 매물 목록 새로고침
@@ -694,6 +782,20 @@
       if (response.ok) {
         const result = await response.json();
         console.log("[PropertyManagement] Sale registration success:", result);
+
+        // 이미지 업로드 처리
+        const imageInput = document.getElementById("sale-property-images");
+        if (imageInput && imageInput.files.length > 0) {
+            try {
+                // propertyId는 이미 알고 있음
+                await this.uploadSalePropertyImages(propertyId, imageInput.files);
+                console.log("[PropertyManagement] Images uploaded after registration");
+            } catch (imgError) {
+                console.error("이미지 업로드 실패:", imgError);
+                alert("판매 등록 요청은 완료되었으나, 이미지 업로드에 실패했습니다.");
+            }
+        }
+
         this.showSuccess(
           "판매 매물 등록 요청이 완료되었습니다. 중개인 승인 후 매물이 공개됩니다."
         );
