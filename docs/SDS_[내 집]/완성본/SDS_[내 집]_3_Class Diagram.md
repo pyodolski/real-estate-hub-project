@@ -6312,3 +6312,286 @@ JWT 토큰 생성, 검증, 파싱, 인증 정보 추출을 담당하는 유틸�
 
 #### 6.3.5. getUserId
 * **type**: Long / public — 토큰에서 사용자 ID 추출.
+
+---
+
+# 11. 경매 기능 관련
+
+## PropertyAuction 클래스
+
+```mermaid
+classDiagram
+  class Property {
+  }
+
+  class AuctionStatus {
+    <<enum>>
+    ONGOING
+    CLOSED
+    COMPLETED
+  }
+
+  class PropertyAuction {
+    -id: Long
+    -property: Property
+    -status: AuctionStatus
+    -createdAt: LocalDateTime
+    -dealType: OfferType
+    -housetype: OfferType2
+    -floor: BigDecimal
+    -availableFrom: LocalDate
+    -maintenanceFee: BigDecimal
+    -negotiable: Boolean
+    -oftion: String
+    +getId(): Long
+    +getProperty(): Property
+    +getStatus(): AuctionStatus
+    +getDealType(): OfferType
+    +getHousetype(): OfferType2
+  }
+
+  PropertyAuction --> Property
+  PropertyAuction --> AuctionStatus
+```
+
+### 1.1 class description  
+매물 1건에 대한 **경매 정보**를 나타내는 엔티티.
+
+### 1.2 attribution 구분
+
+#### 1.2.1. id
+* type: Long / private — PK.
+
+#### 1.2.2. property
+* type: Property / private — 대상 매물.
+
+#### 1.2.3. status
+* type: AuctionStatus / private — 경매 상태.
+
+#### 1.2.4. createdAt
+* type: LocalDateTime / private — 생성 시각.
+
+#### 1.2.5. dealType
+* type: OfferType / private — 거래 유형.
+
+#### 1.2.6. housetype
+* type: OfferType2 / private — 주거 형태.
+
+#### 1.2.7. floor
+* type: BigDecimal / private — 층수.
+
+#### 1.2.8. availableFrom
+* type: LocalDate / private — 입주 가능일.
+
+#### 1.2.9. maintenanceFee
+* type: BigDecimal / private — 관리비.
+
+#### 1.2.10. negotiable
+* type: Boolean / private — 협의 여부.
+
+#### 1.2.11. oftion
+* type: String / private — 옵션 문자열.
+
+### 1.3 Operations 구분
+
+#### 1.3.1. getters
+* 필드 조회.
+
+#### 1.3.2. setStatus
+* 상태 변경.
+
+#### 1.3.3. prePersist
+* createdAt 기본값 설정.
+
+---
+
+## AuctionOffer 클래스
+
+```mermaid
+classDiagram
+  class PropertyAuction {
+  }
+
+  class BrokerProfile {
+  }
+
+  class AuctionOffer {
+    -id: Long
+    -auction: PropertyAuction
+    -broker: BrokerProfile
+    -amount: BigDecimal
+    -accepted: Boolean
+    -createdAt: LocalDateTime
+    +getId(): Long
+    +getAuction(): PropertyAuction
+    +getBroker(): BrokerProfile
+    +getAmount(): BigDecimal
+    +getAccepted(): Boolean
+  }
+
+  AuctionOffer --> PropertyAuction
+  AuctionOffer --> BrokerProfile
+```
+
+### 2.1 class description  
+특정 경매에 대한 **브로커 입찰 정보** 엔티티.
+
+### 2.2 attribution 구분
+
+#### 2.2.1. id  
+PK.
+
+#### 2.2.2. auction  
+소속 경매.
+
+#### 2.2.3. broker  
+입찰 브로커.
+
+#### 2.2.4. amount  
+입찰 금액.
+
+#### 2.2.5. accepted  
+수락 여부.
+
+#### 2.2.6. createdAt  
+생성 시각.
+
+### 2.3 Operations 구분
+
+#### 2.3.1. getters  
+필드 조회.
+
+#### 2.3.2. setAccepted  
+낙찰 처리.
+
+#### 2.3.3. prePersist  
+기본값 설정.
+
+---
+
+## AuctionStatus 열거형
+
+```mermaid
+classDiagram
+  class AuctionStatus {
+    <<enum>>
+    ONGOING
+    CLOSED
+    COMPLETED
+  }
+```
+
+### 3.1 class description  
+경매의 상태 값을 정의하는 enum.
+
+### 3.2 attribution 구분
+
+#### 3.2.1. ONGOING  
+진행 중.
+
+#### 3.2.2. CLOSED  
+종료(낙찰 없음).
+
+#### 3.2.3. COMPLETED  
+낙찰 완료.
+
+---
+
+## AuctionService 클래스
+
+```mermaid
+classDiagram
+  class AuctionService {
+    -auctionRepo: PropertyAuctionRepository
+    -offerRepo: AuctionOfferRepository
+    -propertyRepo: PropertyRepository
+    -brokerProfileRepo: BrokerProfileRepository
+    -delegationRepo: BrokerDelegationRequestRepository
+    -propertyOfferRepo: PropertyOfferRepository
+    -userRepo: UserRepository
+    -notificationService: NotificationService
+    -recommendationService: RecommendationService
+    +createAuction(ownerUserId, propertyId, body)
+    +createOffer(auctionId, brokerUserId, amount)
+    +acceptOffer(ownerUserId, offerId)
+  }
+```
+
+### 4.1 class description  
+경매 생성, 입찰 생성, 입찰 수락 및 후처리를 담당하는 서비스.
+
+### 4.2 attribution 구분
+
+#### 4.2.1. auctionRepo  
+경매 저장소.
+
+#### 4.2.2. offerRepo  
+입찰 저장소.
+
+#### 4.2.3. propertyRepo  
+매물 저장소.
+
+#### 4.2.4. brokerProfileRepo  
+브로커 프로필 조회.
+
+#### 4.2.5. delegationRepo  
+위임 생성.
+
+#### 4.2.6. propertyOfferRepo  
+최종 거래 조건 생성.
+
+#### 4.2.7. userRepo  
+소유자 검증.
+
+#### 4.2.8. notificationService  
+알림 발송.
+
+#### 4.2.9. recommendationService  
+추천 시스템 연동.
+
+### 4.3 Operations 구분
+
+#### 4.3.1. createAuction  
+경매 생성.
+
+#### 4.3.2. createOffer  
+브로커 입찰 생성.
+
+#### 4.3.3. acceptOffer  
+오퍼 수락 → 위임 생성 → 매물 상태 변경 → PropertyOffer 생성 → 알림.
+
+---
+
+## AuctionController 클래스
+
+```mermaid
+classDiagram
+  class AuctionController {
+    +createAuction()
+    +createOffer()
+    +acceptOffer()
+  }
+```
+
+### 5.1 class description  
+REST API 엔트리 포인트.  
+경매 생성, 입찰 생성, 오퍼 수락 제공.
+
+### 5.2 attribution 구분
+
+#### 5.2.1. auctionService  
+비즈니스 로직 수행.
+
+#### 5.2.2. currentUserIdResolver  
+사용자 ID 확인.
+
+### 5.3 Operations 구분
+
+#### 5.3.1. createAuction  
+POST /api/auctions/properties/{propertyId}
+
+#### 5.3.2. createOffer  
+POST /api/auctions/{auctionId}/offers
+
+#### 5.3.3. acceptOffer  
+POST /api/auctions/offers/{offerId}/accept
