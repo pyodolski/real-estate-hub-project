@@ -3992,506 +3992,893 @@ classDiagram
 
 ```mermaid
 classDiagram
-    %% --- Notification 클래스 정의 ---
-    class Notification {
-        %% 클래스 설명: 사용자에게 전송되는 알림 정보를 관리하는 클래스
-        -id: Long
-        -user: User
-        -type: NotificationType
-        -title: String
-        -message: String
-        -relatedId: Long
-        -isRead: Boolean
-        -createdAt: LocalDateTime
-        -readAt: LocalDateTime
+  class Notification {
+    -id: Long
+    -user: User
+    -type: NotificationType
+    -title: String
+    -message: String
+    -relatedId: Long
+    -isRead: Boolean
+    -createdAt: LocalDateTime
+    -readAt: LocalDateTime
 
-        %% --- Operations ---
-        +onCreate(): void
-        +markAsRead(): void
-    }
+    +markAsRead(): void
+    +onCreate(): void
+  }
 
-    %% --- NotificationType Enum ---
-    class NotificationType {
-        <<enumeration>>
-        PROPERTY_APPROVED
-        PROPERTY_REJECTED
-        PROPERTY_SUBMITTED
-        SYSTEM_UPDATE
-        CHAT_MESSAGE
-        PRICE_ALERT
-        PROPERTY_SOLD
-        PURCHASE_COMPLETED
-        +getDisplayName(): String
-    }
+  class User
+  class NotificationType
 
-    %% --- User 클래스 (참조용) ---
-    class User {
-        -userId: Long
-        -name: String
-    }
-
-    %% --- 관계 정의 ---
-    Notification --> User : 다대일 (ManyToOne)
-    Notification --> NotificationType : 사용 (Uses)
+  Notification --> User
+  Notification --> NotificationType
 ```
 
 ## 1.1. class description
 
-사용자에게 전송되는 알림 정보를 관리하는 클래스이다. 매물 승인/거절, 채팅 메시지, 가격 알림, 시스템 업데이트 등 다양한 유형의 알림을 통합 관리한다. 알림의 읽음 여부를 추적하고, 관련 엔티티와의 연결을 통해 알림 클릭 시 해당 페이지로 이동할 수 있도록 지원한다.
+사용자에게 발송되는 개별 알림을 표현하는 도메인 엔티티이다.  
+알림 종류, 제목/내용, 대상 사용자, 관련 도메인 ID, 읽음 여부, 생성/읽음 시각 등을 저장하며 JPA를 통해 `notifications` 테이블과 매핑된다.
 
 ## 1.2. attribution 구분
 
 ### 1.2.1. id
 
-- **name**: id
-- **type**: Long
-- **visibility**: private
-- **description**: 알림을 고유하게 식별하기 위한 primary key로, 데이터베이스에서 자동 생성되는 알림의 고유 ID이다.
+- **name**: id  
+- **type**: Long  
+- **visibility**: private  
+- **description**: 알림 엔티티의 기본 키이며, 데이터베이스에서 자동 생성되는 고유 ID이다.
 
 ### 1.2.2. user
 
-- **name**: user
-- **type**: User
-- **visibility**: private
-- **description**: 알림을 받을 사용자 정보이다. LAZY 로딩 방식을 사용하며, null 값을 허용하지 않는 필수 필드이다.
+- **name**: user  
+- **type**: User  
+- **visibility**: private  
+- **description**: 이 알림을 수신하는 대상 사용자 엔티티이다. `@ManyToOne` 관계로 매핑되며, 실제 컬럼은 `user_id` 외래 키로 저장된다.
 
 ### 1.2.3. type
 
-- **name**: type
-- **type**: NotificationType
-- **visibility**: private
-- **description**: 알림의 유형을 나타내는 열거형 필드이다. PROPERTY_APPROVED, PROPERTY_REJECTED, CHAT_MESSAGE, PRICE_ALERT 등의 값을 가지며, 알림의 종류에 따라 다른 아이콘이나 색상을 표시하는 데 사용된다. 최대 50자로 제한되며, null 값을 허용하지 않는 필수 필드이다.
+- **name**: type  
+- **type**: NotificationType  
+- **visibility**: private  
+- **description**: 알림의 종류를 나타내는 열거형 값이다. 매물 승인, 시스템 공지, 채팅 메시지, 경매 알림 등 도메인 이벤트 타입을 구분한다.
 
 ### 1.2.4. title
 
-- **name**: title
-- **type**: String
-- **visibility**: private
-- **description**: 알림의 제목이다. 알림 목록에서 표시되는 간략한 제목으로, 최대 200자로 제한된다. null 값을 허용하지 않는 필수 필드이다.
+- **name**: title  
+- **type**: String  
+- **visibility**: private  
+- **description**: 알림의 제목 텍스트이다. 알림 리스트나 토스트에서 한 줄로 표시되는 요약 문구를 담는다.
 
 ### 1.2.5. message
 
-- **name**: message
-- **type**: String
-- **visibility**: private
-- **description**: 알림의 상세 내용이다. TEXT 타입으로 저장되어 긴 메시지도 저장할 수 있다. null 값을 허용하지 않는 필수 필드이다.
+- **name**: message  
+- **type**: String  
+- **visibility**: private  
+- **description**: 알림의 상세 메시지 내용이다. 관련 도메인 이벤트에 대한 설명, 안내 문구 등이 포함된다.
 
 ### 1.2.6. relatedId
 
-- **name**: relatedId
-- **type**: Long
-- **visibility**: private
-- **description**: 알림과 관련된 엔티티의 ID이다. 예를 들어 매물 신청 알림의 경우 OwnershipClaim의 ID, 채팅 메시지 알림의 경우 ChatRoom의 ID가 저장된다. 알림 클릭 시 해당 페이지로 이동하는 데 사용되며, null 값을 허용한다.
+- **name**: relatedId  
+- **type**: Long  
+- **visibility**: private  
+- **description**: 해당 알림이 참조하는 도메인 엔티티의 ID이다. 예: 매물 신청 ID, 경매 ID, 거래 ID 등. 알림을 클릭했을 때 어떤 화면으로 이동할지 결정하는데 사용된다.
 
 ### 1.2.7. isRead
 
-- **name**: isRead
-- **type**: Boolean
-- **visibility**: private
-- **description**: 알림의 읽음 여부를 나타낸다. 기본값은 false이며, 사용자가 알림을 확인하면 true로 변경된다. 읽지 않은 알림 개수를 계산하는 데 사용된다.
+- **name**: isRead  
+- **type**: Boolean  
+- **visibility**: private  
+- **description**: 알림이 읽혔는지 여부를 나타낸다. 기본값은 `false`이며, 읽음 처리 시 `true`로 변경된다.
 
 ### 1.2.8. createdAt
 
-- **name**: createdAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 알림이 생성된 날짜와 시간이다. @PrePersist를 통해 엔티티가 저장될 때 자동으로 현재 시간으로 설정되며, 이후 수정되지 않는다.
+- **name**: createdAt  
+- **type**: LocalDateTime  
+- **visibility**: private  
+- **description**: 알림이 생성된 날짜와 시간이다. `@PrePersist` 콜백에서 현재 시각으로 자동 설정된다.
 
 ### 1.2.9. readAt
 
-- **name**: readAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 알림을 읽은 날짜와 시간이다. markAsRead() 메서드 호출 시 현재 시간으로 설정되며, null 값을 허용한다.
+- **name**: readAt  
+- **type**: LocalDateTime  
+- **visibility**: private  
+- **description**: 알림이 읽음 처리된 날짜와 시간이다. 아직 읽지 않은 알림의 경우 `null`일 수 있으며, `markAsRead()` 호출 시 현재 시각으로 채워진다.
 
 ## 1.3. Operations 구분
 
-### 1.3.1. onCreate
+### 1.3.1. markAsRead
 
-- **name**: onCreate
-- **type**: void
-- **visibility**: protected
-- **description**: 엔티티가 데이터베이스에 저장되기 전에 자동으로 호출되는 메서드이다. @PrePersist 어노테이션이 적용되어 있어, createdAt 필드를 현재 시간으로 자동 설정한다.
+- **name**: markAsRead  
+- **type**: void  
+- **visibility**: public  
+- **description**: 알림을 읽음 상태로 변경하는 도메인 메서드이다. `isRead`를 `true`로 설정하고, `readAt`에 현재 시각을 기록한다.
 
-### 1.3.2. markAsRead
+### 1.3.2. onCreate
 
-- **name**: markAsRead
-- **type**: void
-- **visibility**: public
-- **description**: 알림을 읽음 처리하는 메서드이다. isRead를 true로 설정하고, readAt을 현재 시간으로 설정한다. 사용자가 알림을 클릭하거나 확인했을 때 호출된다.
+- **name**: onCreate  
+- **type**: void  
+- **visibility**: protected  
+- **description**: JPA `@PrePersist` 콜백으로 사용되는 라이프사이클 메서드이다. 알림이 처음 저장될 때 `createdAt`을 현재 시각으로 초기화한다.
 
-## 1.4. NotificationType Enum
+## 1.4. NotificationType 열거형
 
-### 1.4.1. Enum Values
+### 1.4.1. class description
 
-- **PROPERTY_APPROVED**: 매물 승인 알림 (displayName: "매물 승인")
-- **PROPERTY_REJECTED**: 매물 거절 알림 (displayName: "매물 거절")
-- **PROPERTY_SUBMITTED**: 매물 신청 알림 (displayName: "매물 신청")
-- **SYSTEM_UPDATE**: 시스템 업데이트 알림 (displayName: "시스템 업데이트")
-- **CHAT_MESSAGE**: 새 메시지 알림 (displayName: "새 메시지")
-- **PRICE_ALERT**: 가격 알림 (displayName: "가격 알림")
-- **PROPERTY_SOLD**: 찜한 매물 거래 완료 알림 (displayName: "찜한 매물 거래 완료")
-- **PURCHASE_COMPLETED**: 구매 완료 알림 (displayName: "구매 완료")
+알림의 종류를 표현하는 내부 열거형이다.  
+각 상수는 비즈니스 도메인 이벤트(매물 승인/거절, 시스템 업데이트, 채팅 메시지, 구매 완료, 추천 매물, 경매 관련 이벤트 등)를 나타내며, 사용자 노출용 한글 이름(`displayName`)을 가진다.
 
-### 1.4.2. getDisplayName()
+### 1.4.2. attribution 구분
 
-- **name**: getDisplayName
-- **type**: String
-- **visibility**: public
-- **description**: 알림 유형의 한글 표시명을 반환하는 메서드이다. UI에서 사용자에게 알림 유형을 표시할 때 사용된다.
+#### 1.4.2.1. displayName
 
----
+- **name**: displayName  
+- **type**: String  
+- **visibility**: private  
+- **description**: 해당 알림 타입에 대한 사용자 노출용 한글 이름이다. 알림 리스트 및 상세 화면에서 보여줄 라벨로 사용된다.
 
-# PriceAlert 클래스
+### 1.4.3. enum value 구분
+
+- **PROPERTY_APPROVED**: 매물 승인 알림 타입. 표시명 `"매물 승인"`.  
+- **PROPERTY_REJECTED**: 매물 신청 거절 알림 타입. 표시명 `"매물 거절"`.  
+- **SYSTEM_UPDATE**: 서비스 공지/점검/업데이트 관련 시스템 알림 타입. 표시명 `"시스템 업데이트"`.  
+- **CHAT_MESSAGE**: 새 채팅 메시지 도착 알림 타입. 표시명 `"새 메시지"`.  
+- **PURCHASE_COMPLETED**: 매물 거래 완료 시 구매자에게 발송되는 알림 타입. 표시명 `"구매 완료"`.  
+- **RECOMMENDED_PROPERTY**: 추천 시스템에서 발견한 신규 추천 매물 알림 타입. 표시명 `"새로운 추천 매물"`.  
+- **AUCTION_NEW_BID**: 경매에 새 입찰이 등록되었을 때 매물 소유자에게 보내는 알림 타입. 표시명 `"경매 새 입찰"`.  
+- **AUCTION_OUTBID**: 사용자의 입찰이 다른 입찰에 의해 상회되었을 때 보내는 알림 타입. 표시명 `"내 입찰 상회"`.  
+- **AUCTION_COMPLETED**: 사용자가 참여한 경매가 종료되었을 때 보내는 알림 타입. 표시명 `"참여한 경매 종료"`.
+
+### 1.4.4. Operations 구분
+
+#### 1.4.4.1. getDisplayName
+
+- **name**: getDisplayName  
+- **type**: String  
+- **visibility**: public  
+- **description**: 각 알림 타입의 한글 표시명을 반환하는 getter 메서드이다.
+
+# NotificationResponse 클래스
 
 ```mermaid
 classDiagram
-    %% --- PriceAlert 클래스 정의 ---
-    class PriceAlert {
-        %% 클래스 설명: 가격 기반 알림 조건을 관리하는 클래스
-        -id: Long
-        -user: User
-        -property: Property
-        -targetValue: BigDecimal
-        -tolerancePct: BigDecimal
-        -createdAt: LocalDateTime
-        -updatedAt: LocalDateTime
+  class NotificationResponse {
+    +id: Long
+    +type: String
+    +typeDisplayName: String
+    +title: String
+    +message: String
+    +relatedId: Long
+    +isRead: Boolean
+    +createdAt: LocalDateTime
+    +readAt: LocalDateTime
+    +timeAgo: String
 
-        %% --- Operations ---
-        +prePersist(): void
-        +preUpdate(): void
-    }
+    +from(notification: Notification): NotificationResponse
+    -calculateTimeAgo(createdAt: LocalDateTime): String
+  }
 
-    %% --- 관련 클래스들 ---
-    class User {
-        -userId: Long
-        -name: String
-    }
-
-    class Property {
-        -id: Long
-        -title: String
-        -price: BigDecimal
-    }
-
-    %% --- 관계 정의 ---
-    PriceAlert --> User : 다대일 (ManyToOne)
-    PriceAlert --> Property : 다대일 (ManyToOne)
+  class Notification
+  NotificationResponse --> Notification
 ```
 
 ## 2.1. class description
 
-가격 기반 알림 조건을 관리하는 클래스이다. 사용자가 특정 매물의 가격이 목표 가격에 도달하거나 허용 오차 범위 내에 들어올 때 알림을 받을 수 있도록 설정한다. 매물 가격 변동을 모니터링하여 사용자가 원하는 가격대의 매물을 놓치지 않도록 지원한다.
+`Notification` 엔티티를 클라이언트로 전달하기 위한 응답 DTO이다.  
+알림의 기본 필드와 함께 `"방금 전"`, `"5분 전"`과 같은 상대 시간 문자열(`timeAgo`)까지 포함하여 알림 목록/상세 API에서 사용된다.
 
 ## 2.2. attribution 구분
 
 ### 2.2.1. id
 
-- **name**: id
-- **type**: Long
-- **visibility**: private
-- **description**: 가격 알림을 고유하게 식별하기 위한 primary key로, 데이터베이스에서 자동 생성되는 알림의 고유 ID이다.
+- **name**: id  
+- **type**: Long  
+- **visibility**: private  
+- **description**: 원본 `Notification` 엔티티의 ID이다.
 
-### 2.2.2. user
+### 2.2.2. type
 
-- **name**: user
-- **type**: User
-- **visibility**: private
-- **description**: 가격 알림을 설정한 사용자 정보이다. LAZY 로딩 방식을 사용하며, null 값을 허용하지 않는 필수 필드이다.
+- **name**: type  
+- **type**: String  
+- **visibility**: private  
+- **description**: 알림 타입의 영문 이름이다. `NotificationType.name()` 값을 문자열로 담는다.
 
-### 2.2.3. property
+### 2.2.3. typeDisplayName
 
-- **name**: property
-- **type**: Property
-- **visibility**: private
-- **description**: 가격 알림을 설정한 매물 정보이다. 해당 매물의 가격 변동을 모니터링한다. LAZY 로딩 방식을 사용하며, null 값을 허용하지 않는 필수 필드이다.
+- **name**: typeDisplayName  
+- **type**: String  
+- **visibility**: private  
+- **description**: 알림 타입의 한글 표시명이다. `NotificationType.getDisplayName()` 값이 들어간다.
 
-### 2.2.4. targetValue
+### 2.2.4. title
 
-- **name**: targetValue
-- **type**: BigDecimal
-- **visibility**: private
-- **description**: 사용자가 설정한 목표 가격이다. 매물 가격이 이 값에 도달하거나 허용 오차 범위 내에 들어오면 알림이 발송된다. precision 14, scale 2로 설정되어 최대 12자리 정수와 2자리 소수를 저장할 수 있다. null 값을 허용하지 않는 필수 필드이다.
+- **name**: title  
+- **type**: String  
+- **visibility**: private  
+- **description**: 알림의 제목 텍스트이다.
 
-### 2.2.5. tolerancePct
+### 2.2.5. message
 
-- **name**: tolerancePct
-- **type**: BigDecimal
-- **visibility**: private
-- **description**: 목표 가격의 허용 오차 비율(%)이다. 예를 들어 5%로 설정하면 목표 가격의 ±5% 범위 내에서 알림이 발송된다. precision 5, scale 2로 설정되어 최대 3자리 정수와 2자리 소수를 저장할 수 있다. null 값을 허용한다.
+- **name**: message  
+- **type**: String  
+- **visibility**: private  
+- **description**: 알림의 상세 메시지 텍스트이다.
 
-### 2.2.6. createdAt
+### 2.2.6. relatedId
 
-- **name**: createdAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 가격 알림이 생성된 날짜와 시간이다. @PrePersist를 통해 엔티티가 저장될 때 자동으로 현재 시간으로 설정되며, 이후 수정되지 않는다.
+- **name**: relatedId  
+- **type**: Long  
+- **visibility**: private  
+- **description**: 알림과 연관된 도메인 엔티티의 ID이다. 화면 이동에 사용된다.
 
-### 2.2.7. updatedAt
+### 2.2.7. isRead
 
-- **name**: updatedAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 가격 알림이 마지막으로 수정된 날짜와 시간이다. @PrePersist와 @PreUpdate를 통해 엔티티가 저장되거나 수정될 때 자동으로 현재 시간으로 갱신된다.
+- **name**: isRead  
+- **type**: Boolean  
+- **visibility**: private  
+- **description**: 알림의 읽음 여부이다.
+
+### 2.2.8. createdAt
+
+- **name**: createdAt  
+- **type**: LocalDateTime  
+- **visibility**: private  
+- **description**: 알림 생성 시각이다.
+
+### 2.2.9. readAt
+
+- **name**: readAt  
+- **type**: LocalDateTime  
+- **visibility**: private  
+- **description**: 알림이 읽힌 시각이다. 아직 읽지 않았다면 `null`이다.
+
+### 2.2.10. timeAgo
+
+- **name**: timeAgo  
+- **type**: String  
+- **visibility**: private  
+- **description**: 현재 시각 기준 알림 생성 시각까지의 상대 시간을 한글로 표현한 문자열이다. `"방금 전"`, `"N분 전"`, `"N시간 전"`, `"N일 전"` 형태로 노출된다.
 
 ## 2.3. Operations 구분
 
-### 2.3.1. prePersist
+### 2.3.1. from
 
-- **name**: prePersist
-- **type**: void
-- **visibility**: public
-- **description**: 엔티티가 데이터베이스에 저장되기 전에 자동으로 호출되는 메서드이다. @PrePersist 어노테이션이 적용되어 있어, createdAt과 updatedAt 필드를 현재 시간으로 자동 설정한다.
+- **name**: from  
+- **type**: NotificationResponse  
+- **visibility**: public, static  
+- **description**: `Notification` 엔티티를 입력받아 DTO로 변환하는 팩토리 메서드이다. 필드를 매핑하고, `timeAgo` 값을 계산해 채운다.
 
-### 2.3.2. preUpdate
+### 2.3.2. calculateTimeAgo
 
-- **name**: preUpdate
-- **type**: void
-- **visibility**: public
-- **description**: 엔티티가 수정될 때 자동으로 호출되는 메서드이다. @PreUpdate 어노테이션이 적용되어 있어, updatedAt 필드를 현재 시간으로 자동 갱신한다.
+- **name**: calculateTimeAgo  
+- **type**: String  
+- **visibility**: private, static  
+- **description**: 생성 시각과 현재 시각의 차이를 분 단위로 계산해 `"방금 전"`, `"N분 전"`, `"N시간 전"`, `"N일 전"` 중 하나로 변환하는 유틸리티 메서드이다.
 
----
-
-# ScoreAlert 클래스
+# NotificationRepository 클래스
 
 ```mermaid
 classDiagram
-    %% --- ScoreAlert 클래스 정의 ---
-    class ScoreAlert {
-        %% 클래스 설명: 점수 기반 알림 조건을 관리하는 클래스
-        -id: Long
-        -user: User
-        -conditionType: ConditionType
-        -targetScore: Integer
-        -createdAt: LocalDateTime
-        -updatedAt: LocalDateTime
+  class NotificationRepository {
+    <<interface>>
+    +findByUserIdOrderByCreatedAtDesc(userId: Long, pageable: Pageable): Page~Notification~
+    +countByUserIdAndIsReadFalse(userId: Long): long
+    +findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId: Long): List~Notification~
+    +markAllAsReadByUserId(userId: Long): int
+    +deleteReadNotificationsByUserId(userId: Long): int
+    +markChatMessageNotificationsRead(userId: Long, roomId: Long): int
+  }
 
-        %% --- Operations ---
-        +prePersist(): void
-        +preUpdate(): void
-    }
-
-    %% --- ConditionType Enum ---
-    class ConditionType {
-        <<enumeration>>
-        TOTAL
-        TRAFFIC
-        AMENITIES
-        PRICE
-        CONDITION
-        DESCRIPTION
-    }
-
-    %% --- User 클래스 (참조용) ---
-    class User {
-        -userId: Long
-        -name: String
-    }
-
-    %% --- 관계 정의 ---
-    ScoreAlert --> User : 다대일 (ManyToOne)
-    ScoreAlert --> ConditionType : 사용 (Uses)
+  class Notification
+  NotificationRepository --> Notification
 ```
 
 ## 3.1. class description
 
-점수 기반 알림 조건을 관리하는 클래스이다. 사용자가 특정 평가 항목(교통, 편의시설, 가격, 상태 등)의 점수가 목표 점수 이상인 매물이 등록될 때 알림을 받을 수 있도록 설정한다. 매물의 다양한 평가 지표를 기반으로 사용자의 선호도에 맞는 매물을 자동으로 추천하고 알림을 제공한다.
-
-## 3.2. attribution 구분
-
-### 3.2.1. id
-
-- **name**: id
-- **type**: Long
-- **visibility**: private
-- **description**: 점수 알림을 고유하게 식별하기 위한 primary key로, 데이터베이스에서 자동 생성되는 알림의 고유 ID이다.
-
-### 3.2.2. user
-
-- **name**: user
-- **type**: User
-- **visibility**: private
-- **description**: 점수 알림을 설정한 사용자 정보이다. LAZY 로딩 방식을 사용하며, null 값을 허용하지 않는 필수 필드이다.
-
-### 3.2.3. conditionType
-
-- **name**: conditionType
-- **type**: ConditionType
-- **visibility**: private
-- **description**: 평가 조건의 유형을 나타내는 열거형 필드이다. TOTAL(종합 점수), TRAFFIC(교통 점수), AMENITIES(편의시설 점수), PRICE(가격 점수), CONDITION(상태 점수), DESCRIPTION(설명 점수) 중 하나의 값을 가진다. 최대 32자로 제한되며, null 값을 허용하지 않는 필수 필드이다.
-
-### 3.2.4. targetScore
-
-- **name**: targetScore
-- **type**: Integer
-- **visibility**: private
-- **description**: 사용자가 설정한 최소 목표 점수이다. 매물의 해당 평가 항목 점수가 이 값 이상일 때 알림이 발송된다. null 값을 허용하지 않는 필수 필드이다.
-
-### 3.2.5. createdAt
-
-- **name**: createdAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 점수 알림이 생성된 날짜와 시간이다. @PrePersist를 통해 엔티티가 저장될 때 자동으로 현재 시간으로 설정되며, 이후 수정되지 않는다.
-
-### 3.2.6. updatedAt
-
-- **name**: updatedAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 점수 알림이 마지막으로 수정된 날짜와 시간이다. @PrePersist와 @PreUpdate를 통해 엔티티가 저장되거나 수정될 때 자동으로 현재 시간으로 갱신된다.
-
-## 3.3. Operations 구분
-
-### 3.3.1. prePersist
-
-- **name**: prePersist
-- **type**: void
-- **visibility**: public
-- **description**: 엔티티가 데이터베이스에 저장되기 전에 자동으로 호출되는 메서드이다. @PrePersist 어노테이션이 적용되어 있어, createdAt과 updatedAt 필드를 현재 시간으로 자동 설정한다.
-
-### 3.3.2. preUpdate
-
-- **name**: preUpdate
-- **type**: void
-- **visibility**: public
-- **description**: 엔티티가 수정될 때 자동으로 호출되는 메서드이다. @PreUpdate 어노테이션이 적용되어 있어, updatedAt 필드를 현재 시간으로 자동 갱신한다.
-
-## 3.4. ConditionType Enum
-
-### 3.4.1. Enum Values
-
-- **TOTAL**: 종합 점수 - 모든 평가 항목을 종합한 전체 점수
-- **TRAFFIC**: 교통 점수 - 대중교통 접근성, 주요 도로 접근성 등
-- **AMENITIES**: 편의시설 점수 - 주변 편의시설(마트, 병원, 학교 등)의 접근성
-- **PRICE**: 가격 점수 - 가격 대비 가치 평가
-- **CONDITION**: 상태 점수 - 매물의 물리적 상태 및 관리 상태
-- **DESCRIPTION**: 설명 점수 - 매물 설명의 상세도 및 품질
+`NotificationRepository`는 `Notification` 엔티티에 대한 데이터베이스 접근을 담당하는  
+Spring Data JPA 리포지토리 인터페이스이다.  
+기본 CRUD 기능 외에도, 사용자별 알림 조회, 읽지 않은 알림 수 조회,  
+일괄 읽음/삭제 처리 등 다양한 커스텀 JPQL 기반 메서드를 제공한다.
 
 ---
 
-# AlertNotification 클래스
+## 3.2. attribution 구분
+
+### 3.2.1. JpaRepository 상속
+
+- **name**: JpaRepository<Notification, Long>  
+- **type**: interface extends  
+- **visibility**: public  
+- **description**:  
+  Spring Data JPA가 제공하는 기본 CRUD, 페이징, 정렬 기능을 상속받아  
+  Notification 엔티티에 대한 표준 데이터 접근 기능을 제공한다.
+
+---
+
+## 3.3. Operations 구분
+
+### 3.3.1. findByUserIdOrderByCreatedAtDesc
+
+- **name**: findByUserIdOrderByCreatedAtDesc  
+- **type**: Page<Notification>  
+- **visibility**: public  
+- **description**:  
+  특정 사용자의 알림을 생성일 기준 내림차순으로 페이징하여 조회한다.  
+  일반적인 알림 목록 API에서 사용하는 기본 메서드이다.
+
+---
+
+### 3.3.2. countByUserIdAndIsReadFalse
+
+- **name**: countByUserIdAndIsReadFalse  
+- **type**: long  
+- **visibility**: public  
+- **description**:  
+  해당 사용자의 읽지 않은(unread) 알림 개수를 반환한다.  
+  상단 알림 벳지 숫자에 사용된다.
+
+---
+
+### 3.3.3. findByUserIdAndIsReadFalseOrderByCreatedAtDesc
+
+- **name**: findByUserIdAndIsReadFalseOrderByCreatedAtDesc  
+- **type**: List<Notification>  
+- **visibility**: public  
+- **description**:  
+  특정 사용자의 읽지 않은 알림 전체 목록을 생성일 기준 내림차순으로 조회한다.  
+  “읽지 않은 알림만 보기” 기능에서 사용된다.
+
+---
+
+### 3.3.4. markAllAsReadByUserId
+
+- **name**: markAllAsReadByUserId  
+- **type**: int  
+- **visibility**: public  
+- **description**:  
+  지정한 사용자에 대해 읽지 않은 모든 알림을 읽음 상태로 업데이트한다.  
+  JPQL `UPDATE`를 사용하기 때문에 성능이 좋으며,  
+  반환값은 읽음 처리된 알림 수이다.
+
+---
+
+### 3.3.5. deleteReadNotificationsByUserId
+
+- **name**: deleteReadNotificationsByUserId  
+- **type**: int  
+- **visibility**: public  
+- **description**:  
+  해당 사용자의 읽은(read) 알림들을 일괄 삭제하는 JPQL 삭제 메서드이다.  
+  반환값은 삭제된 알림의 개수이다.
+
+---
+
+### 3.3.6. markChatMessageNotificationsRead
+
+- **name**: markChatMessageNotificationsRead  
+- **type**: int  
+- **visibility**: public  
+- **description**:  
+  특정 채팅방(roomId)에 대해,  
+  특정 사용자(userId)의 CHAT_MESSAGE 타입 알림들을 일괄 읽음 처리한다.  
+  채팅방 입장 시 메시지 알림을 자동으로 읽음 처리할 때 사용된다.
+
+# NotificationService 클래스
 
 ```mermaid
 classDiagram
-    %% --- AlertNotification 클래스 정의 ---
-    class AlertNotification {
-        %% 클래스 설명: 가격/점수 알림 조건이 충족되었을 때 발송되는 알림 정보
-        -id: Long
-        -user: User
-        -property: Property
-        -priceAlert: PriceAlert
-        -scoreAlert: ScoreAlert
-        -alertType: AlertType
-        -message: String
-        -sentAt: LocalDateTime
-        -isRead: Boolean
-    }
+  class NotificationService {
+    -notificationRepository: NotificationRepository
+    -userRepository: UserRepository
 
-    %% --- AlertType Enum ---
-    class AlertType {
-        <<enumeration>>
-        BUDGET
-        SCORE
-    }
+    +getUserNotifications(userId: Long, page: int, size: int): Page~NotificationResponse~
+    +getUnreadCount(userId: Long): long
+    +getUnreadNotifications(userId: Long): List~NotificationResponse~
+    +markAsRead(notificationId: Long, userId: Long): void
+    +markChatMessageNotificationsRead(userId: Long, roomId: Long): int
+    +markAllAsRead(userId: Long): int
+    +deleteNotification(notificationId: Long, userId: Long): void
+    +deleteReadNotifications(userId: Long): int
+    +createNotification(userId: Long, type: NotificationType, title: String, message: String, relatedId: Long): void
+    +createPropertyApprovedNotification(userId: Long, claimId: Long, propertyAddress: String): void
+    +createPropertyRejectedNotification(userId: Long, claimId: Long, propertyAddress: String, reason: String): void
+    +createRecommendedPropertyNotification(userId: Long, propertyId: Long, propertyTitleOrAddr: String): void
+    +createAuctionNewBidNotificationToOwner(ownerUserId: Long, auctionId: Long, amount: BigDecimal, brokerName: String): void
+    +createAuctionOutbidNotification(brokerUserId: Long, auctionId: Long, newAmount: BigDecimal): void
+    +createAuctionCompletedNotification(brokerUserId: Long, auctionId: Long, winner: boolean): void
+  }
 
-    %% --- 관련 클래스들 ---
-    class User {
-        -userId: Long
-        -name: String
-    }
+  class NotificationRepository
+  class UserRepository
 
-    class Property {
-        -id: Long
-        -title: String
-    }
-
-    class PriceAlert {
-        -id: Long
-        -targetValue: BigDecimal
-    }
-
-    class ScoreAlert {
-        -id: Long
-        -targetScore: Integer
-    }
-
-    %% --- 관계 정의 ---
-    AlertNotification --> User : 다대일 (ManyToOne)
-    AlertNotification --> Property : 다대일 (ManyToOne)
-    AlertNotification --> PriceAlert : 다대일 (ManyToOne)
-    AlertNotification --> ScoreAlert : 다대일 (ManyToOne)
-    AlertNotification --> AlertType : 사용 (Uses)
+  NotificationService --> NotificationRepository
+  NotificationService --> UserRepository
 ```
 
 ## 4.1. class description
 
-가격 또는 점수 알림 조건이 충족되었을 때 발송되는 알림 정보를 관리하는 클래스이다. PriceAlert 또는 ScoreAlert에서 설정한 조건이 만족되면 자동으로 생성되어 사용자에게 전송된다. 어떤 알림 조건에 의해 발송되었는지, 어떤 매물에 대한 알림인지 등의 정보를 포함한다.
+`NotificationService`는 알림 도메인의 핵심 비즈니스 로직을 담당하는 서비스 클래스이다.  
+사용자의 알림 조회, 읽음/삭제 처리, 그리고 도메인 이벤트에 따라 다양한 타입의 알림을 생성하는 역할을 수행한다.  
+컨트롤러나 이벤트 리스너는 이 서비스를 통해 알림 기능을 사용하며,  
+실제 데이터베이스 접근은 `NotificationRepository`와 `UserRepository`에 위임된다.
+
+---
 
 ## 4.2. attribution 구분
 
-### 4.2.1. id
+### 4.2.1. notificationRepository
 
-- **name**: id
-- **type**: Long
-- **visibility**: private
-- **description**: 알림을 고유하게 식별하기 위한 primary key로, 데이터베이스에서 자동 생성되는 알림의 고유 ID이다.
+- **name**: notificationRepository  
+- **type**: NotificationRepository  
+- **visibility**: private, final  
+- **description**:  
+  `Notification` 엔티티에 대한 CRUD, 조회, 일괄 업데이트/삭제 기능을 제공하는 리포지토리 의존성이다.  
+  알림 조회/생성/삭제 등의 모든 DB 연산이 이 객체를 통해 수행된다.
 
-### 4.2.2. user
+### 4.2.2. userRepository
 
-- **name**: user
-- **type**: User
-- **visibility**: private
-- **description**: 알림을 받을 사용자 정보이다. LAZY 로딩 방식을 사용하며, null 값을 허용하지 않는 필수 필드이다.
+- **name**: userRepository  
+- **type**: UserRepository  
+- **visibility**: private, final  
+- **description**:  
+  알림을 생성할 때 대상 사용자를 조회하기 위해 사용하는 리포지토리이다.  
+  `createNotification` 호출 시 사용자 존재 여부를 검증하는 데 사용된다.
 
-### 4.2.3. property
+---
 
-- **name**: property
-- **type**: Property
-- **visibility**: private
-- **description**: 알림과 관련된 매물 정보이다. 조건을 충족한 매물을 나타낸다. LAZY 로딩 방식을 사용하며, null 값을 허용한다.
+## 4.3. Operations 구분
 
-### 4.2.4. priceAlert
+### 4.3.1. getUserNotifications
 
-- **name**: priceAlert
-- **type**: PriceAlert
-- **visibility**: private
-- **description**: 이 알림을 발생시킨 가격 알림 조건이다. alertType이 BUDGET인 경우에만 값이 설정된다. LAZY 로딩 방식을 사용하며, null 값을 허용한다.
+- **name**: getUserNotifications  
+- **type**: Page<NotificationResponse>  
+- **visibility**: public  
+- **description**:  
+  특정 사용자의 알림 목록을 페이지 단위로 조회하는 메서드이다.  
+  `NotificationRepository.findByUserIdOrderByCreatedAtDesc`로 알림 엔티티를 조회한 뒤,  
+  각 엔티티를 `NotificationResponse` DTO로 매핑하여 반환한다.  
 
-### 4.2.5. scoreAlert
+---
 
-- **name**: scoreAlert
-- **type**: ScoreAlert
-- **visibility**: private
-- **description**: 이 알림을 발생시킨 점수 알림 조건이다. alertType이 SCORE인 경우에만 값이 설정된다. LAZY 로딩 방식을 사용하며, null 값을 허용한다.
+### 4.3.2. getUnreadCount
 
-### 4.2.6. alertType
+- **name**: getUnreadCount  
+- **type**: long  
+- **visibility**: public  
+- **description**:  
+  특정 사용자의 읽지 않은(unread) 알림 개수를 반환하는 메서드이다.  
+  상단 알림 아이콘 뱃지 숫자 등을 표시할 때 사용된다.
 
-- **name**: alertType
-- **type**: AlertType
-- **visibility**: private
-- **description**: 알림의 유형을 나타내는 열거형 필드이다. BUDGET(가격 알림) 또는 SCORE(점수 알림) 중 하나의 값을 가진다. 최대 16자로 제한되며, null 값을 허용하지 않는 필수 필드이다.
+---
 
-### 4.2.7. message
+### 4.3.3. getUnreadNotifications
 
-- **name**: message
-- **type**: String
-- **visibility**: private
-- **description**: 알림의 상세 메시지이다. 어떤 조건이 충족되었는지, 매물의 어떤 정보가 변경되었는지 등을 설명한다. TEXT 타입으로 저장되어 긴 메시지도 저장할 수 있으며, null 값을 허용한다.
+- **name**: getUnreadNotifications  
+- **type**: List<NotificationResponse>  
+- **visibility**: public  
+- **description**:  
+  특정 사용자의 읽지 않은 알림 전체 목록을 조회하여 DTO 리스트로 반환하는 메서드이다.  
+  `findByUserIdAndIsReadFalseOrderByCreatedAtDesc`로 조회 후,  
+  `NotificationResponse.from`으로 변환한다.
 
-### 4.2.8. sentAt
+---
 
-- **name**: sentAt
-- **type**: LocalDateTime
-- **visibility**: private
-- **description**: 알림이 발송된 날짜와 시간이다. null 값을 허용한다.
+### 4.3.4. markAsRead
 
-### 4.2.9. isRead
+- **name**: markAsRead  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  개별 알림을 읽음 상태로 변경하는 메서드이다.  
+  1) 알림 ID로 `Notification`을 조회하고  
+  2) 요청한 사용자 ID와 알림의 소유자 ID를 비교해 권한을 검증한 뒤  
+  3) `notification.markAsRead()`를 호출하여 읽음 처리한다.
 
-- **name**: isRead
-- **type**: Boolean
-- **visibility**: private
-- **description**: 알림의 읽음 여부를 나타낸다. 기본값은 false이며, 사용자가 알림을 확인하면 true로 변경된다. null 값을 허용하지 않는 필수 필드이다.
+---
+
+### 4.3.5. markChatMessageNotificationsRead
+
+- **name**: markChatMessageNotificationsRead  
+- **type**: int  
+- **visibility**: public  
+- **description**:  
+  특정 사용자와 채팅방에 대해, `CHAT_MESSAGE` 타입의 알림을 일괄 읽음 처리하는 메서드이다.  
+  채팅방 입장 시 해당 방의 새 메시지 알림을 모두 읽음 처리하는 데 사용되며,  
+  반환값은 읽음 처리된 알림의 개수이다.
+
+---
+
+### 4.3.6. markAllAsRead
+
+- **name**: markAllAsRead  
+- **type**: int  
+- **visibility**: public  
+- **description**:  
+  사용자의 모든 읽지 않은 알림을 읽음 상태로 변경하는 메서드이다.  
+  `NotificationRepository.markAllAsReadByUserId`를 호출하여  
+  JPQL `UPDATE`로 한 번에 처리하며, 변경된 행 수를 반환한다.
+
+---
+
+### 4.3.7. deleteNotification
+
+- **name**: deleteNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  개별 알림을 삭제하는 메서드이다.  
+  먼저 알림을 조회하고, 요청한 사용자와 소유자 일치 여부를 검증한 뒤 삭제한다.  
+  소유자가 아닌 사용자가 삭제를 시도하면 예외를 발생시킨다.
+
+---
+
+### 4.3.8. deleteReadNotifications
+
+- **name**: deleteReadNotifications  
+- **type**: int  
+- **visibility**: public  
+- **description**:  
+  특정 사용자의 읽은(read) 알림들을 일괄 삭제하는 메서드이다.  
+  `deleteReadNotificationsByUserId`를 호출하여 JPQL `DELETE`로 삭제하고,  
+  삭제된 알림 개수를 반환한다.
+
+---
+
+### 4.3.9. createNotification
+
+- **name**: createNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  알림 생성의 공통 로직을 담당하는 메서드이다.  
+  1) `userId`로 사용자를 조회하여 존재 여부를 검증하고  
+  2) `Notification` 엔티티를 빌더로 생성한 뒤  
+  3) `notificationRepository.save`를 통해 저장한다.  
+  다른 도메인별 알림 생성 메서드들이 이 메서드를 내부적으로 사용한다.
+
+---
+
+### 4.3.10. createPropertyApprovedNotification
+
+- **name**: createPropertyApprovedNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  매물 승인 처리 시 사용되는 헬퍼 메서드이다.  
+  승인된 매물의 주소와 신청 ID를 기반으로 제목과 메시지를 구성하고,  
+  `NotificationType.PROPERTY_APPROVED` 타입으로 알림을 생성한다.
+
+---
+
+### 4.3.11. createPropertyRejectedNotification
+
+- **name**: createPropertyRejectedNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  매물 신청이 거절되었을 때 사용되는 헬퍼 메서드이다.  
+  매물 주소와 거절 사유를 포함한 메시지를 만들어  
+  `NotificationType.PROPERTY_REJECTED` 타입으로 알림을 생성한다.
+
+---
+
+### 4.3.12. createRecommendedPropertyNotification
+
+- **name**: createRecommendedPropertyNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  추천 시스템에서 사용자 취향에 맞는 새로운 매물이 발견되었을 때,  
+  해당 사용자에게 새로운 추천 매물 알림을 생성하는 메서드이다.  
+  매물 제목 또는 주소를 포함해, 추천 이유를 전달하는 메시지를 구성한다.
+
+---
+
+### 4.3.13. createAuctionNewBidNotificationToOwner
+
+- **name**: createAuctionNewBidNotificationToOwner  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  경매에 새 입찰이 등록되었을 때, 매물 소유자에게 보내는 알림을 생성하는 메서드이다.  
+  입찰 금액(`amount`)과 브로커 이름(`brokerName`)을 포함한 메시지를 구성하고  
+  `NotificationType.AUCTION_NEW_BID` 타입으로 알림을 발송한다.
+
+---
+
+### 4.3.14. createAuctionOutbidNotification
+
+- **name**: createAuctionOutbidNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  사용자의 기존 입찰보다 더 높은 입찰이 들어왔을 때,  
+  해당 브로커에게 보내는 입찰 상회(outbid) 알림을 생성하는 메서드이다.  
+  새 금액(`newAmount`) 정보를 포함하여  
+  `NotificationType.AUCTION_OUTBID` 타입 알림을 만든다.
+
+---
+
+### 4.3.15. createAuctionCompletedNotification
+
+- **name**: createAuctionCompletedNotification  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  사용자가 참여한 경매가 종료되었을 때 호출되는 메서드이다.  
+  `winner` 플래그에 따라  
+  - 낙찰된 경우: “최종 선정된 브로커” 메시지  
+  - 낙찰되지 않은 경우: “다른 브로커가 최종 선정” 메시지  
+  로 내용을 분기하여 `NotificationType.AUCTION_COMPLETED` 타입 알림을 생성한다.
+
+# NotificationController 클래스
+
+```mermaid
+classDiagram
+  class NotificationController {
+    -notificationService: NotificationService
+
+    +getNotifications(currentUser: AuthUser, page: int, size: int): ResponseEntity
+    +getUnreadCount(currentUser: AuthUser): ResponseEntity
+    +getUnreadNotifications(currentUser: AuthUser): ResponseEntity
+    +markAsRead(notificationId: Long, currentUser: AuthUser): ResponseEntity
+    +markAllAsRead(currentUser: AuthUser): ResponseEntity
+    +deleteNotification(notificationId: Long, currentUser: AuthUser): ResponseEntity
+    +deleteReadNotifications(currentUser: AuthUser): ResponseEntity
+  }
+
+  class NotificationService
+  NotificationController --> NotificationService
+```
+
+## 5.1. class description
+
+`NotificationController`는 알림 관련 REST API를 제공하는 웹 컨트롤러 클래스이다.  
+현재 로그인한 사용자의 알림 조회, 읽음 처리, 삭제, 읽지 않은 알림 개수 조회 등의 HTTP 요청을 처리하며,  
+실제 비즈니스 로직은 `NotificationService`에 위임한다.
+
+---
+
+## 5.2. attribution 구분
+
+### 5.2.1. notificationService
+
+- **name**: notificationService  
+- **type**: NotificationService  
+- **visibility**: private, final  
+- **description**:  
+  알림 관련 비즈니스 로직을 수행하는 서비스 의존성이다.  
+  모든 엔드포인트에서 알림 조회/생성/수정/삭제 작업을 이 서비스에 위임한다.
+
+---
+
+## 5.3. Operations 구분
+
+### 5.3.1. getNotifications
+
+- **name**: getNotifications  
+- **type**: ResponseEntity<Page<NotificationResponse>>  
+- **visibility**: public  
+- **description**:  
+  `GET /api/notifications` 요청을 처리하는 메서드이다.  
+  현재 로그인한 사용자의 알림 목록을 페이지 단위(`page`, `size`)로 조회하여 반환한다.  
+  내부적으로 `notificationService.getUserNotifications`를 호출하여  
+  `Page<NotificationResponse>` 형태의 응답을 감싼 `ResponseEntity`를 반환한다.
+
+---
+
+### 5.3.2. getUnreadCount
+
+- **name**: getUnreadCount  
+- **type**: ResponseEntity<Map<String, Long>>  
+- **visibility**: public  
+- **description**:  
+  `GET /api/notifications/unread-count` 요청을 처리하는 메서드이다.  
+  현재 사용자의 읽지 않은 알림 개수를 조회하여  
+  `{ "count": <unreadCount> }` 형태의 JSON으로 반환한다.
+
+---
+
+### 5.3.3. getUnreadNotifications
+
+- **name**: getUnreadNotifications  
+- **type**: ResponseEntity<List<NotificationResponse>>  
+- **visibility**: public  
+- **description**:  
+  `GET /api/notifications/unread` 요청을 처리하는 메서드이다.  
+  현재 사용자의 읽지 않은 알림 목록만 조회하여 리스트 형태로 반환한다.  
+  알림 드롭다운, “읽지 않은 알림” 전용 탭 등에 사용할 수 있다.
+
+---
+
+### 5.3.4. markAsRead
+
+- **name**: markAsRead  
+- **type**: ResponseEntity<Void>  
+- **visibility**: public  
+- **description**:  
+  `PUT /api/notifications/{notificationId}/read` 요청을 처리하는 메서드이다.  
+  특정 알림 하나를 읽음 상태로 변경하며,  
+  내부적으로 `notificationService.markAsRead(notificationId, currentUserId)`를 호출한다.  
+  성공 시 바디 없는 200 OK 응답을 반환한다.
+
+---
+
+### 5.3.5. markAllAsRead
+
+- **name**: markAllAsRead  
+- **type**: ResponseEntity<Map<String, Integer>>  
+- **visibility**: public  
+- **description**:  
+  `PUT /api/notifications/read-all` 요청을 처리하는 메서드이다.  
+  현재 사용자의 모든 읽지 않은 알림을 읽음 처리하고,  
+  `{"updatedCount": <int>}` 형태로 몇 건이 업데이트되었는지 반환한다.
+
+---
+
+### 5.3.6. deleteNotification
+
+- **name**: deleteNotification  
+- **type**: ResponseEntity<Void>  
+- **visibility**: public  
+- **description**:  
+  `DELETE /api/notifications/{notificationId}` 요청을 처리하는 메서드이다.  
+  특정 알림을 삭제하며, 실제 삭제 로직은 `notificationService.deleteNotification`에 위임된다.  
+  성공 시 바디 없이 200 OK를 반환한다.
+
+---
+
+### 5.3.7. deleteReadNotifications
+
+- **name**: deleteReadNotifications  
+- **type**: ResponseEntity<Map<String, Integer>>  
+- **visibility**: public  
+- **description**:  
+  `DELETE /api/notifications/read` 요청을 처리하는 메서드이다.  
+  현재 사용자의 읽은(read) 알림들을 일괄 삭제하고,  
+  `{"deletedCount": <int>}` 형태로 삭제된 개수를 반환한다.
+
+# NotificationEventListener 클래스
+
+```mermaid
+classDiagram
+  class NotificationEventListener {
+    -notifications: NotificationService
+    -favoriteRepo: FavoriteJpaRepository
+    -userRepo: UserRepository
+    -em: EntityManager
+
+    +onChatMessageCreated(e: ChatMessageCreatedEvent): void
+    +onPurchaseCompleted(e: PurchaseCompletedEvent): void
+    +onSystemUpdate(e: SystemUpdateEvent): void
+  }
+
+  class NotificationService
+  class FavoriteJpaRepository
+  class UserRepository
+  class EntityManager
+  class ChatRoom
+  class ChatMessageCreatedEvent
+  class PurchaseCompletedEvent
+  class SystemUpdateEvent
+
+  NotificationEventListener --> NotificationService
+  NotificationEventListener --> FavoriteJpaRepository
+  NotificationEventListener --> UserRepository
+  NotificationEventListener --> EntityManager
+  NotificationEventListener --> ChatMessageCreatedEvent
+  NotificationEventListener --> PurchaseCompletedEvent
+  NotificationEventListener --> SystemUpdateEvent
+```
+
+## 6.1. class description
+
+`NotificationEventListener`는 도메인 이벤트를 수신하여 알림을 생성하는 스프링 이벤트 리스너 클래스이다.  
+채팅 메시지 생성, 매물 구매 완료, 시스템 업데이트와 같은 이벤트를 구독하고,  
+트랜잭션 커밋 이후(`AFTER_COMMIT`) 대상 사용자에게 적절한 알림을 자동 발송한다.
+
+이 클래스는 실시간 알림 기능의 핵심 요소로,  
+직접 REST API로 만들어지는 알림이 아닌 “도메인 이벤트 기반 알림”을 담당한다.
+
+---
+
+## 6.2. attribution 구분
+
+### 6.2.1. notifications
+
+- **name**: notifications  
+- **type**: NotificationService  
+- **visibility**: private, final  
+- **description**:  
+  이벤트가 발생했을 때 실제 알림 생성 로직을 처리하는 핵심 서비스 의존성이다.  
+  모든 알림 생성은 내부적으로 `NotificationService.createNotification()`에 위임된다.
+
+---
+
+### 6.2.2. favoriteRepo
+
+- **name**: favoriteRepo  
+- **type**: FavoriteJpaRepository  
+- **visibility**: private, final  
+- **description**:  
+  즐겨찾기 매물 기반 알림 기능 확장에 활용될 수 있는 리포지토리이다.  
+  현재 코드에서는 사용되지 않지만,  
+  “즐겨찾기한 매물에 새 가격변동 발생” 같은 알림 기능 구현 시 활용될 수 있다.
+
+---
+
+### 6.2.3. userRepo
+
+- **name**: userRepo  
+- **type**: UserRepository  
+- **visibility**: private, final  
+- **description**:  
+  시스템 업데이트 이벤트 시 전체 사용자 ID 목록을 조회하기 위해 사용하는 리포지토리이다.  
+  “전체 사용자에게 시스템 공지 발송” 처리 시 활용된다.
+
+---
+
+### 6.2.4. em
+
+- **name**: em  
+- **type**: EntityManager  
+- **visibility**: private, final  
+- **description**:  
+  채팅방 ID로 `ChatRoom` 엔티티를 조회하기 위해 사용하는 JPA EntityManager이다.  
+  이벤트 객체에 채팅방 ID만 들어있기 때문에, 실제 방 정보를 조회해야 참여자 정보를 파악할 수 있다.
+
+---
+
+## 6.3. Operations 구분
+
+### 6.3.1. onChatMessageCreated
+
+- **name**: onChatMessageCreated  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  `ChatMessageCreatedEvent` 이벤트를 처리하는 리스너 메서드이다.  
+  트랜잭션 커밋 이후(AFTER_COMMIT)에 실행되며 다음 절차를 수행한다:
+
+  1. 이벤트에 포함된 채팅방 ID로 `ChatRoom` 엔티티를 조회  
+  2. 채팅방 참여자 목록 중 메시지를 보낸 사람(sender) 을 제외  
+  3. 나머지 모든 참여자에게 “새 채팅 메시지” 알림 발송  
+  4. 알림 내용은 메시지 본문 일부(최대 60글자)로 구성됨  
+
+  실시간 채팅 알림 기능의 핵심 역할을 한다.
+
+---
+
+### 6.3.2. onPurchaseCompleted
+
+- **name**: onPurchaseCompleted  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  `PurchaseCompletedEvent` 이벤트를 수신해 처리하는 리스너 메서드이다.  
+  매물 거래가 완료되면 구매자에게 다음 내용의 알림을 발송한다:
+
+  - 알림 제목: “구매 완료”
+  - 알림 메시지: 구매 완료 및 후속 절차 안내
+  - 관련 엔티티 ID: 거래 ID
+
+  이 이벤트 리스너는 거래 완료 플로우의 일부로서 자동 실행된다.
+
+---
+
+### 6.3.3. onSystemUpdate
+
+- **name**: onSystemUpdate  
+- **type**: void  
+- **visibility**: public  
+- **description**:  
+  `SystemUpdateEvent` 이벤트를 처리하는 메서드이다.  
+  시스템 공지 또는 업데이트 발생 시 다음 로직이 실행된다:
+
+  1. 전체 사용자 ID 목록을 조회 (`userRepo.findAllIds()`)  
+  2. 각 사용자에게 “시스템 업데이트” 알림 생성  
+     - 제목, 내용은 이벤트 객체에서 전달됨  
+
+  대규모 공지나 서비스 점검 정보 전달에 활용된다.
 
 ---
 

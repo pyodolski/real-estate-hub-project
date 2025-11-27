@@ -1689,74 +1689,80 @@ Map Service (지도 서비스) 외부 지도 API (예: Naver Map, Kakao Map)로�
 
   23.4.4 Due Date : None
 
-# Use case 24. 알림 기능
+# Use Case 24. 알림 기능
 
 ## 24.1 GENERAL CHARACTERISTICS
 
-24.1.1 Summary : 시스템 이벤트 발생 시 사용자에게 알림을 전송하고, 사용자가 알림함을 확인 및 관리하는 기능.
+24.1.1 Summary
+시스템 이벤트 발생 시 사용자에게 알림을 전송하고, 사용자가 알림함을 확인 및 관리하는 기능.
 
-24.1.2 Scope : None
+24.1.2 Scope
+None
 
-24.1.3 Level : user level
+24.1.3 Level
+User level
 
-24.1.4 Author : None
+24.1.4 Author
+None
 
-24.1.5 Last Update : None
+24.1.5 Last Update
+None
 
-24.1.6 Status : Analysis
+24.1.6 Status
+Analysis
 
-24.1.7 Primary Actor : User
+24.1.7 Primary Actor
+User
 
-24.1.8 Secondary Actors : System, Admin, Broker
+24.1.8 Secondary Actors
+System, Admin, Broker
 
 24.1.9 Preconditions
-
 - 사용자는 로그인 상태이며 알림 수신이 허용되어 있어야 한다.
 
-  24.1.10 Trigger
-
+24.1.10 Trigger
 - 거래 완료, 가격 하락, 추천 매물 등록, 예산 도달, 계약서 승인 등 이벤트 발생 시.
 
-  24.1.11 Success Post Conditions
-
+24.1.11 Success Post Conditions
 - 알림이 생성·전송되어 알림함에 표시되고, 읽음/삭제 상태로 관리된다.
 
-  24.1.12 Failure Post Conditions
-
+24.1.12 Failure Post Conditions
 - 알림이 생성되지 않거나 동기화에 실패한다.
 - 오류 메시지가 표시된다.
 
 ## 24.2 MAIN SUCCESS SCENARIO
 
-| Step | Action                                                            |
-| ---- | ----------------------------------------------------------------- |
-| S    | 시스템이 조건을 만족하는 이벤트를 감지한다.                       |
-| 1    | 시스템이 이벤트 발생 시 알림을 생성한다.                          |
-| 2    | 시스템이 알림을 사용자에게 전송한다.                              |
-| 3    | 사용자는 사이드바의 알림 아이콘을 눌러 알림함을 연다.             |
-| 4    | 시스템이 최신순으로 알림 목록을 로드한다.                         |
-| 5    | 사용자는 개별 또는 전체 알림을 읽음/삭제 처리할 수 있다.          |
+| Step | Action |
+| ---- | ------ |
+| S    | 시스템이 조건을 만족하는 이벤트를 감지한다. |
+| 1    | 시스템이 이벤트 발생 시 알림을 생성한다. |
+| 2    | 시스템이 알림을 사용자에게 전송한다. |
+| 3    | 사용자는 사이드바의 알림 아이콘을 눌러 알림함을 연다. |
+| 4    | 시스템이 최신순으로 알림 목록을 로드한다. |
+| 5    | 사용자는 개별 또는 전체 알림을 읽음/삭제 처리할 수 있다. |
 | 6    | 알림 상세를 통해 관련 화면(매물 상세, 추천 목록 등)으로 이동한다. |
 
 ## 24.3 EXTENSION SCENARIOS
 
-| Step | Branching Action                                                                                         |
-| ---- | -------------------------------------------------------------------------------------------------------- |
-| 2    | 2a. 네트워크 오류로 알림 저장/전송 실패<br>- 2a1. 시스템은 재시도 정책을 적용하고 실패 시 로그를 남긴다. |
-| 4    | 4a. 알림 목록 로드 실패<br>- 4a1. 캐시된 알림을 표시하고 '동기화 실패' 메시지를 띄운다.                  |
-| 5    | 5a. 일부 알림 상태 업데이트 실패<br>- 5a1. 성공한 건만 반영하고 실패 건은 안내 메시지를 표시한다.        |
+| Step | Branching Action |
+| ---- | ---------------- |
+| 2    | **2a. 네트워크 오류로 알림 저장/전송 실패**<br>- 2a1. 시스템은 재시도 정책을 적용하고 실패 시 로그를 남긴다. |
+| 4    | **4a. 알림 목록 로드 실패**<br>- 4a1. 캐시된 알림을 표시하고 '동기화 실패' 메시지를 띄운다. |
+| 5    | **5a. 일부 알림 상태 업데이트 실패**<br>- 5a1. 성공한 건만 반영하고 실패 건은 안내 메시지를 표시한다. |
 
 ## 24.4 RELATED INFORMATION
 
-24.4.1 Performance : ≤ 1 second
+24.4.1 Performance
+- ≤ 1 second
 
 24.4.2 Frequency
-
 - 제한 없음
 
-  24.4.3 Concurrency : 제한 없음
+24.4.3 Concurrency
+- 제한 없음
 
-  24.4.4 Due Date : None
+24.4.4 Due Date
+None
 
 # Use case 25. 지도 매물 시각화
 
