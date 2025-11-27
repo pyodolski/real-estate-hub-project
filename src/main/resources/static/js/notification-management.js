@@ -208,6 +208,36 @@ class NotificationManagement {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
                 </div>`;
+      case "PURCHASE_COMPLETED":
+        return `<div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg class="${iconClass} text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>`;
+      case "RECOMMENDED_PROPERTY":
+        return `<div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <svg class="${iconClass} text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                  </svg>
+                </div>`;
+      case "AUCTION_NEW_BID":
+        return `<div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <svg class="${iconClass} text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                </div>`;
+      case "AUCTION_OUTBID":
+        return `<div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg class="${iconClass} text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                </div>`;
+      case "AUCTION_COMPLETED":
+        return `<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg class="${iconClass} text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                  </svg>
+                </div>`;
       default:
         return `<div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                   <svg class="${iconClass} text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
