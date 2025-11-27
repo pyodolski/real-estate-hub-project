@@ -34,8 +34,7 @@ public class ComparisonRestController {
     public Page<GroupSummaryResponse> myGroups(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "20") int size) {
         Long me = auth.currentUserId();
-        return service.myGroups(me, PageRequest.of(page, size))
-                .map(GroupSummaryResponse::from);
+        return service.myGroupSummaries(me, PageRequest.of(page, size));
     }
 
     // 그룹 이름 변경

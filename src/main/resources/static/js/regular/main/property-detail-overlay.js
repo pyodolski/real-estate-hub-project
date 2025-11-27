@@ -204,7 +204,9 @@ const PropertyDetailOverlay = {
                         관심매물 등록
                       </button>
                       <button
+                        id="add-to-compare-button-${suffix}"
                         class="flex-1 h-11 rounded-md bg-gray-100 text-gray-700 font-medium hover:bg-gray-200"
+                        onclick="window.addToCompareGroup('${suffix}')"
                       >
                         매물 비교
                       </button>
@@ -510,4 +512,29 @@ window.switchDetailTab = function (suffix, tabName) {
       contentEl.appendChild(CalculatorPanel.getElement());
     }
   }
+};
+
+// 매물 비교 그룹 추가 함수 (전역으로 노출)
+window.addToCompareGroup = function(suffix) {
+    const overlay = document.getElementById(`property-detail-overlay-${suffix}`);
+    if (!overlay) return;
+    
+    const propertyId = overlay.dataset.propertyId;
+    if (propertyId) {
+        // RightSidePanels에 타겟 매물 설정
+        if (window.RightSidePanels && typeof window.RightSidePanels.setTargetProperty === 'function') {
+            window.RightSidePanels.setTargetProperty(propertyId);
+        }
+        
+        // 비교 패널 열기
+        if (typeof window.openRightPanel === 'function') {
+            window.openRightPanel('compare');
+        } else {
+            // fallback
+            const btn = document.getElementById("compare-panel-button");
+            if (btn) btn.click();
+        }
+    } else {
+        alert("매물 정보를 찾을 수 없습니다.");
+    }
 };

@@ -508,6 +508,304 @@ const RightSidePanels = {
     `;
   },
 
+  // 비교 그룹 추가 모드 상태
+  targetPropertyId: null,
+
+  setTargetProperty(propertyId) {
+    this.targetPropertyId = propertyId;
+    this.loadCompareGroups();
+  },
+
+  /**
+   * 비교 그룹 목록 로드
+   */
+  async loadCompareGroups() {
+    const listEl = document.getElementById("compare-list");
+    const countSpan = document.getElementById("compare-group-count");
+    if (!listEl || !countSpan) return;
+
+    const token = localStorage.getItem("accessToken") || "";
+
+    try {
+      const res = await fetch("/api/comparisons/groups?page=0&size=100", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error("비교 그룹 불러오기 실패");
+
+      const data = await res.json();
+      const groups = data.content; // Page<GroupSummaryResponse>
+
+      countSpan.textContent = `비교 그룹 ${groups.length}개`;
+      listEl.innerHTML = "";
+
+      groups.forEach((g) => {
+        // 아이템 미리보기 이미지 (최대 3개)
+        let imagesHtml = "";
+        if (g.items && g.items.length > 0) {
+          imagesHtml = g.items.slice(0, 3).map(item => {
+             const imgUrl = item.thumbnailUrl || "https://via.placeholder.com/150?text=No+Image";
+             return `<img src="${imgUrl}" class="w-8 h-8 rounded-full border-2 border-white -ml-2 first:ml-0 object-cover">`;
+          }).join("");
+        } else {
+          imagesHtml = `<span class="text-xs text-gray-400">매물 없음</span>`;
+        }
+
+        const isAddMode = !!this.targetPropertyId;
+        let actionBtn = "";
+        const isFull = g.items && g.items.length >= 3;
+
+        if (isAddMode) {
+            if (isFull) {
+                 actionBtn = `
+                  <span class="text-xs text-red-500 font-medium px-3 py-1">
+                    가득 참 (3/3)
+                  </span>
+                `;
+            } else {
+                actionBtn = `
+                  <button class="text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-medium hover:bg-blue-700 transition-colors add-to-group-btn" data-group-id="${g.id}">
+                    이 그룹에 추가
+                  </button>
+                `;
+            }
+        } else {
+            // 일반 모드에서는 확장/축소 아이콘 (클릭 시 토글됨)
+            actionBtn = `
+               <div class="transform transition-transform duration-200 group-expanded-icon-${g.id}">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                 </svg>
+               </div>
+            `;
+        }
+
+        // 매물 목록 HTML 생성
+        let itemsListHtml = "";
+        if (g.items && g.items.length > 0) {
+            itemsListHtml = `<div id="group-items-${g.id}" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-2">`;
+            g.items.forEach(item => {
+                const priceStr = item.priceText || this.formatPrice(item.price);
+                // recommended-list 스타일 적용
+                // 썸네일, 상태 뱃지, 가격, 주소/이름
+                const statusBadge = item.status === 'AVAILABLE' 
+                    ? `<span class="bg-green-100 text-green-800 text-[10px] px-1.5 py-0.5 rounded">거래가능</span>`
+                    : `<span class="bg-gray-100 text-gray-800 text-[10px] px-1.5 py-0.5 rounded">거래완료</span>`;
+
+                itemsListHtml += `
+                    <div class="flex gap-3 p-3 bg-white border border-gray-100 rounded-lg hover:shadow-md transition-shadow cursor-pointer property-card-btn group relative" data-property-id="${item.propertyId}">
+                        <div class="relative w-20 h-20 flex-shrink-0">
+                            <img src="${item.thumbnailUrl || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover rounded-md">
+                            <div class="absolute top-1 left-1">${statusBadge}</div>
+                        </div>
+                        <div class="flex-grow min-w-0 flex flex-col justify-between py-0.5">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900 truncate">${item.propertyName || item.address}</div>
+                                <div class="text-xs text-gray-500 truncate mt-0.5">${item.address}</div>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <div class="text-sm font-bold text-blue-600">${priceStr}</div>
+                            </div>
+                        </div>
+                        <button class="absolute top-2 right-2 text-gray-300 hover:text-red-500 p-1 delete-item-btn opacity-0 group-hover:opacity-100 transition-opacity" data-group-id="${g.id}" data-property-id="${item.propertyId}" title="삭제">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            });
+            itemsListHtml += `</div>`;
+        } else {
+             itemsListHtml = `<div id="group-items-${g.id}" class="hidden mt-3 pt-3 border-t border-gray-100 text-center text-xs text-gray-400 py-2">매물이 없습니다.</div>`;
+        }
+
+        const card = `
+          <div class="bg-white rounded-lg shadow p-4 border border-gray-100 ${isAddMode ? 'border-blue-200 ring-2 ring-blue-100' : 'cursor-pointer group-card-toggle'}" data-group-id="${g.id}">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="font-bold text-gray-800">${g.name}</h3>
+                <p class="text-xs text-gray-500">${new Date(g.createdAt).toLocaleDateString()} 생성 <span class="ml-1 text-blue-600 font-medium">(${g.items ? g.items.length : 0}/3)</span></p>
+              </div>
+              <button class="text-gray-400 hover:text-red-500 delete-group-btn" data-group-id="${g.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div class="flex items-center pl-2">
+                ${imagesHtml}
+              </div>
+              ${actionBtn}
+            </div>
+            
+            ${itemsListHtml}
+          </div>
+        `;
+        listEl.insertAdjacentHTML("beforeend", card);
+      });
+
+      // 안내 메시지 (추가 모드일 때)
+      if (this.targetPropertyId) {
+          const msg = `<div class="bg-blue-50 text-blue-800 p-3 rounded-lg mb-4 text-sm font-medium flex justify-between items-center">
+            <span>매물을 추가할 그룹을 선택하세요.</span>
+            <button class="text-xs underline text-blue-600 hover:text-blue-800 cancel-add-mode-btn">취소</button>
+          </div>`;
+          listEl.insertAdjacentHTML("afterbegin", msg);
+          
+          const cancelBtn = listEl.querySelector(".cancel-add-mode-btn");
+          if(cancelBtn) {
+              cancelBtn.addEventListener("click", () => {
+                  this.targetPropertyId = null;
+                  this.loadCompareGroups();
+              });
+          }
+      }
+
+      // 이벤트 리스너 추가 (그룹 삭제, 상세보기)
+      // 기존 리스너가 중복되지 않도록 주의해야 하지만, innerHTML로 덮어쓰므로 새로 달아야 함.
+      // 하지만 listEl 자체에 위임하는 것이 좋음. (init에서 처리하거나 여기서 처리)
+      // 여기서는 매번 새로 생성되므로 여기서 처리하는게 간편함.
+      
+      // 삭제 버튼 이벤트
+      listEl.querySelectorAll(".delete-group-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const groupId = btn.getAttribute("data-group-id");
+          // if (!confirm("정말 이 비교 그룹을 삭제하시겠습니까?")) return; // 즉시 삭제로 변경
+          
+          try {
+            const delRes = await fetch(`/api/comparisons/groups/${groupId}`, {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+            });
+            if (delRes.ok) {
+              this.loadCompareGroups();
+            } else {
+              alert("삭제 실패");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("삭제 중 오류 발생");
+          }
+        });
+      });
+
+      // 그룹에 추가 버튼 이벤트
+      listEl.querySelectorAll(".add-to-group-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+           e.stopPropagation();
+           const groupId = btn.getAttribute("data-group-id");
+           const propertyId = this.targetPropertyId;
+           
+           if (!propertyId) return;
+
+           try {
+             const res = await fetch(`/api/comparisons/groups/${groupId}/items`, {
+               method: "POST",
+               headers: {
+                 "Authorization": `Bearer ${token}`,
+                 "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ propertyId: parseInt(propertyId) }),
+             });
+
+             if (res.ok) {
+               alert("비교 그룹에 추가되었습니다.");
+               this.targetPropertyId = null; // 모드 해제
+               this.loadCompareGroups();
+             } else {
+               alert("추가 실패 (이미 존재하는 매물일 수 있습니다)");
+             }
+           } catch (err) {
+             console.error(err);
+             alert("오류가 발생했습니다.");
+           }
+        });
+      });
+      
+      // 매물 카드 클릭 이벤트 (상세보기) - sideBySide 지원
+      listEl.querySelectorAll(".property-card-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+              // 삭제 버튼 클릭 시 이벤트 전파 중단은 이미 삭제 버튼 핸들러에서 처리됨(e.stopPropagation)
+              // 하지만 안전을 위해 여기서도 체크
+              if (e.target.closest(".delete-item-btn")) return;
+              
+              const propertyId = btn.getAttribute("data-property-id");
+              if (propertyId) {
+                  if (typeof window.openPropertyDetail === 'function') {
+                      window.openPropertyDetail(propertyId, null, { sideBySide: true });
+                  } else {
+                      alert("상세보기 기능을 사용할 수 없습니다.");
+                  }
+              }
+          });
+      });
+
+      // 매물 삭제 버튼 이벤트
+      listEl.querySelectorAll(".delete-item-btn").forEach(btn => {
+          btn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              const groupId = btn.getAttribute("data-group-id");
+              const propertyId = btn.getAttribute("data-property-id");
+              
+              if (!confirm("이 매물을 그룹에서 삭제하시겠습니까?")) return;
+
+              try {
+                  const res = await fetch(`/api/comparisons/groups/${groupId}/items/${propertyId}`, {
+                      method: "DELETE",
+                      headers: {
+                          "Authorization": `Bearer ${token}`
+                      }
+                  });
+                  
+                  if (res.ok) {
+                      this.loadCompareGroups();
+                  } else {
+                      alert("삭제 실패");
+                  }
+              } catch (err) {
+                  console.error(err);
+                  alert("오류 발생");
+              }
+          });
+      });
+      
+      // 그룹 카드 클릭 이벤트 (확장/축소)
+      listEl.querySelectorAll(".group-card-toggle").forEach(card => {
+          card.addEventListener("click", (e) => {
+              // 버튼 클릭 등은 제외
+              if (e.target.closest("button") || e.target.closest(".property-card-btn")) return;
+              
+              const groupId = card.getAttribute("data-group-id");
+              const itemsDiv = document.getElementById(`group-items-${groupId}`);
+              const iconDiv = card.querySelector(`.group-expanded-icon-${groupId}`);
+              
+              if (itemsDiv) {
+                  if (itemsDiv.classList.contains("hidden")) {
+                      itemsDiv.classList.remove("hidden");
+                      if (iconDiv) iconDiv.classList.add("rotate-180");
+                  } else {
+                      itemsDiv.classList.add("hidden");
+                      if (iconDiv) iconDiv.classList.remove("rotate-180");
+                  }
+              }
+          });
+      });
+
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = "<p class='text-center text-gray-500 py-4'>목록을 불러올 수 없습니다.</p>";
+    }
+  },
+
   /**
    * 비교 패널 HTML 생성
    */
@@ -553,8 +851,9 @@ const RightSidePanels = {
           <div
             class="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
           >
-            <span class="text-sm text-gray-700">비교 그룹 2개</span>
+            <span id="compare-group-count" class="text-sm text-gray-700">비교 그룹 로딩 중...</span>
             <button
+              id="create-compare-group-btn"
               class="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               새 그룹 추가
@@ -569,6 +868,21 @@ const RightSidePanels = {
           </div>
         </div>
       </aside>
+
+      <!-- 새 그룹 생성 모달 -->
+      <div id="create-group-modal" class="hidden absolute top-0 right-[525px] w-[300px] bg-white rounded-lg shadow-xl border border-gray-200 z-30 p-4 transform transition-all duration-200 ease-in-out scale-95 opacity-0">
+        <h3 class="text-lg font-bold text-gray-800 mb-3">새 비교 그룹 만들기</h3>
+        <input 
+          type="text" 
+          id="new-group-name-input" 
+          placeholder="그룹 이름 (예: 강남 아파트)" 
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 text-sm"
+        >
+        <div class="flex justify-end gap-2">
+          <button id="cancel-create-group-btn" class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors">취소</button>
+          <button id="confirm-create-group-btn" class="px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors font-medium">생성</button>
+        </div>
+      </div>
     `;
   },
 
@@ -1226,6 +1540,15 @@ const RightSidePanels = {
     `;
   },
 
+  formatPrice(price) {
+      if (!price) return "가격 정보 없음";
+      const 억 = Math.floor(price / 100000000);
+      const 만 = Math.floor((price % 100000000) / 10000);
+      if (억 > 0 && 만 > 0) return `${억}억 ${만}만원`;
+      if (억 > 0) return `${억}억원`;
+      return `${만}만원`;
+  },
+
   /**
    * 전체 패널 HTML 생성
    */
@@ -1279,9 +1602,84 @@ const RightSidePanels = {
     }
     this.loadFavoriteList();
 
+    // 비교 그룹 생성 버튼 이벤트 (모달 열기)
+    const createGroupBtn = document.getElementById("create-compare-group-btn");
+    const modal = document.getElementById("create-group-modal");
+    const nameInput = document.getElementById("new-group-name-input");
+    const cancelBtn = document.getElementById("cancel-create-group-btn");
+    const confirmBtn = document.getElementById("confirm-create-group-btn");
+
+    if (createGroupBtn && modal) {
+      createGroupBtn.addEventListener("click", () => {
+        modal.classList.remove("hidden");
+        // 약간의 지연 후 애니메이션 적용
+        setTimeout(() => {
+            modal.classList.remove("scale-95", "opacity-0");
+            modal.classList.add("scale-100", "opacity-100");
+        }, 10);
+        nameInput.focus();
+      });
+
+      const closeModal = () => {
+          modal.classList.remove("scale-100", "opacity-100");
+          modal.classList.add("scale-95", "opacity-0");
+          setTimeout(() => {
+              modal.classList.add("hidden");
+              nameInput.value = "";
+          }, 200);
+      };
+
+      cancelBtn.addEventListener("click", closeModal);
+
+      confirmBtn.addEventListener("click", async () => {
+        const token = localStorage.getItem("accessToken") || "";
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            alert("그룹 이름을 입력해주세요.");
+            return;
+        }
+
+        try {
+          const res = await fetch("/api/comparisons/groups", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name: name }),
+          });
+
+          if (res.ok) {
+            this.loadCompareGroups();
+            closeModal();
+          } else {
+            alert("그룹 생성 실패");
+          }
+        } catch (e) {
+          console.error(e);
+          alert("그룹 생성 중 오류 발생");
+        }
+      });
+      
+      // 엔터키 입력 시 생성
+      nameInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") confirmBtn.click();
+      });
+    }
+
+    // 전역 함수로 노출 (panel-manager.js에서 호출)
+    window.renderCompareGroups = () => this.loadCompareGroups();
+
+    // 초기 로드
+    this.loadCompareGroups();
+
     console.log("[RightSidePanels] 우측 패널들 초기화 완료");
   },
 };
+
+// 전역으로 노출
+window.RightSidePanels = RightSidePanels;
 
 // DOM 로드 완료 후 패널 초기화
 if (document.readyState === "loading") {
