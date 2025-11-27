@@ -26,7 +26,7 @@ public class BrokerDashboardController {
     @GetMapping("/map-properties")
     public List<BrokerMapPropertyDto> mapProperties(Authentication auth) {
         Long brokerUserId = currentUserIdResolver.requireUserId(auth);
-        return propertyRepository.findManagedForBroker(brokerUserId)
+        return propertyRepository.findManagedByBroker(brokerUserId)
                 .stream()
                 .map(BrokerMapPropertyDto::from)
                 .toList();
