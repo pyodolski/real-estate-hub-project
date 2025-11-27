@@ -33,7 +33,17 @@ public class SupabaseStorageService {
             originalName = "image.jpg";
         }
 
-        String filename = UUID.randomUUID() + "-" + originalName;
+        // 한글/공백 등 특수문자가 포함된 파일명은 URL에서 문제를 일으킬 수 있으므로 UUID만 사용하거나 영문/숫자로 변환
+        // 여기서는 UUID + 확장자 형태로 저장하거나, 원본 파일명을 사용할 경우 URL 인코딩 필요
+        // 간단하게 UUID만 사용하거나, 원본 파일명에서 확장자만 추출해서 붙이는 방식 권장
+        
+        String extension = "";
+        int dotIndex = originalName.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            extension = originalName.substring(dotIndex); // .jpg
+        }
+        
+        String filename = UUID.randomUUID() + extension;
         // property/{propertyId}/{filename}
         String path = baseFolder + "/" + propertyId + "/" + filename;
 

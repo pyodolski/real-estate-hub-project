@@ -221,6 +221,18 @@ const SaleRegistrationPanel = {
               </label>
             </div>
 
+            <!-- 매물 이미지 업로드 -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">매물 이미지 업로드</label>
+                <input type="file" id="sale-property-images" multiple accept="image/*"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       onchange="propertyManagement.handleSaleImageSelect(this)">
+                <p class="mt-1 text-xs text-gray-500">jpg, png, jpeg 형식의 이미지를 선택해주세요.</p>
+                <div id="sale-image-preview-area" class="grid grid-cols-4 gap-2 mt-2">
+                    <!-- 이미지 미리보기 영역 -->
+                </div>
+            </div>
+
             <!-- 중개인 선택 -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">중개인 선택</label>
