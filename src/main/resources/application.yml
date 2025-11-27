@@ -33,7 +33,7 @@ management:
 
 supabase:
   project-url: https://uapxufwstdldvgudedxy.supabase.co
-  api-key: ${SUPABASE_SERVICE_ROLE_KEY:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhcHh1ZndzdGRsZHZndWRlZHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODYwODcwNSwiZXhwIjoyMDc0MTg0NzA1fQ.EIYGNi_aleGvx3kB5VGJ8ufJR3TEWDKL-7vgCIClE84}
+  service-key: ${SUPABASE_SERVICE_ROLE_KEY:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhcHh1ZndzdGRsZHZndWRlZHh5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODYwODcwNSwiZXhwIjoyMDc0MTg0NzA1fQ.EIYGNi_aleGvx3kB5VGJ8ufJR3TEWDKL-7vgCIClE84}
   storage:
     bucket: property_image
     base-folder: property
