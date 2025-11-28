@@ -6983,131 +6983,27 @@ POST /api/auctions/{auctionId}/offers
 #### 5.3.3. acceptOffer  
 POST /api/auctions/offers/{offerId}/accept
 
-# 1. 매물 비교(ComparisonGroup) 클래스
-
-```mermaid
-classDiagram
-  %% --- 연관된 클래스 (이름만 표시) ---
-  class User {
-    %% 1.1.1. ComparisonGroup이 소유자를 나타내기 위해 참조하는 사용자이다.
-  }
-  class Property {
-    %% 1.1.2. 비교 대상이 되는 매물 객체이다.
-  }
-  class ComparisonItem {
-    %% 1.1.3. 그룹 내 개별 매물과 메타 정보를 담는 아이템이다.
-  }
-  class ComparisonWeights {
-    %% 1.1.4. 가격/면적/전세가율 등의 가중치 설정을 담는 객체이다.
-  }
-
-  %% --- ComparisonGroup 클래스 상세 정의 ---
-  class ComparisonGroup {
-    %% 1.1. class description: 매물 비교 그룹과 관련 속성 및 동작 관리
-    -groupId: Long
-    -owner: User
-    -name: String
-    -items: List~ComparisonItem~
-    -weights: ComparisonWeights
-    -createdAt: LocalDateTime
-    -updatedAt: LocalDateTime
-
-    +addProperty(property: Property): void
-    +removeProperty(property: Property): void
-    +updateWeights(weights: ComparisonWeights): void
-    +calculateScores(): Map~Property, Double~
-    +getTopN(n: int): List~Property~
-  }
-
-  %% --- 관계 정의 ---
-  ComparisonGroup "1" -- "1" User : owner
-  ComparisonGroup "1" -- "0..*" ComparisonItem : items
-  ComparisonItem "*" --> "1" Property : target
-  ComparisonGroup "1" --> "1" ComparisonWeights : weights
-
-```
-
-# 2. 매물 비교(ComparisonGroup) 클래스 — 설명
-
-## 1.1 class description
-매물 비교 그룹을 구성하고, 매물 목록·가중치·점수 계산 기능을 포함하는 도메인 클래스이다.  
-사용자가 여러 매물을 하나의 그룹으로 묶어 가격·면적·역세권·전세가율 등을 기준으로 비교할 수 있도록 한다.
-
-## 1.2 attribution 구분
-
-### 1.2.1 groupId
-- **type**: Long  
-- **visibility**: private  
-- **description**: 비교 그룹 고유 식별자이다.
-
-### 1.2.2 owner
-- **type**: User  
-- **visibility**: private  
-- **description**: 그룹 생성 및 관리 권한을 가진 사용자이다.
-
-### 1.2.3 name
-- **type**: String  
-- **visibility**: private  
-- **description**: 비교 그룹 이름이다.
-
-### 1.2.4 items
-- **type**: List\<ComparisonItem\>  
-- **visibility**: private  
-- **description**: 비교할 매물들의 목록이다.
-
-### 1.2.5 weights
-- **type**: ComparisonWeights  
-- **visibility**: private  
-- **description**: 가격·면적·역세권 등 비교 항목에 대한 가중치 설정이다.
-
-### 1.2.6 createdAt
-- **type**: LocalDateTime  
-- **visibility**: private  
-- **description**: 그룹 생성 시각이다.
-
-### 1.2.7 updatedAt
-- **type**: LocalDateTime  
-- **visibility**: private  
-- **description**: 마지막 수정 시각이다.
-
-## 1.3 Operations 구분
-
-### 1.3.1 addProperty
-- 비교 목록에 Property를 추가한다.
-
-### 1.3.2 removeProperty
-- 비교 목록에서 Property를 제거한다.
-
-### 1.3.3 updateWeights
-- 비교 가중치를 새로 저장한다.
-
-### 1.3.4 calculateScores
-- 가중치 기반 점수를 계산하여 Property–Score 매핑을 반환한다.
-
-### 1.3.5 getTopN
-- 점수 기준 상위 N개 매물을 반환한다.
-
-#2 실거래가 조회
+#1 실거래가 조회
 
 ```mermaid
 classDiagram
   %% --- 연관된 클래스 (이름만 표시) ---
   class Property {
-    %% 3.2.2. 기준이 되는 매물이다.
+    %% 1.2.2. 기준이 되는 매물이다.
   }
   class RealEstateDeal {
-    %% 3.2.3. 실거래 이력 레코드를 나타내는 엔티티이다.
+    %% 1.2.3. 실거래 이력 레코드를 나타내는 엔티티이다.
   }
   class DealResponse {
-    %% 3.3.4. 클라이언트에 반환되는 DTO이다.
+    %% 1.3.4. 클라이언트에 반환되는 DTO이다.
   }
   class NormalizedAddress {
-    %% 3.2.4. 주소 정규화 결과를 담는 값 객체이다.
+    %% 1.2.4. 주소 정규화 결과를 담는 값 객체이다.
   }
 
   %% --- DealQueryService 클래스 상세 정의 ---
   class DealQueryService {
-    %% 3.1. class description: 매물 기준 실거래 조회 로직 관리
+    %% 1.1. class description: 매물 기준 실거래 조회 로직 관리
     -maxResultSize: int
     -defaultPeriodMonths: int
 
@@ -7126,44 +7022,44 @@ classDiagram
 
 ```
 
-# 2. 실거래가 조회(DealQueryService) 클래스 — 설명
+# 1. 실거래가 조회(DealQueryService) 클래스 — 설명
 
-## 2.1 class description
+## 1.1 class description
 DealQueryService는 매물의 주소·면적을 기반으로 strict/loose 매칭을 수행해 실거래 데이터를 조회하는 서비스 클래스이다.  
 주소 정규화, 평균값 계산, 정렬, DTO 변환 기능을 포함한다.
 
-## 2.2 attribution 구분
+## 1.2 attribution 구분
 
-### 2.2.1 maxResultSize
+### 1.2.1 maxResultSize
 - **type**: int  
 - **visibility**: private  
 - **description**: 조회 결과의 최대 개수 제한이다.
 
-### 2.2.2 defaultPeriodMonths
+### 1.2.2 defaultPeriodMonths
 - **type**: int  
 - **visibility**: private  
 - **description**: 기본 조회 기간(개월)이다.
 
-### 2.2.3 repository/client
+### 1.2.3 repository/client
 - **description**: RealEstateDeal DB 조회를 위한 내부 의존성이다.
 
-### 2.2.4 NormalizedAddress
+### 1.2.4 NormalizedAddress
 - **description**: 정규화된 주소 구조(city_raw, city_full, gu, road_full 등)를 담는 값 객체이다.
 
-## 2.3 Operations 구분
+## 1.3 Operations 구분
 
-### 2.3.1 getDealsByProperty
+### 1.3.1 getDealsByProperty
 - Property를 입력받아 실거래 조회 전체 프로세스를 수행한다.
 
-### 2.3.2 normalizeAddress
+### 1.3.2 normalizeAddress
 - 주소 문자열을 분석해 정규화된 주소 정보를 생성한다.
 
-### 2.3.3 findStrictMatches
+### 1.3.3 findStrictMatches
 - 도로명 + 시군구 + 면적 기준을 사용하는 strict 매칭을 수행한다.
 
-### 2.3.4 findLooseMatches
+### 1.3.4 findLooseMatches
 - 같은 구 + 면적 기준만 적용하는 loose 매칭을 수행한다.
 
-### 2.3.5 toDealResponseList
+### 1.3.5 toDealResponseList
 - 실거래 엔티티 목록을 DealResponse DTO 목록으로 변환한다.
 
