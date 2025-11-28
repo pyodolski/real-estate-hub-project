@@ -548,6 +548,51 @@
         );
       }
     }
+    viewPropertyDetail(claimId) {
+          console.log(
+            `[PropertyManagement] viewPropertyDetail called for claim: ${claimId}`
+          );
+
+          try {
+            // claimId로 내 매물 찾기
+            const property = this.myProperties.find(
+              (p) => p.claimId === claimId
+            );
+
+            if (!property) {
+              console.error(
+                "[PropertyManagement] Property not found for claimId:",
+                claimId
+              );
+              this.showError("매물 정보를 찾을 수 없습니다.");
+              return;
+            }
+
+            if (!property.propertyId) {
+              console.error(
+                "[PropertyManagement] propertyId is missing for claim:",
+                property
+              );
+              this.showError("매물 고유 ID가 없어 상세 정보를 열 수 없습니다.");
+              return;
+            }
+
+            // 공통 상세 패널 열기 (sales 쪽과 동일한 방식)
+            if (typeof window.openPropertyDetail === "function") {
+              window.openPropertyDetail(property.propertyId);
+            } else {
+              console.error(
+                "[PropertyManagement] openPropertyDetail function not found"
+              );
+              this.showError("매물 상세 정보를 표시할 수 없습니다.");
+            }
+          } catch (error) {
+            console.error("내 매물 상세보기 실패:", error);
+            this.showError(
+              `내 매물 상세보기 중 오류가 발생했습니다: ${error.message}`
+            );
+          }
+        }
 
     // 상세보기 모달 생성
     createAndShowDetailModal(property) {
@@ -1183,48 +1228,42 @@
       }
     }
 
-    // 판매 매물 필터 탭 스타일 업데이트
+    // 판매 매물 필터 탭 스타일 업데이트 (내 판매 매물 현황)
     updateSalesFilterTabs() {
       try {
-        // 거래 유형 필터 탭 업데이트
-        const transactionTabs = [
-          { id: "sales-all-tab", filter: "ALL" },
-          { id: "sales-sale-tab", filter: "SALE" },
-          { id: "sales-jeonse-tab", filter: "JEONSE" },
-          { id: "sales-wolse-tab", filter: "WOLSE" },
-        ];
+        // 공통 pill 스타일
+        const inactivePillClass =
+          "flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200 text-center";
+        const activePillClass =
+          "flex-1 px-3 py-1.5 text-[11px] rounded-full bg-white text-gray-900 font-medium shadow-sm text-center";
 
-        transactionTabs.forEach(({ id, filter }) => {
-          const tab = document.getElementById(id);
-          if (tab) {
-            if (filter === this.currentSalesTransactionFilter) {
-              tab.className =
-                "flex-1 px-3 py-2 text-xs border-b-2 border-blue-500 text-blue-600 font-medium text-center";
-            } else {
-              tab.className =
-                "flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center";
-            }
-          }
+        // 거래 유형 필터 탭 (전체 / 매매 / 전세 / 월세)
+        const transactionTabs = {
+          ALL: document.getElementById("sales-all-tab"),
+          SALE: document.getElementById("sales-sale-tab"),
+          JEONSE: document.getElementById("sales-jeonse-tab"),
+          WOLSE: document.getElementById("sales-wolse-tab"),
+        };
+
+        const currentTx = this.currentSalesTransactionFilter || "ALL";
+
+        Object.entries(transactionTabs).forEach(([key, el]) => {
+          if (!el) return;
+          el.className = key === currentTx ? activePillClass : inactivePillClass;
         });
 
-        // 활성 상태 필터 탭 업데이트
-        const activeTabs = [
-          { id: "active-all-tab", filter: "ALL" },
-          { id: "active-active-tab", filter: "ACTIVE" },
-          { id: "active-inactive-tab", filter: "INACTIVE" },
-        ];
+        // 활성 상태 필터 탭 (전체 / 활성 / 비활성)
+        const activeTabs = {
+          ALL: document.getElementById("active-all-tab"),
+          ACTIVE: document.getElementById("active-active-tab"),
+          INACTIVE: document.getElementById("active-inactive-tab"),
+        };
 
-        activeTabs.forEach(({ id, filter }) => {
-          const tab = document.getElementById(id);
-          if (tab) {
-            if (filter === this.currentSalesActiveFilter) {
-              tab.className =
-                "flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 text-center";
-            } else {
-              tab.className =
-                "flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center";
-            }
-          }
+        const currentActive = this.currentSalesActiveFilter || "ALL";
+
+        Object.entries(activeTabs).forEach(([key, el]) => {
+          if (!el) return;
+          el.className = key === currentActive ? activePillClass : inactivePillClass;
         });
 
         console.log("[PropertyManagement] Sales filter tabs updated");
@@ -1376,95 +1415,95 @@
       this.renderMyProperties();
     }
 
-    // 필터 탭 스타일 업데이트
+    // 필터 탭 스타일 업데이트 (내 매물 현황)
     updateFilterTabs() {
-      // 상태 필터 탭 업데이트
-      document
-        .querySelectorAll('[id^="property-"][id$="-tab"]')
-        .forEach((tab) => {
-          tab.className =
-            "flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center";
+      try {
+        // 공통 pill 스타일
+        const inactivePillClass =
+          "flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200 text-center";
+        const activePillClass =
+          "flex-1 px-3 py-1.5 text-[11px] rounded-full bg-white text-gray-900 font-medium shadow-sm text-center";
+
+        // 상태 필터 탭들 (전체 / 심사중 / 승인됨 / 거절됨)
+        const statusTabs = {
+          ALL: document.getElementById("property-all-tab"),
+          PENDING: document.getElementById("property-pending-tab"),
+          APPROVED: document.getElementById("property-approved-tab"),
+          REJECTED: document.getElementById("property-rejected-tab"),
+        };
+
+        const currentStatus = this.currentStatusFilter || "ALL";
+
+        Object.entries(statusTabs).forEach(([key, el]) => {
+          if (!el) return;
+          el.className = key === currentStatus ? activePillClass : inactivePillClass;
         });
 
-      const statusTabId =
-        this.currentStatusFilter === "ALL"
-          ? "property-all-tab"
-          : this.currentStatusFilter === "PENDING"
-          ? "property-pending-tab"
-          : this.currentStatusFilter === "APPROVED"
-          ? "property-approved-tab"
-          : "property-rejected-tab";
+        // 유형 필터 탭들 (전체 / 단순등록 / 판매등록)
+        const typeTabs = {
+          ALL: document.getElementById("type-all-tab"),
+          SIMPLE: document.getElementById("type-simple-tab"),
+          SALE: document.getElementById("type-sale-tab"),
+        };
 
-      const statusTab = document.getElementById(statusTabId);
-      if (statusTab) {
-        statusTab.className =
-          "flex-1 px-3 py-2 text-xs border-b-2 border-blue-500 text-blue-600 font-medium text-center";
-      }
+        const currentType = this.currentTypeFilter || "ALL";
 
-      // 유형 필터 탭 업데이트
-      document.querySelectorAll('[id^="type-"][id$="-tab"]').forEach((tab) => {
-        tab.className =
-          "flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center";
-      });
+        Object.entries(typeTabs).forEach(([key, el]) => {
+          if (!el) return;
+          el.className = key === currentType ? activePillClass : inactivePillClass;
+        });
 
-      const typeTabId =
-        this.currentTypeFilter === "ALL"
-          ? "type-all-tab"
-          : this.currentTypeFilter === "SIMPLE"
-          ? "type-simple-tab"
-          : "type-sale-tab";
-
-      const typeTab = document.getElementById(typeTabId);
-      if (typeTab) {
-        typeTab.className =
-          "flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 text-center";
+        console.log("[PropertyManagement] Ownership filter tabs updated");
+      } catch (error) {
+        console.error(
+          "[PropertyManagement] Error updating ownership filter tabs:",
+          error
+        );
       }
     }
 
     // 매물 목록 렌더링
-    renderMyProperties() {
-      const myPropertyList = document.getElementById("my-property-list");
-      if (!myPropertyList) return;
+        renderMyProperties() {
+          const myPropertyList = document.getElementById("my-property-list");
+          if (!myPropertyList) return;
 
-      myPropertyList.innerHTML = "";
+          myPropertyList.innerHTML = "";
 
-      const propertiesToShow =
-        this.filteredProperties.length > 0
-          ? this.filteredProperties
-          : this.myProperties;
+          // ✅ 항상 filteredProperties 기준으로 렌더링
+          const propertiesToShow = this.filteredProperties || [];
 
-      if (propertiesToShow.length === 0) {
-        myPropertyList.innerHTML = `
-        <div class="text-center py-8 text-gray-500">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-          </svg>
-          <p class="text-sm">
-            ${
-              this.currentStatusFilter === "ALL" &&
-              this.currentTypeFilter === "ALL"
-                ? "등록된 매물이 없습니다."
-                : "필터 조건에 맞는 매물이 없습니다."
-            }
-          </p>
-          <p class="text-xs mt-1">
-            ${
-              this.currentStatusFilter === "ALL" &&
-              this.currentTypeFilter === "ALL"
-                ? "내 매물을 등록해보세요!"
-                : "다른 필터를 선택해보세요."
-            }
-          </p>
-        </div>
-      `;
-        return;
-      }
+          if (propertiesToShow.length === 0) {
+            myPropertyList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+              <p class="text-sm">
+                ${
+                  this.currentStatusFilter === "ALL" &&
+                  this.currentTypeFilter === "ALL"
+                    ? "등록된 매물이 없습니다."
+                    : "필터 조건에 맞는 매물이 없습니다."
+                }
+              </p>
+              <p class="text-xs mt-1">
+                ${
+                  this.currentStatusFilter === "ALL" &&
+                  this.currentTypeFilter === "ALL"
+                    ? "내 매물을 등록해보세요!"
+                    : "다른 필터를 선택해보세요."
+                }
+              </p>
+            </div>
+          `;
+            return;
+          }
 
-      propertiesToShow.forEach((property) => {
-        const propertyCard = this.createPropertyCard(property);
-        myPropertyList.appendChild(propertyCard);
-      });
-    }
+          propertiesToShow.forEach((property) => {
+            const propertyCard = this.createPropertyCard(property);
+            myPropertyList.appendChild(propertyCard);
+          });
+        }
 
     // 매물 카드 생성
     createPropertyCard(property) {
@@ -1686,27 +1725,113 @@
     }
 
     // 이벤트 리스너 설정
-    setupEventListeners() {
-      // 내 매물 등록 버튼 (ID로 찾기)
-      const myPropertyBtn = document.getElementById("add-property-btn");
-      if (myPropertyBtn) {
-        myPropertyBtn.addEventListener("click", () => {
-          console.log("내 매물 등록 버튼 클릭됨");
-          this.showNewPropertyModal();
-        });
-      }
+        setupEventListeners() {
+          // 내 매물 등록 버튼 (ID로 찾기)
+          const myPropertyBtn = document.getElementById("add-property-btn");
+          if (myPropertyBtn) {
+            myPropertyBtn.addEventListener("click", () => {
+              console.log("내 매물 등록 버튼 클릭됨");
+              this.showNewPropertyModal();
+            });
+          }
 
-      // 백업: 클래스로도 찾기
-      const myPropertyBtnFallback = document.querySelector(
-        "#my-property-panel .bg-blue-600"
-      );
-      if (myPropertyBtnFallback && myPropertyBtnFallback !== myPropertyBtn) {
-        myPropertyBtnFallback.addEventListener("click", () => {
-          console.log("내 매물 등록 버튼 클릭됨 (fallback)");
-          this.showNewPropertyModal();
-        });
-      }
-    }
+          // 백업: 클래스로도 찾기
+          const myPropertyBtnFallback = document.querySelector(
+            "#my-property-panel .bg-blue-600"
+          );
+          if (myPropertyBtnFallback && myPropertyBtnFallback !== myPropertyBtn) {
+            myPropertyBtnFallback.addEventListener("click", () => {
+              console.log("내 매물 등록 버튼 클릭됨 (fallback)");
+              this.showNewPropertyModal();
+            });
+          }
+
+          // 상단 탭 전환 (소유 / 판매)
+          const ownershipTab = document.getElementById("ownership-tab");
+          if (ownershipTab) {
+            ownershipTab.addEventListener("click", () => {
+              this.switchTab("ownership");
+            });
+          }
+
+          const salesTab = document.getElementById("sales-tab");
+          if (salesTab) {
+            salesTab.addEventListener("click", () => {
+              this.switchTab("sales");
+            });
+          }
+
+          // 내 매물 상태 필터 탭
+          const statusFilters = {
+            "property-all-tab": "ALL",
+            "property-pending-tab": "PENDING",
+            "property-approved-tab": "APPROVED",
+            "property-rejected-tab": "REJECTED",
+          };
+
+          Object.entries(statusFilters).forEach(([id, status]) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.addEventListener("click", () => {
+                this.filterProperties(status, this.currentTypeFilter);
+              });
+            }
+          });
+
+          // 내 매물 유형 필터 탭 (단순 / 판매등록)
+          const typeFilters = {
+            "type-all-tab": "ALL",
+            "type-simple-tab": "SIMPLE",
+            "type-sale-tab": "SALE",
+          };
+
+          Object.entries(typeFilters).forEach(([id, type]) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.addEventListener("click", () => {
+                this.filterProperties(this.currentStatusFilter, type);
+              });
+            }
+          });
+
+          // 판매 매물 거래유형 필터 탭
+          const salesTransactionFilters = {
+            "sales-all-tab": "ALL",
+            "sales-sale-tab": "SALE",
+            "sales-jeonse-tab": "JEONSE",
+            "sales-wolse-tab": "WOLSE",
+          };
+
+          Object.entries(salesTransactionFilters).forEach(([id, t]) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.addEventListener("click", () => {
+                this.filterSalesProperties(t, this.currentSalesActiveFilter);
+              });
+            }
+          });
+
+          // 판매 매물 활성 상태 필터 탭
+          const salesActiveFilters = {
+            "active-all-tab": "ALL",
+            "active-active-tab": "ACTIVE",
+            "active-inactive-tab": "INACTIVE",
+          };
+
+          Object.entries(salesActiveFilters).forEach(([id, f]) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.addEventListener("click", () => {
+                this.filterSalesProperties(
+                  this.currentSalesTransactionFilter,
+                  f
+                );
+              });
+            }
+          });
+
+          console.log("[PropertyManagement] Event listeners initialized");
+        }
 
     // 새 매물 등록 모달 표시
     showNewPropertyModal() {
