@@ -282,6 +282,8 @@
     console.log(`[PropertyManagement] Switching to tab: ${tabName}`);
 
     try {
+      // 어떤 모달/패널에서 body 스크롤을 막아놨더라도 탭 바꿀 때는 항상 해제
+      document.body.style.overflow = "";
       // 유효한 탭 이름인지 확인
       const validTabs = ["ownership", "sales"];
       if (!validTabs.includes(tabName)) {
@@ -309,12 +311,16 @@
           this.updateSalesFilterTabs();
         }
         
-        // 판매 매물을 지도에 마커로 표시
+        // 판매 매물을 지도에 마커로 표시 (함수 있을 때만)
+      if (typeof this.showSalesPropertiesOnMap === "function") {
         this.showSalesPropertiesOnMap();
-      } else if (tabName === "ownership") {
-        // ownership 탭으로 돌아가면 마커 제거
-        this.clearSalesMarkersFromMap();
       }
+      } else if (tabName === "ownership") {
+      // ownership 탭으로 돌아가면 마커 제거 (함수 있을 때만)
+      if (typeof this.clearSalesMarkersFromMap === "function") {
+      this.clearSalesMarkersFromMap();
+      }
+       }
 
       console.log("[PropertyManagement] Tab switched successfully");
       return true;
@@ -369,11 +375,11 @@
       }
 
       if (activeTab === "ownership") {
-        ownershipContent.style.display = "block";
+        ownershipContent.style.display = "flex";
         salesContent.style.display = "none";
       } else {
         ownershipContent.style.display = "none";
-        salesContent.style.display = "block";
+        salesContent.style.display = "flex";
       }
 
       console.log("[PropertyManagement] Tab content updated");
@@ -384,3 +390,4 @@
 
   console.log("[PropertyManagement Part 2] Modal management methods loaded");
 })();
+

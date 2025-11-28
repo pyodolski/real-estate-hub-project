@@ -1026,60 +1026,52 @@ const RightSidePanels = {
             </button>
           </div>
 
-          <!-- 필터 탭 -->
+          <!-- 필터 영역 -->
           <div class="mb-4 flex-shrink-0">
-            <div class="flex border-b border-gray-200">
-              <button
-                id="property-all-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-blue-500 text-blue-600 font-medium text-center"
-                onclick="propertyManagement.filterProperties('ALL', 'ALL')"
+            <div class="flex items-center justify-between gap-3">
+
+              <!-- 상태 세그먼트 -->
+              <div class="inline-flex bg-gray-100 rounded-full p-0.5 flex-1">
+                <button
+                  id="property-all-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full bg-white text-gray-900 font-medium shadow-sm"
+                  onclick="propertyManagement.filterProperties('ALL', propertyManagement.currentTypeFilter || 'ALL')"
+                >
+                  전체
+                </button>
+                <button
+                  id="property-pending-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200"
+                  onclick="propertyManagement.filterProperties('PENDING', propertyManagement.currentTypeFilter || 'ALL')"
+                >
+                  심사 중
+                </button>
+                <button
+                  id="property-approved-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200"
+                  onclick="propertyManagement.filterProperties('APPROVED', propertyManagement.currentTypeFilter || 'ALL')"
+                >
+                  승인됨
+                </button>
+                <button
+                  id="property-rejected-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200"
+                  onclick="propertyManagement.filterProperties('REJECTED', propertyManagement.currentTypeFilter || 'ALL')"
+                >
+                  거절됨
+                </button>
+              </div>
+
+              <!-- 유형 드롭다운 (라벨 없음) -->
+              <select
+                id="type-filter-select"
+                class="text-[11px] border border-gray-300 rounded-full px-3 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                onchange="propertyManagement.filterProperties(propertyManagement.currentStatusFilter || 'ALL', this.value)"
               >
-                전체
-              </button>
-              <button
-                id="property-pending-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
-                onclick="propertyManagement.filterProperties('PENDING', 'ALL')"
-              >
-                심사 중
-              </button>
-              <button
-                id="property-approved-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
-                onclick="propertyManagement.filterProperties('APPROVED', 'ALL')"
-              >
-                승인됨
-              </button>
-              <button
-                id="property-rejected-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
-                onclick="propertyManagement.filterProperties('REJECTED', 'ALL')"
-              >
-                거절됨
-              </button>
-            </div>
-            <div class="flex border-b border-gray-100 mt-1">
-              <button
-                id="type-all-tab"
-                class="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 text-center"
-                onclick="propertyManagement.filterProperties(propertyManagement.currentStatusFilter, 'ALL')"
-              >
-                전체 유형
-              </button>
-              <button
-                id="type-simple-tab"
-                class="flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center"
-                onclick="propertyManagement.filterProperties(propertyManagement.currentStatusFilter, 'SIMPLE')"
-              >
-                단순 등록
-              </button>
-              <button
-                id="type-sale-tab"
-                class="flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center"
-                onclick="propertyManagement.filterProperties(propertyManagement.currentStatusFilter, 'SALE')"
-              >
-                판매 등록
-              </button>
+                <option value="ALL">전체</option>
+                <option value="SIMPLE">단순</option>
+                <option value="SALE">판매</option>
+              </select>
             </div>
           </div>
 
@@ -1093,60 +1085,52 @@ const RightSidePanels = {
 
         <!-- 내 판매 매물 현황 탭 콘텐츠 -->
         <div id="sales-content" class="flex-col flex-grow overflow-hidden" style="display: none;">
-          <!-- 판매 매물 필터 탭 -->
+          <!-- 판매 매물 필터 (상태 세그먼트 + 상태 드롭다운) -->
           <div class="mb-4 flex-shrink-0">
-            <div class="flex border-b border-gray-200">
-              <button
-                id="sales-all-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-blue-500 text-blue-600 font-medium text-center"
-                onclick="propertyManagement.filterSalesProperties('ALL', propertyManagement.currentSalesActiveFilter)"
+            <div class="flex items-center justify-between gap-3">
+
+              <!-- 거래 유형 세그먼트 -->
+              <div class="inline-flex bg-gray-100 rounded-full p-0.5 flex-1">
+                <button
+                  id="sales-all-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full bg-white text-gray-900 font-medium shadow-sm"
+                  onclick="propertyManagement.filterSalesProperties('ALL', propertyManagement.currentSalesActiveFilter || 'ALL')"
+                >
+                  전체
+                </button>
+                <button
+                  id="sales-sale-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200"
+                  onclick="propertyManagement.filterSalesProperties('SALE', propertyManagement.currentSalesActiveFilter || 'ALL')"
+                >
+                  매매
+                </button>
+                <button
+                  id="sales-jeonse-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200"
+                  onclick="propertyManagement.filterSalesProperties('JEONSE', propertyManagement.currentSalesActiveFilter || 'ALL')"
+                >
+                  전세
+                </button>
+                <button
+                  id="sales-wolse-tab"
+                  class="flex-1 px-3 py-1.5 text-[11px] rounded-full text-gray-600 hover:bg-gray-200"
+                  onclick="propertyManagement.filterSalesProperties('WOLSE', propertyManagement.currentSalesActiveFilter || 'ALL')"
+                >
+                  월세
+                </button>
+              </div>
+
+              <!-- 활성 여부 드롭다운 (라벨 없음) -->
+              <select
+                id="sales-active-select"
+                class="text-[11px] border border-gray-300 rounded-full px-3 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                onchange="propertyManagement.filterSalesProperties(propertyManagement.currentSalesTransactionFilter || 'ALL', this.value)"
               >
-                전체
-              </button>
-              <button
-                id="sales-sale-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
-                onclick="propertyManagement.filterSalesProperties('SALE', propertyManagement.currentSalesActiveFilter)"
-              >
-                매매
-              </button>
-              <button
-                id="sales-jeonse-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
-                onclick="propertyManagement.filterSalesProperties('JEONSE', propertyManagement.currentSalesActiveFilter)"
-              >
-                전세
-              </button>
-              <button
-                id="sales-wolse-tab"
-                class="flex-1 px-3 py-2 text-xs border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-center"
-                onclick="propertyManagement.filterSalesProperties('WOLSE', propertyManagement.currentSalesActiveFilter)"
-              >
-                월세
-              </button>
-            </div>
-            <div class="flex border-b border-gray-100 mt-1">
-              <button
-                id="active-all-tab"
-                class="flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 text-center"
-                onclick="propertyManagement.filterSalesProperties(propertyManagement.currentSalesTransactionFilter, 'ALL')"
-              >
-                전체
-              </button>
-              <button
-                id="active-active-tab"
-                class="flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center"
-                onclick="propertyManagement.filterSalesProperties(propertyManagement.currentSalesTransactionFilter, 'ACTIVE')"
-              >
-                활성
-              </button>
-              <button
-                id="active-inactive-tab"
-                class="flex-1 px-3 py-1 text-xs bg-white text-gray-500 hover:bg-gray-50 text-center"
-                onclick="propertyManagement.filterSalesProperties(propertyManagement.currentSalesTransactionFilter, 'INACTIVE')"
-              >
-                비활성
-              </button>
+                <option value="ALL">전체</option>
+                <option value="ACTIVE">활성</option>
+                <option value="INACTIVE">비활성</option>
+              </select>
             </div>
           </div>
 
