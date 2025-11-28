@@ -199,6 +199,7 @@ const PropertyDetailOverlay = {
                     </div>
                     <div class="flex gap-4 pt-2">
                       <button
+                        id="favorite-register-button-${suffix}"
                         class="flex-1 h-11 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700"
                       >
                         관심매물 등록

@@ -282,12 +282,10 @@
     const d = data || {};
     const suffix = buf;
 
-    // propertyId를 데이터 속성으로 저장 (시세예측 등에서 사용)
-    if (el.overlay) {
-      const propertyId = d._raw?.propertyId || d.id;
-      if (propertyId) {
-        el.overlay.dataset.propertyId = propertyId;
-      }
+     // propertyId를 데이터 속성으로 저장 (시세예측, 즐겨찾기 등에서 사용)
+    let propertyId = d._raw?.propertyId || d.id;
+    if (el.overlay && propertyId) {
+    el.overlay.dataset.propertyId = propertyId;
     }
 
     // 이미지
@@ -430,48 +428,54 @@
       });
     }
 
-    // 즐겨찾기 버튼
-    // ⭐ 즐겨찾기 버튼 (DB 연동)
-    if (el.favBtn) {
-      const favoredInitial = !!d.isFavorite;
-      el.favBtn.setAttribute("aria-pressed", favoredInitial.toString());
-      el.favIcon && el.favIcon.classList.toggle("text-red-500", favoredInitial);
+        // ⭐ 즐겨찾기 버튼 / 관심매물 등록 버튼 → 전역 toggleFavorite과 연동
+        if (el.favBtn) {
+          const overlay = getElems(buf).overlay;
+          const pid = overlay?.dataset?.propertyId || d._raw?.propertyId || d.id;
+          if (!pid) {
+            console.warn("favorite: propertyId 없음");
+          }
 
-      el.favBtn.onclick = async (e) => {
-        e.stopPropagation();
+          // 초기 즐겨찾기 상태: 전역 Set이 있으면 그걸 우선 사용
+          const favoredInitial =
+            (typeof window.isFavored === "function" && pid)
+              ? window.isFavored(pid)
+              : !!d.isFavorite;
 
-        const overlay = getElems(buf).overlay;
-        const propertyId =
-          overlay?.dataset?.propertyId || d._raw?.propertyId || d.id;
+          el.favBtn.setAttribute("aria-pressed", favoredInitial.toString());
+          if (el.favIcon) {
+            el.favIcon.setAttribute(
+              "fill",
+              favoredInitial ? "currentColor" : "none"
+            );
+            el.favIcon.classList.toggle("text-red-500", favoredInitial);
+            el.favIcon.classList.toggle("text-gray-600", !favoredInitial);
+          }
 
-        try {
-          const res = await fetch(`/api/properties/${propertyId}/favorite`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${localStorage.getItem("accessToken") || ""}`,
-              "Content-Type": "application/json"
-            }
-          });
+          const regBtn = document.getElementById(
+            `favorite-register-button-${suffix}`
+          );
+          if (regBtn) {
+            regBtn.textContent = favoredInitial
+              ? "관심매물 해제"
+              : "관심매물 등록";
+          }
 
-          if (!res.ok) throw new Error("favorite toggle failed");
+          const handler = (e) => {
+            e.stopPropagation();
+            if (!pid || typeof window.toggleFavorite !== "function") return;
+            window.toggleFavorite(pid);
+          };
 
-          const body = await res.json(); // { favored: true/false }
-          const favored = !!body.favored;
+          // 상단 하트 버튼 클릭 → 즐겨찾기 토글
+          el.favBtn.onclick = handler;
 
-          // UI 반영
-          el.favBtn.setAttribute("aria-pressed", favored.toString());
-          el.favIcon.classList.toggle("text-red-500", favored);
-
-          // in-memory 업데이트
-          d.isFavorite = favored;
-          if (d._raw) d._raw.favorite = favored;
-
-        } catch (err) {
-          console.error("Favorite toggle error", err);
-          alert("즐겨찾기 변경 실패");
+          // 하단 “관심매물 등록” 버튼 클릭 → 동일 토글
+          if (regBtn) {
+            regBtn.onclick = handler;
+          }
         }
-      };
-    }
+
     if (el.contactBtn) {
       el.contactBtn.onclick = () => {
         if (d.brokerId && window.ChatController) {
@@ -1150,11 +1154,10 @@
               contentDiv.appendChild(PredictionPanel.getElement());
             }
           } else if (t === "calculator") {
-            if (
-              typeof CalculatorPanel !== "undefined" &&
-              contentDiv.children.length === 0
-            ) {
-              contentDiv.appendChild(CalculatorPanel.getElement());
+            if (typeof CalculatorPanel !== "undefined") {
+              // 매물 바뀔 때마다 최신 propertyId 기준으로 다시 그림
+              contentDiv.innerHTML = "";
+              contentDiv.appendChild(CalculatorPanel.getElement(suffix));
             }
           }
         } else {

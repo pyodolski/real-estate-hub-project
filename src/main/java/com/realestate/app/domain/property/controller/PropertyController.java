@@ -93,11 +93,40 @@ public class PropertyController {
     }
 
     @GetMapping("/{propertyId}/jeonse-ratio")
-    public JeonseRatioResponse jeonseRatioByProperty(
+    public ResponseEntity<?> jeonseRatioByProperty(
             @PathVariable Long propertyId,
             @RequestParam(value = "salePriceFallback", required = false) BigDecimal salePriceFallback
     ) {
-        return jeonseRatioService.computeByProperty(propertyId, salePriceFallback);
+        try {
+            // 정상 계산
+            JeonseRatioResponse resp =
+                    jeonseRatioService.computeByProperty(propertyId, salePriceFallback);
+            return ResponseEntity.ok(resp);
+
+        } catch (ResponseStatusException e) {
+            // 예상된 비즈니스 에러 1: 전세 오퍼 없음 (404)
+            if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)
+                    && "전세 오퍼가 없습니다.".equals(e.getReason())) {
+
+                // 바디는 그냥 문자열이나 json 둘 다 가능
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("전세 오퍼가 없습니다.");
+                // 또는 body(Map.of("message", e.getReason())) 이런식으로
+            }
+
+            // 예상된 비즈니스 에러 2: 매매가(예측가) 없음 (503)
+            if (e.getStatusCode().equals(HttpStatus.SERVICE_UNAVAILABLE)
+                    && e.getReason() != null
+                    && e.getReason().contains("매매가(예측가)를 아직 구할 수 없습니다")) {
+
+                return ResponseEntity
+                        .status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(e.getReason());
+            }
+
+            throw e;
+        }
     }
 
     @PostMapping("/{id}/view")
