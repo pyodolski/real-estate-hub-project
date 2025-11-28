@@ -5,7 +5,7 @@ const BOX_ID = 'favorite-list';
 let bound = false;
 const inflight = new Set();
 
-// ✅ 전역 즐겨찾기 상태 (Set<number>)
+// 전역 즐겨찾기 상태 (Set<number>)
 export const favoritePropertyIds = new Set();
 window.favoritePropertyIds = favoritePropertyIds; // 디버깅용
 
@@ -52,12 +52,12 @@ function renderList(box, list) {
   for (const it of list) box.insertAdjacentHTML('beforeend', cardFromFavoriteDto(it));
 }
 
-// ✅ 즐겨찾기 여부 확인 (전역)
+// 즐겨찾기 여부 확인 (전역)
 window.isFavored = function(id) {
   return favoritePropertyIds.has(Number(id));
 };
 
-// ✅ 즐겨찾기 토글 (전역)
+// 즐겨찾기 토글 (전역)
 window.toggleFavorite = async function(id, btnElement) {
   const pid = Number(id);
   if (inflight.has(pid)) return;
@@ -83,7 +83,13 @@ window.toggleFavorite = async function(id, btnElement) {
         else favoritePropertyIds.delete(pid);
         updateAllHeartIcons(pid, res.favored);
     }
-    
+
+    if (typeof window.showToast === 'function') {
+        window.showToast(
+           res.favored ? '관심매물에 등록되었습니다.' : '관심매물에서 해제되었습니다.'
+        );
+    }
+
     // 즐겨찾기 패널 목록 갱신
     loadFavorites();
 
@@ -99,10 +105,12 @@ window.toggleFavorite = async function(id, btnElement) {
   }
 };
 
-// ✅ 화면 내 모든 해당 매물의 하트 아이콘 상태 업데이트
+// 화면 내 모든 해당 매물의 하트 아이콘 상태 업데이트
 function updateAllHeartIcons(id, isFavored) {
   // 1. 메인 리스트 / 추천 리스트의 하트 버튼들
-  const buttons = document.querySelectorAll(`button[data-property-id="${id}"].favorite-btn`);
+  const buttons = document.querySelectorAll(
+    `button[data-property-id="${id}"].favorite-btn`
+  );
   buttons.forEach(btn => {
     const svg = btn.querySelector('svg');
     if (isFavored) {
@@ -116,25 +124,46 @@ function updateAllHeartIcons(id, isFavored) {
     }
   });
 
-  // 2. 상세 패널의 하트 버튼 (ID가 다를 수 있음)
-  const detailBtnA = document.getElementById('favorite-button-a');
+  // 2. 상세 패널 A
+  const detailBtnA  = document.getElementById('favorite-button-a');
   const detailIconA = document.getElementById('favorite-icon-a');
-  const overlayA = document.getElementById('property-detail-overlay-a');
+  const overlayA    = document.getElementById('property-detail-overlay-a');
+  const detailRegA  = document.getElementById('favorite-register-button-a');
+
   if (overlayA && Number(overlayA.dataset.propertyId) === id) {
-     if (detailIconA) detailIconA.classList.toggle('text-red-500', isFavored);
-     if (detailBtnA) detailBtnA.setAttribute('aria-pressed', isFavored.toString());
+    if (detailIconA) {
+      detailIconA.setAttribute('fill', isFavored ? 'currentColor' : 'none');
+      detailIconA.classList.toggle('text-red-500', isFavored);
+      detailIconA.classList.toggle('text-gray-600', !isFavored);
+    }
+    if (detailBtnA) {
+      detailBtnA.setAttribute('aria-pressed', isFavored.toString());
+    }
+    if (detailRegA) {
+      detailRegA.textContent = isFavored ? '관심매물 해제' : '관심매물 등록';
+    }
   }
 
-  const detailBtnB = document.getElementById('favorite-button-b');
+  // 3. 상세 패널 B
+  const detailBtnB  = document.getElementById('favorite-button-b');
   const detailIconB = document.getElementById('favorite-icon-b');
-  const overlayB = document.getElementById('property-detail-overlay-b');
+  const overlayB    = document.getElementById('property-detail-overlay-b');
+  const detailRegB  = document.getElementById('favorite-register-button-b');
+
   if (overlayB && Number(overlayB.dataset.propertyId) === id) {
-     if (detailIconB) detailIconB.classList.toggle('text-red-500', isFavored);
-     if (detailBtnB) detailBtnB.setAttribute('aria-pressed', isFavored.toString());
+    if (detailIconB) {
+      detailIconB.setAttribute('fill', isFavored ? 'currentColor' : 'none');
+      detailIconB.classList.toggle('text-red-500', isFavored);
+      detailIconB.classList.toggle('text-gray-600', !isFavored);
+    }
+    if (detailBtnB) {
+      detailBtnB.setAttribute('aria-pressed', isFavored.toString());
+    }
+    if (detailRegB) {
+      detailRegB.textContent = isFavored ? '관심매물 해제' : '관심매물 등록';
+    }
   }
 }
-
-
 export async function loadFavorites() {
   const box = document.getElementById(BOX_ID);
   // box가 없어도 초기 로딩 시 favoritePropertyIds 채우기 위해 API 호출은 필요할 수 있음
@@ -143,7 +172,7 @@ export async function loadFavorites() {
   try {
     const list = await api('/api/properties/favorites', { params: { limit: 100 } });
     
-    // ✅ 전역 상태 업데이트
+    // 전역 상태 업데이트
     favoritePropertyIds.clear();
     list.forEach(item => favoritePropertyIds.add(item.propertyId));
 
@@ -200,3 +229,30 @@ export function initFavorites() {
     }
   });
 }
+
+// ====== 공통 토스트 메시지 함수 ======
+function showToast(message) {
+  let box = document.getElementById('global-toast');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'global-toast';
+    box.className =
+      'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center space-y-2';
+    document.body.appendChild(box);
+  }
+
+  const item = document.createElement('div');
+  item.className =
+    'px-4 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-100 transition-opacity duration-300';
+  item.textContent = message;
+
+  box.appendChild(item);
+
+  // 1.5초 뒤 서서히 사라지고 삭제
+  setTimeout(() => {
+    item.style.opacity = '0';
+    setTimeout(() => item.remove(), 300);
+  }, 1500);
+}
+
+window.showToast = showToast;
