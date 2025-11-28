@@ -115,6 +115,28 @@ public class AuctionController {
         return ResponseEntity.ok(response);
     }
 
+    /** 브로커: 내가 입찰한 경매 목록 조회 */
+    @GetMapping("/my-bids")
+    public ResponseEntity<List<MyBidResponse>> getMyBids(Authentication auth) {
+        Long brokerUserId = currentUserIdResolver.requireUserId(auth);
+        var bids = auctionService.getMyBids(brokerUserId);
+        var response = bids.stream()
+                .map(this::toMyBidResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    /** 오너: 경매 취소 (입찰이 없을 때만 가능) */
+    @DeleteMapping("/{auctionId}")
+    public ResponseEntity<Void> cancelAuction(
+            Authentication auth,
+            @PathVariable Long auctionId
+    ) {
+        Long ownerUserId = currentUserIdResolver.requireUserId(auth);
+        auctionService.cancelAuction(ownerUserId, auctionId);
+        return ResponseEntity.ok().build();
+    }
+
     private AvailablePropertyResponse toAvailablePropertyResponse(Property property) {
         return AvailablePropertyResponse.builder()
                 .id(property.getId())
@@ -153,6 +175,24 @@ public class AuctionController {
                 .amount(offer.getAmount())
                 .accepted(offer.getAccepted())
                 .createdAt(offer.getCreatedAt())
+                .build();
+    }
+
+    private MyBidResponse toMyBidResponse(AuctionOffer offer) {
+        var auction = offer.getAuction();
+        var property = auction.getProperty();
+        return MyBidResponse.builder()
+                .offerId(offer.getId())
+                .auctionId(auction.getId())
+                .propertyId(property.getId())
+                .propertyAddress(property.getAddress())
+                .auctionStatus(auction.getStatus().name())
+                .dealType(auction.getDealType().name())
+                .housetype(auction.getHousetype().name())
+                .myBidAmount(offer.getAmount())
+                .isAccepted(offer.getAccepted())
+                .bidCreatedAt(offer.getCreatedAt())
+                .auctionCreatedAt(auction.getCreatedAt())
                 .build();
     }
 
@@ -214,5 +254,21 @@ public class AuctionController {
         private BigDecimal areaM2;
         private Integer buildingYear;
         private LocalDateTime createdAt;
+    }
+
+    @Data
+    @Builder
+    public static class MyBidResponse {
+        private Long offerId;
+        private Long auctionId;
+        private Long propertyId;
+        private String propertyAddress;
+        private String auctionStatus;
+        private String dealType;
+        private String housetype;
+        private BigDecimal myBidAmount;
+        private Boolean isAccepted;
+        private LocalDateTime bidCreatedAt;
+        private LocalDateTime auctionCreatedAt;
     }
 }
