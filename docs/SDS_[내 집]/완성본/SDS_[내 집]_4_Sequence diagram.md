@@ -3836,3 +3836,169 @@ sequenceDiagram
 최종적으로 컨트롤러는 JeonseRatioResponse를 200 OK로 반환한다. 이 응답은 전세가율 숫자, 비교 평균, 해석 텍스트(높음/보통/낮음), 데이터 출처(실데이터/예측), 산출 불가 사유(데이터 없음/신뢰도 부족)를 포함한다. 클라이언트는 값이 존재하면 퍼센트로 렌더링하고, 비교 결과가 있으면 “전세가율 40.5% (주변 평균 35.0%, 높음)”와 같이 강조한다. 데이터가 아예 없거나 신뢰도 미달인 경우에는 “전세가율 정보를 제공할 수 없습니다” 메시지를 노출한다. 계산 중 DB 예외나 예측 서비스 장애가 발생하면 클라이언트는 재시도 버튼을 제공한다.
 
 ---
+
+# 33. 매물 비교(ComparisonGroup)
+
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant UI as Frontend
+    participant CGC as ComparisonGroupController
+    participant CGS as ComparisonGroupService
+    participant PropRepo as PropertyRepository
+    participant GroupRepo as ComparisonGroupRepository
+    participant ItemRepo as ComparisonItemRepository
+    participant WeightRepo as WeightRepository
+    participant DB as Database
+
+    User->>UI: 비교 그룹 화면 열기
+    UI->>CGC: GET /api/comparison/groups
+    CGC->>CGS: getGroups(userId)
+    CGS->>GroupRepo: findByUser(userId)
+    GroupRepo->>DB: SELECT groups
+    DB-->>GroupRepo: 결과 반환
+    GroupRepo-->>CGS: 그룹 목록
+    CGS-->>CGC: GroupResponse 목록
+    CGC-->>UI: 그룹 목록 표시
+
+    User->>UI: 새 비교 그룹 생성 요청
+    UI->>CGC: POST /api/comparison/groups {name}
+    CGC->>CGS: createGroup(userId, name)
+    CGS->>GroupRepo: save(newGroup)
+    GroupRepo->>DB: INSERT group
+    DB-->>GroupRepo: groupId
+    GroupRepo-->>CGS: 저장됨
+    CGS-->>CGC: GroupResponse
+    CGC-->>UI: 그룹 생성 완료
+
+    User->>UI: 매물 추가 선택
+    UI->>CGC: POST /api/comparison/groups/{id}/items {propertyId}
+    CGC->>CGS: addProperty(groupId, propertyId)
+    CGS->>PropRepo: findById(propertyId)
+    PropRepo->>DB: SELECT property
+    DB-->>PropRepo: Property
+    PropRepo-->>CGS: Property
+
+    CGS->>ItemRepo: save(ComparisonItem)
+    ItemRepo->>DB: INSERT item
+    DB-->>ItemRepo: itemId
+    ItemRepo-->>CGS: 저장됨
+
+    CGS-->>CGC: ItemResponse
+    CGC-->>UI: 매물 추가 완료
+
+    User->>UI: 점수 계산 요청
+    UI->>CGC: GET /api/comparison/groups/{id}/scores
+    CGC->>CGS: calculateScores(groupId)
+
+    CGS->>ItemRepo: findByGroup(groupId)
+    ItemRepo->>DB: SELECT items
+    DB-->>ItemRepo: item 목록
+    ItemRepo-->>CGS: items
+
+    CGS->>WeightRepo: findByGroup(groupId)
+    WeightRepo->>DB: SELECT weight
+    DB-->>WeightRepo: weight
+    WeightRepo-->>CGS: 가중치
+
+    CGS->>CGS: 점수 계산
+    CGS-->>CGC: ScoreResponse
+    CGC-->>UI: 점수 결과 표시
+```
+
+사용자가 비교 그룹 화면에 진입하면 시스템은 해당 사용자의 모든 비교 그룹을 조회하여 표시한다.  
+새 그룹 생성 요청 시 서비스는 그룹을 저장한 뒤 고유 ID를 반환한다. 이후 사용자가 특정 그룹에 매물을 추가하면, 서비스는 매물 존재 여부를 확인한 후 ComparisonItem을 생성해 DB에 저장한다.  
+사용자가 점수 계산을 요청하면 시스템은 그룹에 포함된 매물 목록과 설정된 가중치를 조회한 뒤 가격·면적·역세권 등 기준을 반영하여 각 매물의 점수를 계산해 반환한다.
+
+---
+
+# 34. 실거래가 조회(DealQuery)
+
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant UI as Frontend
+    participant Controller as DealController
+    participant Service as DealQueryService
+    participant PropRepo as PropertyRepository
+    participant DealRepo as RealEstateDealRepository
+    participant DB as Database
+
+    User->>UI: 매물 상세 페이지 진입
+    UI->>Controller: GET /api/deals?propertyId=123
+    Controller->>Service: getDealsByProperty(propertyId)
+
+    Service->>PropRepo: findById(propertyId)
+    PropRepo->>DB: SELECT property
+    DB-->>PropRepo: Property
+    PropRepo-->>Service: Property
+
+    Service->>Service: normalizeAddress(property.address)
+    Service->>DealRepo: findStrictMatches(normalized, area)
+    DealRepo->>DB: SELECT strict matches
+    DB-->>DealRepo: strict 결과
+    DealRepo-->>Service: strict 목록
+
+    alt strict 결과 없음
+        Service->>DealRepo: findLooseMatches(normalized, area)
+        DealRepo->>DB: SELECT loose matches
+        DB-->>DealRepo: loose 결과
+        DealRepo-->>Service: loose 목록
+    end
+
+    Service->>Service: 평균가 정렬 및 DTO 변환
+    Service-->>Controller: DealsListResponse
+    Controller-->>UI: 실거래 리스트 렌더링
+```
+
+사용자가 매물 상세 페이지에 진입하면 UI는 해당 매물의 실거래 데이터를 조회하기 위해 서버에 요청을 보낸다.  
+서비스는 매물 주소를 정규화한 뒤 strict 기준(도로명·시군구 일치 + 면적 ±10%)으로 먼저 실거래 내역을 검색한다.  
+strict 결과가 없다면 loose 기준(시군구 + 면적 ±10%)으로 추가 조회한다.  
+조회된 결과는 최근 거래일 기준으로 정렬되어 DTO 형태로 반환되며 UI는 이를 사용해 실거래 그래프·리스트 등을 보여준다.
+
+---
+
+# 35. 이상 매물 탐지(PriceAnomalyDetector)
+
+```mermaid
+sequenceDiagram
+    actor System as 시스템(Batch/Trigger)
+    participant Detector as PriceAnomalyDetector
+    participant PropRepo as PropertyRepository
+    participant DealRepo as RealEstateDealRepository
+    participant DB as Database
+
+    System->>Detector: evaluateProperty(propertyId)
+
+    Detector->>PropRepo: findById(propertyId)
+    PropRepo->>DB: SELECT property
+    DB-->>PropRepo: Property
+    PropRepo-->>Detector: Property
+
+    Detector->>Detector: normalizeAddress(property.address)
+
+    Detector->>DealRepo: findStrictMatches(address, area)
+    DealRepo->>DB: SELECT strict
+    DB-->>DealRepo: 결과
+    DealRepo-->>Detector: strict 목록
+
+    alt strict 없음
+        Detector->>DealRepo: findLooseMatches(address, area)
+        DealRepo->>DB: SELECT loose
+        DB-->>DealRepo: 결과
+        DealRepo-->>Detector: loose 목록
+    end
+
+    Detector->>Detector: computeAveragePrice(deals)
+    Detector->>Detector: computeDeviation(price, avgPrice)
+    Detector->>Detector: isAnomaly(deviation)
+
+    Detector-->>System: anomaly_alert = true/false
+```
+
+시스템(트리거 또는 매물 저장 시 실행)은 PriceAnomalyDetector에게 특정 매물의 이상 여부 평가를 요청한다.  
+탐지기는 매물의 주소와 면적을 기반으로 strict 또는 loose 매칭을 통해 관련 실거래 데이터를 불러온 뒤 평균 가격을 계산한다.  
+매물 가격과 실거래 평균 가격의 편차 비율을 계산해 threshold(예: 30%)을 초과하면 anomaly_alert를 true로 표시한다.  
+결과는 시스템 또는 매물 엔티티 업데이트 로직으로 전달되어 DB에 anomaly 상태를 반영하게 된다.
+
+---
