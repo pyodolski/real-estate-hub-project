@@ -128,6 +128,11 @@ public class AuctionService {
         BrokerProfile broker = brokerProfileRepo.findByUserId(brokerUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "broker profile not found"));
 
+        // 중복 입찰 방지
+        if (offerRepo.existsByAuctionAndBroker(auction, broker)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 해당 경매에 입찰하셨습니다");
+        }
+
         // 🔹 새 입찰 이전 최고 입찰자 (outbid 알림용)
         AuctionOffer prevTopOffer = offerRepo.findTopByAuctionOrderByAmountDesc(auction)
                 .orElse(null);
@@ -347,5 +352,47 @@ public class AuctionService {
     @Transactional(readOnly = true)
     public List<Property> getAvailablePropertiesForAuction(Long ownerUserId) {
         return propertyRepo.findAuctionAvailableProperties(ownerUserId);
+    }
+
+    /**
+     * 브로커: 내가 입찰한 경매 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AuctionOffer> getMyBids(Long brokerUserId) {
+        return offerRepo.findByBroker_UserIdOrderByCreatedAtDesc(brokerUserId);
+    }
+
+    /**
+     * 오너: 경매 취소
+     * - 입찰이 없을 때만 가능
+     */
+    @Transactional
+    public void cancelAuction(Long ownerUserId, Long auctionId) {
+        PropertyAuction auction = auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "auction not found"));
+
+        Property property = auction.getProperty();
+
+        // 오너 권한 체크
+        if (property.getOwner() == null || !property.getOwner().getId().equals(ownerUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "you are not the owner of this auction");
+        }
+
+        // 이미 완료된 경매는 취소 불가
+        if (auction.getStatus() == AuctionStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "completed auction cannot be cancelled");
+        }
+
+        // 입찰이 있으면 취소 불가 (브로커 보호)
+        long offerCount = offerRepo.countByAuction(auction);
+        if (offerCount > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "입찰이 존재하는 경매는 취소할 수 없습니다. 입찰 수: " + offerCount);
+        }
+
+        // 경매 삭제
+        auctionRepo.delete(auction);
+
+        log.info("Auction cancelled - auctionId: {}, ownerId: {}", auctionId, ownerUserId);
     }
 }

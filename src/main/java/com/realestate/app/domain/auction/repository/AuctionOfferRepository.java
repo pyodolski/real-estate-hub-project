@@ -2,6 +2,7 @@ package com.realestate.app.domain.auction.repository;
 
 import com.realestate.app.domain.auction.entity.AuctionOffer;
 import com.realestate.app.domain.auction.entity.PropertyAuction;
+import com.realestate.app.domain.broker_profile.BrokerProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -23,4 +24,10 @@ public interface AuctionOfferRepository extends JpaRepository<AuctionOffer, Long
     Optional<AuctionOffer> findTopByAuctionOrderByAmountDesc(PropertyAuction auction);
 
     List<AuctionOffer> findByAuction(PropertyAuction auction);
+
+    boolean existsByAuctionAndBroker(PropertyAuction auction, BrokerProfile broker);
+
+    List<AuctionOffer> findByBroker_UserIdOrderByCreatedAtDesc(Long brokerUserId);
+
+    long countByAuction(PropertyAuction auction);
 }
