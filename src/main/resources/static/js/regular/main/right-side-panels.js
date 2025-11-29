@@ -2139,6 +2139,776 @@ const RightSidePanels = {
       this.loadMyBids();
     }
   },
+    /**
+   * 경매 등록 가능 매물 조회 (집주인용)
+   */
+  async loadAvailableProperties() {
+    const listEl = document.getElementById('available-properties-list');
+    if (!listEl) return;
+
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      listEl.innerHTML = `
+        <div class="text-center text-gray-500 py-16">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <p class="text-lg font-medium">로그인이 필요한 기능입니다</p>
+        </div>
+      `;
+      return;
+    }
+
+    // 로딩 표시
+    listEl.innerHTML = `
+      <div class="flex justify-center items-center h-40">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch('/api/auctions/available-properties', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          listEl.innerHTML = `<div class="text-center text-gray-500 py-8">로그인이 필요합니다</div>`;
+          return;
+        }
+        throw new Error('등록 가능 매물 조회 실패');
+      }
+
+      const properties = await res.json();
+
+      if (!properties || properties.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center text-gray-500 py-16">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            <p class="text-lg font-medium mb-2">경매에 등록할 수 있는 매물이 없습니다</p>
+            <p class="text-sm text-gray-400">매물을 먼저 등록하거나, 이미 위임되지 않은 매물을 확인하세요</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = properties.map((property) => {
+        const area = property.areaM2 ? property.areaM2.toFixed(1) : '0.0';
+        const createdDate = new Date(property.createdAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        return `
+          <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow">
+            <!-- 상단: 제목 -->
+            <h3 class="font-bold text-gray-800 mb-2">${property.title}</h3>
+            
+            <!-- 중간: 정보 -->
+            <div class="space-y-1 mb-3">
+              <p class="text-sm text-gray-600 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                ${property.address}
+              </p>
+              <div class="flex gap-4 text-sm text-gray-600">
+                <span>📐 ${area}㎡</span>
+                <span>🏗️ ${property.buildingYear}년</span>
+              </div>
+              <p class="text-xs text-gray-400">등록일: ${createdDate}</p>
+            </div>
+            
+            <!-- 하단: 버튼 -->
+            <button
+              onclick="RightSidePanels.showAuctionCreateForm(${property.id})"
+              class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded-lg transition-colors text-sm"
+            >
+              경매 등록하기
+            </button>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+      listEl.innerHTML = `<div class="text-center text-red-500 py-8">매물 목록을 불러올 수 없습니다</div>`;
+    }
+  },
+
+  /**
+   * 집주인용 경매 패널 타브 전환
+   */
+  switchOwnerAuctionTab(tabName) {
+    const registerTab = document.getElementById('owner-auction-tab-register');
+    const manageTab = document.getElementById('owner-auction-tab-manage');
+    const registerContent = document.getElementById('owner-auction-content-register');
+    const manageContent = document.getElementById('owner-auction-content-manage');
+
+    if (tabName === 'register') {
+      registerTab.classList.add('border-orange-500', 'text-orange-600');
+      registerTab.classList.remove('border-transparent', 'text-gray-500');
+      manageTab.classList.remove('border-orange-500', 'text-orange-600');
+      manageTab.classList.add('border-transparent', 'text-gray-500');
+      
+      registerContent.classList.remove('hidden');
+      manageContent.classList.add('hidden');
+      
+      this.loadAvailableProperties();
+    } else if (tabName === 'manage') {
+      manageTab.classList.add('border-orange-500', 'text-orange-600');
+      manageTab.classList.remove('border-transparent', 'text-gray-500');
+      registerTab.classList.remove('border-orange-500', 'text-orange-600');
+      registerTab.classList.add('border-transparent', 'text-gray-500');
+      
+      manageContent.classList.remove('hidden');
+      registerContent.classList.add('hidden');
+      
+      // Step 7에서 구현할 loadMyAuctions() 호출
+      this.loadMyAuctions();
+    }
+  },
+
+  /**
+   * 집주인용 경매 패널 HTML 생성
+   */
+  renderOwnerAuctionPanel() {
+    return `
+      <!-- =================================================================== -->
+      <!-- 집주인용 경매 패널                                                  -->
+      <!-- =================================================================== -->
+      <aside
+        id="owner-auction-panel"
+        class="absolute top-0 w-[450px] bg-gray-50 p-0 flex flex-col h-full shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out"
+        style="right: 75px"
+      >
+        <!-- 헤더 -->
+        <div
+          class="flex justify-between items-center p-4 bg-white border-b flex-shrink-0 sticky top-0 z-10"
+        >
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-800">경매 관리</h2>
+            <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-0.5 rounded-full">OWNER</span>
+          </div>
+          <button
+            id="close-owner-auction-panel"
+            class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            title="경매 패널 닫기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="bg-white border-b flex-shrink-0">
+          <div class="flex">
+            <button
+              id="owner-auction-tab-register"
+              class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-orange-500 text-orange-600 transition-colors"
+              onclick="RightSidePanels.switchOwnerAuctionTab('register')"
+            >
+              경매 등록
+            </button>
+            <button
+              id="owner-auction-tab-manage"
+              class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
+              onclick="RightSidePanels.switchOwnerAuctionTab('manage')"
+            >
+              내 경매 관리
+            </button>
+          </div>
+        </div>
+
+        <!-- 경매 등록 컨텐츠 -->
+        <div id="owner-auction-content-register" class="flex-grow overflow-y-auto custom-scrollbar">
+          <div class="p-4">
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+              <p class="text-sm text-orange-800">
+                <strong>💡 경매 등록 안내</strong><br/>
+                등록된 매물 중 위임되지 않은 매물만 경매에 등록할 수 있습니다.
+              </p>
+            </div>
+            <div id="available-properties-list">
+              <!-- loadAvailableProperties()로 로드 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 내 경매 관리 컨텐츠 -->
+        <div id="owner-auction-content-manage" class="flex-grow overflow-y-auto custom-scrollbar hidden">
+          <div class="p-4">
+            <div id="my-auctions-list">
+              <!-- Step 7에서 구현 -->
+            </div>
+          </div>
+        </div>
+      </aside>
+    `;
+  },
+
+  /**
+   * 경매 등록 폼 표시 (Step 6에서 구현 예정)
+   */
+    /**
+   * 경매 등록 폼 표시
+   */
+  showAuctionCreateForm(propertyId) {
+    // 오늘 날짜를 YYYY-MM-DD 형식으로
+    const today = new Date().toISOString().split('T')[0];
+    
+    const modal = document.createElement('div');
+    modal.id = 'auction-create-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+        <!-- 헤더 -->
+        <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+          <h3 class="text-xl font-bold text-gray-800">경매 등록</h3>
+          <button id="close-auction-create-modal" class="p-2 hover:bg-gray-100 rounded-full">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 폼 -->
+        <form id="auction-create-form" class="p-6 space-y-6">
+          <!-- 거래 유형 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              거래 유형 <span class="text-red-500">*</span>
+            </label>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="radio" name="dealType" value="SALE" class="mr-2" required>
+                <span>매매</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="dealType" value="JEONSE" class="mr-2">
+                <span>전세</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="dealType" value="WOLSE" class="mr-2">
+                <span>월세</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 주택 유형 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              주택 유형 <span class="text-red-500">*</span>
+            </label>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="radio" name="housetype" value="APART" class="mr-2" required>
+                <span>아파트</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="housetype" value="BILLA" class="mr-2">
+                <span>빌라</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="housetype" value="ONE" class="mr-2">
+                <span>원룸</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 층수 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              층수 <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="floor"
+              min="1"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="예: 5"
+              required
+            >
+            <p class="text-xs text-gray-500 mt-1">1층 이상의 숫자를 입력하세요</p>
+          </div>
+
+          <!-- 관리비 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              관리비 (원)
+            </label>
+            <input
+              type="number"
+              name="maintenanceFee"
+              min="0"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="예: 150000"
+            >
+            <p class="text-xs text-gray-500 mt-1">선택 사항입니다</p>
+          </div>
+
+          <!-- 가격협상 가능 -->
+          <div>
+            <label class="flex items-center">
+              <input type="checkbox" name="negotiable" class="mr-2 w-4 h-4">
+              <span class="text-sm font-medium text-gray-700">가격 협상 가능</span>
+            </label>
+            <p class="text-xs text-gray-500 mt-1">체크 시 입찰자와 가격 협상이 가능합니다</p>
+          </div>
+
+          <!-- 옵션 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              옵션
+            </label>
+            <input
+              type="text"
+              name="oftion"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="예: 에어컨, 냉장고, 세탁기"
+            >
+            <p class="text-xs text-gray-500 mt-1">쉼표로 구분하여 입력하세요</p>
+          </div>
+
+          <!-- 입주 가능일 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              입주 가능일
+            </label>
+            <input
+              type="date"
+              name="availableFrom"
+              min="${today}"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+            <p class="text-xs text-gray-500 mt-1">오늘 이후 날짜를 선택하세요</p>
+          </div>
+
+          <!-- 버튼 -->
+          <div class="flex gap-3 pt-4 border-t">
+            <button
+              type="submit"
+              class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 rounded-lg transition-colors"
+            >
+              경매 등록하기
+            </button>
+            <button
+              type="button"
+              id="cancel-auction-create"
+              class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-lg transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 이벤트 리스너
+    const form = document.getElementById('auction-create-form');
+    const closeBtn = document.getElementById('close-auction-create-modal');
+    const cancelBtn = document.getElementById('cancel-auction-create');
+
+    // 폼 제출
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = {
+        dealType: formData.get('dealType'),
+        housetype: formData.get('housetype'),
+        floor: parseInt(formData.get('floor')),
+        maintenanceFee: formData.get('maintenanceFee') ? parseInt(formData.get('maintenanceFee')) : null,
+        negotiable: formData.get('negotiable') === 'on',
+        oftion: formData.get('oftion') || '',
+        availableFrom: formData.get('availableFrom') || null
+      };
+
+      // 검증
+      if (!data.dealType || !data.housetype || !data.floor) {
+        alert('필수 항목을 모두 입력해주세요');
+        return;
+      }
+
+      if (data.floor <= 0) {
+        alert('층수는 1층 이상이어야 합니다');
+        return;
+      }
+
+      await this.createAuction(propertyId, data);
+    });
+
+    // 닫기
+    const closeModal = () => {
+      modal.remove();
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  },
+
+  /**
+   * 경매 등록 API 호출
+   */
+  async createAuction(propertyId, data) {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      alert('로그인이 필요합니다');
+      window.location.href = '/loginO.html';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/auctions/properties/${propertyId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        alert('경매가 등록되었습니다!');
+        
+        // 모달 닫기
+        const modal = document.getElementById('auction-create-modal');
+        if (modal) modal.remove();
+
+        // "내 경매 관리" 탭으로 전환
+        this.switchOwnerAuctionTab('manage');
+      } else if (res.status === 401) {
+        alert('로그인이 필요합니다');
+        window.location.href = '/loginO.html';
+      } else if (res.status === 400) {
+        alert('입력 정보를 확인해주세요');
+      } else {
+        throw new Error('경매 등록 실패');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('경매 등록 중 오류가 발생했습니다');
+    }
+  },
+    /**
+   * 내 경매 목록 조회 (집주인용)
+   */
+  async loadMyAuctions() {
+    const listEl = document.getElementById('my-auctions-list');
+    if (!listEl) return;
+
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      listEl.innerHTML = `
+        <div class="text-center text-gray-500 py-16">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <p class="text-lg font-medium">로그인이 필요한 기능입니다</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = `
+      <div class="flex justify-center items-center h-40">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch('/api/auctions/my', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          listEl.innerHTML = `<div class="text-center text-gray-500 py-8">로그인이 필요합니다</div>`;
+          return;
+        }
+        throw new Error('내 경매 목록 조회 실패');
+      }
+
+      const auctions = await res.json();
+
+      if (!auctions || auctions.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center text-gray-500 py-16">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            <p class="text-lg font-medium">등록한 경매가 없습니다</p>
+            <p class="text-sm text-gray-400 mt-2">"경매 등록" 탭에서 매물을 경매에 등록하세요</p>
+          </div>
+        `;
+        return;
+      }
+
+      const dealTypeMap = { SALE: '매매', JEONSE: '전세', WOLSE: '월세' };
+      const houseTypeMap = { APART: '아파트', BILLA: '빌라', ONE: '원룸' };
+
+      listEl.innerHTML = auctions.map((auction) => {
+        const dealTypeKo = dealTypeMap[auction.dealType] || auction.dealType;
+        const houseTypeKo = houseTypeMap[auction.housetype] || auction.housetype;
+
+        let statusBadge = '';
+        if (auction.status === 'ONGOING') {
+          statusBadge = '<span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">진행중</span>';
+        } else if (auction.status === 'COMPLETED') {
+          statusBadge = '<span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">완료</span>';
+        } else {
+          statusBadge = '<span class="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">종료</span>';
+        }
+
+        const createdDate = new Date(auction.createdAt).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        let buttons = '';
+        if (auction.status === 'ONGOING') {
+          buttons += `<button onclick="RightSidePanels.showAuctionOffers(${auction.id})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm">입찰 보기</button>`;
+          if (auction.offerCount === 0) {
+            buttons += `<button onclick="RightSidePanels.cancelAuction(${auction.id}, '${auction.propertyAddress || ''}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg text-sm">❌ 경매 취소</button>`;
+          }
+        }
+
+        return `
+          <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-bold text-gray-800 flex-1">${auction.propertyAddress || '주소 정보 없음'}</h3>
+              ${statusBadge}
+            </div>
+            <div class="flex gap-2 mb-3">
+              <span class="text-xs bg-orange-50 text-orange-600 px-2 py-1 rounded">${dealTypeKo}</span>
+              <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">${houseTypeKo}</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">등록일: ${createdDate}</p>
+            ${buttons ? `<div class="flex gap-2">${buttons}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+      listEl.innerHTML = `<div class="text-center text-red-500 py-8">경매 목록을 불러올 수 없습니다</div>`;
+    }
+  },
+
+  async loadAuctionOffers(auctionId) {
+    const token = localStorage.getItem('accessToken');
+    if (!token) throw new Error('로그인이 필요합니다');
+
+    const res = await fetch(`/api/auctions/${auctionId}/offers`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) throw new Error('입찰 목록 조회 실패');
+    return await res.json();
+  },
+
+  async showAuctionOffers(auctionId) {
+    try {
+      const offers = await this.loadAuctionOffers(auctionId);
+      offers.sort((a, b) => b.amount - a.amount);
+
+      const modal = document.createElement('div');
+      modal.id = 'auction-offers-modal';
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+
+      const offersHtml = offers.length === 0
+        ? `<div class="text-center text-gray-500 py-16">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+            <p class="text-lg font-medium">아직 입찰이 없습니다</p>
+          </div>`
+        : offers.map((offer, index) => {
+            const bidDate = new Date(offer.createdAt).toLocaleDateString('ko-KR', {
+              year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            const isHighest = index === 0;
+            const acceptedBadge = offer.accepted 
+              ? '<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 flex items-center gap-1"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>수락됨</span>'
+              : '';
+
+            return `
+              <div class="bg-white border ${isHighest ? 'border-orange-400 border-2' : 'border-gray-200'} rounded-lg p-4 mb-3">
+                <div class="flex justify-between items-start mb-2">
+                  <div class="flex items-center gap-2">
+                    <p class="font-bold text-gray-800">${offer.brokerName}</p>
+                    ${isHighest ? '<span class="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">최고가</span>' : ''}
+                    ${acceptedBadge}
+                  </div>
+                </div>
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
+                  <p class="text-xs text-orange-600 mb-1">입찰 금액</p>
+                  <p class="text-2xl font-bold text-orange-700">${this.formatPrice(offer.amount)}</p>
+                </div>
+                <p class="text-xs text-gray-500 mb-3">입찰일: ${bidDate}</p>
+                ${!offer.accepted ? `<button onclick="RightSidePanels.acceptOffer(${offer.id}, ${auctionId}, '${offer.brokerName}', ${offer.amount})" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg text-sm">수락하기</button>` : ''}
+              </div>
+            `;
+          }).join('');
+
+      modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+          <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
+            <h3 class="text-xl font-bold text-gray-800">입찰 목록</h3>
+            <button id="close-offers-modal" class="p-2 hover:bg-gray-100 rounded-full">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="p-6">${offersHtml}</div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      const closeBtn = document.getElementById('close-offers-modal');
+      const closeModal = () => modal.remove();
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    } catch (e) {
+      console.error(e);
+      alert('입찰 목록을 불러올 수 없습니다');
+    }
+  },
+
+    async acceptOffer(offerId, auctionId, brokerName, amount) {
+    // 확인 대화상자
+    const confirmed = confirm(
+      `브로커 ${brokerName}님의 ${this.formatPrice(amount)} 입찰을 수락하시겠습니까?\n\n` +
+      `수락 시 경매가 즉시 종료되고 해당 브로커에게 위임됩니다.`
+    );
+
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      alert('로그인이 필요합니다');
+      window.location.href = '/loginO.html';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/auctions/offers/${offerId}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        alert('입찰이 수락되었습니다! 브로커에게 위임이 완료되었습니다.');
+        
+        // 모달 닫기
+        const modal = document.getElementById('auction-offers-modal');
+        if (modal) modal.remove();
+
+        // 목록 새로고침
+        this.loadMyAuctions();
+      } else if (res.status === 409) {
+        alert('이미 다른 입찰이 수락되었습니다');
+      } else if (res.status === 403) {
+        alert('권한이 없습니다');
+      } else if (res.status === 401) {
+        alert('로그인이 필요합니다');
+        window.location.href = '/loginO.html';
+      } else {
+        throw new Error('입찰 수락 실패');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('입찰 수락 중 오류가 발생했습니다');
+    }
+  },
+
+    async cancelAuction(auctionId, propertyAddress) {
+    // 확인 대화상자
+    const confirmed = confirm(
+      `${propertyAddress} 경매를 취소하시겠습니까?\n\n` +
+      `※ 입찰이 없는 경매만 취소 가능합니다.`
+    );
+
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      alert('로그인이 필요합니다');
+      window.location.href = '/loginO.html';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/auctions/${auctionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        alert('경매가 취소되었습니다.');
+        
+        // 목록 새로고침
+        this.loadMyAuctions();
+      } else if (res.status === 409) {
+        const errorData = await res.json().catch(() => ({}));
+        const message = errorData.message || '입찰이 존재하는 경매는 취소할 수 없습니다';
+        alert(message);
+      } else if (res.status === 403) {
+        alert('권한이 없습니다');
+      } else if (res.status === 401) {
+        alert('로그인이 필요합니다');
+        window.location.href = '/loginO.html';
+      } else {
+        throw new Error('경매 취소 실패');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('경매 취소 중 오류가 발생했습니다');
+    }
+  },
   /**
    * 경매 패널 HTML 생성
    */
@@ -2254,6 +3024,7 @@ const RightSidePanels = {
       ${this.renderComparePanel()}
       ${this.renderCommunityPanel()}
       ${this.renderAuctionPanel()}
+      ${this.renderOwnerAuctionPanel()}
       ${this.renderMyPropertyPanel()}
       ${this.renderBrokerListPanel()}
     `;
@@ -2274,6 +3045,7 @@ const RightSidePanels = {
       "compare-panel",
       "community-panel",
       "auction-panel",
+      "owner-auction-panel",
       "my-property-panel",
       "broker-list-panel",
     ];

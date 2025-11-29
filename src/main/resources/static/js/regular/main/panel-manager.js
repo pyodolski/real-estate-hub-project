@@ -87,6 +87,13 @@ document.addEventListener("DOMContentLoaded", () => {
       isOpen: false,
       width: 450,
     },
+    "owner-auction": {
+      panel: document.getElementById("owner-auction-panel"),
+      button: document.getElementById("owner-auction-button"),
+      closeButton: document.getElementById("close-owner-auction-panel"),
+      isOpen: false,
+      width: 450,
+    },
     "my-property": {
       panel: document.getElementById("my-property-panel"),
       button: document.getElementById("my-property-button"),
@@ -252,11 +259,21 @@ document.addEventListener("DOMContentLoaded", () => {
         initializeChatSearch();
       }
     }
+  
     if (panelName === "my-property" && window.propertyManagement) {
       window.propertyManagement.loadMyProperties();
     }
+
     if (panelName === "broker-list" && window.brokerManagement) {
       window.brokerManagement.loadBrokers();
+    }
+
+    if (panelName === "auction" && window.RightSidePanels) {
+      window.RightSidePanels.switchAuctionTab('ongoing');
+    }
+
+    if (panelName === "owner-auction" && window.RightSidePanels) {
+      window.RightSidePanels.switchOwnerAuctionTab('register');
     }
 
     if (panelName === "profile") {

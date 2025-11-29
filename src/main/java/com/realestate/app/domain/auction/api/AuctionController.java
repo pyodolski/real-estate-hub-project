@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -64,6 +65,7 @@ public class AuctionController {
 
     /** 브로커: 진행중인 경매 목록 조회 */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<AuctionResponse>> getOngoingAuctions() {
         var auctions = auctionService.getOngoingAuctions();
         var response = auctions.stream()
@@ -74,6 +76,7 @@ public class AuctionController {
 
     /** 경매 상세 조회 */
     @GetMapping("/{auctionId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<AuctionResponse> getAuction(@PathVariable Long auctionId) {
         var auction = auctionService.getAuction(auctionId);
         return ResponseEntity.ok(toAuctionResponse(auction));
@@ -81,6 +84,7 @@ public class AuctionController {
 
     /** 오너: 특정 경매의 입찰 목록 조회 */
     @GetMapping("/{auctionId}/offers")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<OfferResponse>> getOffers(
             Authentication auth,
             @PathVariable Long auctionId
@@ -95,6 +99,7 @@ public class AuctionController {
 
     /** 오너: 본인 경매 목록 조회 */
     @GetMapping("/my")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<AuctionResponse>> getMyAuctions(Authentication auth) {
         Long ownerUserId = currentUserIdResolver.requireUserId(auth);
         var auctions = auctionService.getMyAuctions(ownerUserId);
@@ -106,6 +111,7 @@ public class AuctionController {
 
     /** 오너: 경매 등록 가능한 매물 목록 조회 */
     @GetMapping("/available-properties")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<AvailablePropertyResponse>> getAvailableProperties(Authentication auth) {
         Long ownerUserId = currentUserIdResolver.requireUserId(auth);
         var properties = auctionService.getAvailablePropertiesForAuction(ownerUserId);
@@ -117,6 +123,7 @@ public class AuctionController {
 
     /** 브로커: 내가 입찰한 경매 목록 조회 */
     @GetMapping("/my-bids")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<MyBidResponse>> getMyBids(Authentication auth) {
         Long brokerUserId = currentUserIdResolver.requireUserId(auth);
         var bids = auctionService.getMyBids(brokerUserId);

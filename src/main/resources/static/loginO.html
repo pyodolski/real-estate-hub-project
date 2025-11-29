@@ -177,11 +177,11 @@
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </button>
-        <button id="auction-button"
+        <button id="owner-auction-button"
           class="w-full aspect-square bg-gray-100 hover:bg-gray-200 transition-all rounded-2xl p-2 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24"
             stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M1槌3 5l7 7-7 7M5 5l7 7-7 7" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             <g transform="scale(0.04) translate(0,0)">
               <path
                 d="M486.9 217.4L372.5 103c-18.7-18.7-49.1-18.7-67.9 0l-56.6 56.6-56.6-56.6c-18.7-18.7-49.1-18.7-67.9 0L9.1 217.4c-12.1 12.1-12.1 31.8 0 43.9l56.6 56.6L9.1 374.5c-12.1 12.1-12.1 31.8 0 43.9l113.1 113.1c12.1 12.1 31.8 12.1 43.9 0l56.6-56.6 56.6 56.6c12.1 12.1 31.8 12.1 43.9 0l114.3-114.3c18.7-18.7 18.7-49.1 0-67.9l-56.6-56.6 56.6-56.6c12.1-12.1 12.1-31.8 0-43.9zM338.6 385.9l-56.6-56.6 56.6-56.6 56.6 56.6-56.6 56.6zm-113.1-113.1l-56.6-56.6 56.6-56.6 56.6 56.6-56.6 56.6zM464 464H48c-26.5 0-48-21.5-48-48s21.5-48 48-48h416c26.5 0 48 21.5 48 48s-21.5 48-48 48z" />
@@ -221,6 +221,21 @@
         </svg>
       </button>
     </aside>
+    <!-- 집주인용 경매 패널 -->
+    <div id="owner-auction-panel" class="side-panel" style="display: none;">
+      <div class="side-panel-header">
+        <h3>내 경매 관리</h3>
+        <button id="close-owner-auction-panel" class="close-btn">×</button>
+      </div>
+      <div class="side-panel-content">
+        <div class="auction-tabs">
+          <button class="tab-btn active" data-tab="register">경매 등록</button>
+          <button class="tab-btn" data-tab="manage">경매 관리</button>
+        </div>
+        <div id="available-properties-list"></div>
+        <div id="my-auctions-list" style="display:none;"></div>
+      </div>
+    </div>
 
     <!-- 오른쪽 패널 토글 버튼 -->
     <button id="right-panel-toggle-button"
