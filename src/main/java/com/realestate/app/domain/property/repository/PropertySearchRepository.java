@@ -37,7 +37,8 @@ public class PropertySearchRepository {
               CAST(p.area_m2 AS integer)                AS area,
               -- 좌표계가 X=lng, Y=lat 라면 아래처럼 매핑하세요
               CAST(p.location_y AS double precision)    AS lat,
-              CAST(p.location_x AS double precision)    AS lng
+              CAST(p.location_x AS double precision)    AS lng,
+              p.anomaly_alert                           AS anomalyAlert
             FROM property_offers po
             JOIN properties p ON p.id = po.property_id
             WHERE po.is_active = true
@@ -149,6 +150,7 @@ public class PropertySearchRepository {
                     .area(rs.getObject("area") == null ? null : rs.getInt("area"))
                     .lat(rs.getObject("lat") == null ? null : rs.getDouble("lat"))
                     .lng(rs.getObject("lng") == null ? null : rs.getDouble("lng"))
+                    .anomalyAlert(rs.getObject("anomalyAlert") == null ? false : rs.getBoolean("anomalyAlert"))
                     // 추천용 필드는 초기값 세팅
                     .score(null)
                     .recommended(false)
@@ -172,7 +174,8 @@ public class PropertySearchRepository {
           p.address,
           CAST(p.area_m2 AS integer)                AS area,
           CAST(p.location_y AS double precision)    AS lat,
-          CAST(p.location_x AS double precision)    AS lng
+          CAST(p.location_x AS double precision)    AS lng,
+          p.anomaly_alert                           AS anomalyAlert
         FROM property_offers po
         JOIN properties p ON p.id = po.property_id
         WHERE po.is_active = true

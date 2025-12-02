@@ -566,6 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
             offers: [],
             images: [],
             maintenanceFee: null,
+            anomalyAlert: prop.anomalyAlert, // 허위매물 위험 여부
             _raw: prop
           };
         }));
