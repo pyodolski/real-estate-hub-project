@@ -4,6 +4,7 @@ import { debounce } from '../utils/debounce.js';
 import { renderMarkers, highlightMarker } from './markers.js';
 import { fetchPropertiesInBounds } from '../components/propertiesApi.js';
 import { renderMarkerPopup, closeMarkerPopup } from './marker-popup.js';
+import { getUserLocation } from './user-location.js';
 
 export function initMap(app) {
   const center = new naver.maps.LatLng(37.5665, 126.9780);
@@ -41,11 +42,18 @@ export function initMap(app) {
   // 최초 한 번 POI 레이어 초기화 (체크박스/토글 이벤트 등)
   initPoiLayers(app);
 
-  // 지도 렌더 후(첫 idle) map:ready 발행
+  // 지도 렌더 후(첫 idle) map:ready 발행 + 사용자 위치 가져오기
   naver.maps.Event.once(app.map, 'idle', () => {
     window.__MAP_IS_READY__ = true; // ✅ 지도 준비 완료 플래그
     window.dispatchEvent(new Event('map:ready'));
+    
+    // ✅ 사용자 현재 위치 가져오기 (지도 이동: false로 설정하여 기본 중심 유지)
+    // 페이지 로드 시 자동으로 현재 위치를 표시하려면 moveToLocation을 true로 변경
+    getUserLocation(app.map, false, 15);
   });
+
+  // ✅ 다른 스크립트에서 사용자 위치 기능을 호출할 수 있도록 전역으로 노출
+  window.getUserCurrentLocation = () => getUserLocation(app.map, true, 15);
 
   // (선택) 상단 상태 필터
   const statusFilterEl = document.getElementById('statusFilter');
