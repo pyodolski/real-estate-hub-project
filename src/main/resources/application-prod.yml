@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate # 운영은 스키마 강제 수정 금지
+      ddl-auto: validate    # 운영 스키마 보호
     open-in-view: false
 
   servlet:
@@ -21,18 +21,57 @@ spring:
       file-size-threshold: 2KB
       location: ${java.io.tmpdir}
 
-  flyway:
-    enabled: true # 운영 환경에서 마이그레이션 실행
+    # Gmail SMTP
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
-# 파일 업로드 설정 (운영 환경)
+  flyway:
+    enabled: true          # 운영에서는 Flyway 사용
+
+# 파일 업로드 (Railway / Docker 환경)
 app:
   profile-image-dir: uploads/profile-images
   file:
     upload-dir: ${FILE_UPLOAD_DIR:uploads/ownership}
 
-# Actuator 설정 (운영 환경에서는 제한적으로 노출)
+# 건강 체크
 management:
   endpoints:
     web:
       exposure:
         include: health, info
+
+# Railway는 PORT를 동적으로 제공 → 반드시 필요
+server:
+  port: ${PORT:8080}
+
+# JWT (환경변수에서 반드시 주입)
+jwt:
+  secret: ${JWT_SECRET}
+  access-exp-seconds: ${JWT_ACCESS_EXP_SECONDS:3600}
+
+# Supabase 설정
+supabase:
+  project-url: ${SUPABASE_PROJECT_URL}
+  service-key: ${SUPABASE_SERVICE_KEY}
+  storage:
+    bucket: property_image
+    base-folder: property
+
+# 네이버 지도/오픈API
+naver:
+  map:
+    client-id: ${NAVER_MAP_CLIENT_ID}
+    client-secret: ${NAVER_MAP_CLIENT_SECRET}
+  openapi:
+    client-id: ${NAVER_OPENAPI_CLIENT_ID}
+    client-secret: ${NAVER_OPENAPI_CLIENT_SECRET}

@@ -2,7 +2,7 @@
 // ES Module로 사용하는 공용 API 유틸
 
 // 서버 베이스 URL (window.BASE가 있으면 우선)
-export const BASE = (typeof window !== 'undefined' && window.BASE) || 'http://localhost:8080';
+export const BASE = (typeof window !== 'undefined' && window.BASE) || 'https://real-estate-hub-project-production.up.railway.app';
 
 // 토큰 유틸
 export function getToken() {

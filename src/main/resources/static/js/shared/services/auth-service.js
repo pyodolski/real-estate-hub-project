@@ -3,7 +3,7 @@
  * 로그인, 로그아웃, 토큰 관리 등 인증 관련 기능
  */
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://real-estate-hub-project-production.up.railway.app";
 
 export class AuthService {
   constructor(apiBaseUrl = API_BASE_URL) {

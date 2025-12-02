@@ -96,7 +96,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:3000", // 프론트 개발 서버
                 "http://localhost:5173", // Vite 등
-                "http://localhost:8080"  // 같은 포트에서 SPA 서빙 시
+                "http://localhost:8080",  // 같은 포트에서 SPA 서빙 시
+                "https://real-estate-hub-project-production.up.railway.app" // 우리 배포 사이트
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
