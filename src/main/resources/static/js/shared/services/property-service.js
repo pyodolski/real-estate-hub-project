@@ -3,7 +3,7 @@
  * 매물 조회, 검색, 상세 정보 가져오기 등 매물 관련 API 호출
  */
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://real-estate-hub-project-production.up.railway.app';
 
 export class PropertyService {
   constructor(apiBaseUrl = API_BASE_URL) {

@@ -4,7 +4,7 @@ import {
   searchSubwayStations,
   searchBusStations,
 } from "./poi-naver-local.js";
-// import { tm128ToLatLng } from '../utils/coord.js'; // 🔥 일단 주석
+// import { tm128ToLatLng } from '../utils/coord.js'; // 뭐 하는 건지 모름
 
 export function initPoiLayers(app) {
   const convToggle = document.getElementById("toggleConvenience");
@@ -63,7 +63,7 @@ function syncPoiMarkers(app, type, poiList) {
   }
 
   poiList.forEach((poi, idx) => {
-    // ✅ mapx / mapy 는 위경도 * 1e7 로 들어옴
+    //
     const lng = poi.mapx / 1e7;
     const lat = poi.mapy / 1e7;
 
@@ -107,6 +107,7 @@ function syncPoiMarkers(app, type, poiList) {
 
 // POI 타입별 아이콘 설정
 function getPoiIconConfig(type) {
+  // 이걸로 수정 바람
   switch (type) {
     case "convenience":
       return {
