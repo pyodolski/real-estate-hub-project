@@ -127,7 +127,7 @@ function createCompareCard(item) {
 
 // --- 메인 매물 카드 생성 함수 ---
 function createPropertyCard(property, index) {
-    const tagsHTML = (property.tags || [])
+    let tagsHTML = (property.tags || [])
         .map((tag) => {
             let colorClass = "bg-blue-100 text-blue-800";
             if (tag === "직거래") colorClass = "bg-green-100 text-green-800";
@@ -135,6 +135,12 @@ function createPropertyCard(property, index) {
             return `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded ${colorClass}">${tag}</span>`;
         })
         .join("");
+
+    // 허위매물 위험 배지 (별도 라인으로 분리)
+    let anomalyHtml = '';
+    if (property.anomalyAlert) {
+        anomalyHtml = `<div class="mt-2"><span class="text-xs font-semibold px-2.5 py-0.5 rounded bg-red-100 text-red-800">허위매물 위험</span></div>`;
+    }
 
     // data-property-id 속성 추가하여 클릭 시 올바른 매물 데이터를 찾을 수 있도록 함
     const propertyId = property.id || index || 0;
@@ -159,6 +165,7 @@ function createPropertyCard(property, index) {
                     <div class="mt-3">
                         ${tagsHTML}
                     </div>
+                    ${anomalyHtml}
                 </div>
             </div>
         `;

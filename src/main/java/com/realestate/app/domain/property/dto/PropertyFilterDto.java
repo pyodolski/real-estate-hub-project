@@ -28,6 +28,7 @@ public class PropertyFilterDto {
     private Integer area;
     private Double lat;
     private Double lng;
+    private Boolean anomalyAlert; // 허위매물 위험 여부
 
     // --- 추천 시스템에서 쓰는 추가 필드 ---
     private Double score;            // 코사인 유사도 점수
