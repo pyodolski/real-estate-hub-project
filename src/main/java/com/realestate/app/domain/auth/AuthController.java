@@ -82,7 +82,7 @@ public class AuthController {
     ) {
         String appBaseUrl = (baseUrl != null && !baseUrl.isBlank())
                 ? baseUrl
-                : "http://localhost:8080"; // 필요 시 환경변수/설정으로 분리
+                : "https://real-estate-hub-project-production.up.railway.app"; // 필요 시 환경변수/설정으로 분리
         auth.requestPasswordReset(req, appBaseUrl);
     }
 

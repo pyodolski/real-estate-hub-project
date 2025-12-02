@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080",
+      "value": "https://real-estate-hub-project-production.up.railway.app",
       "type": "string"
     },
     {
