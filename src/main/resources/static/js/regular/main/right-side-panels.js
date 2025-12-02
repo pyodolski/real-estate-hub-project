@@ -25,7 +25,7 @@ const RightSidePanels = {
       const favoritesWithImages = await Promise.all(
         favorites.map(async (f) => {
           let img =
-            f.thumbnailUrl || "https://via.placeholder.com/150?text=No+Image";
+            f.thumbnailUrl || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400";
           try {
             const imgRes = await fetch(
               `/api/properties/${f.propertyId}/images`,
@@ -571,7 +571,7 @@ const RightSidePanels = {
             g.items.map(async (item) => {
               let imgUrl =
                 item.thumbnailUrl ||
-                "https://via.placeholder.com/150?text=No+Image";
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=400";
               try {
                 const imgRes = await fetch(
                   `/api/properties/${item.propertyId}/images`,
