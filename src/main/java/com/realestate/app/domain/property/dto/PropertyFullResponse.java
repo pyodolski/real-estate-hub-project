@@ -44,7 +44,10 @@ public record PropertyFullResponse(
         Boolean favorite,
 
         @JsonProperty("favorite_count")
-        Long favoriteCount
+        Long favoriteCount,
+
+        @JsonProperty("anomaly_alert")
+        Boolean anomalyAlert
 ) {
     public static PropertyFullResponse from(Property p) {
         // 예전 코드 호환용 – 기본값: 즐찾 아님, 카운트 0
@@ -74,7 +77,8 @@ public record PropertyFullResponse(
                         .map(ImageResponse::from)
                         .toList(),
                 favorite,
-                favoriteCount
+                favoriteCount,
+                p.getAnomalyAlert()
         );
     }
 

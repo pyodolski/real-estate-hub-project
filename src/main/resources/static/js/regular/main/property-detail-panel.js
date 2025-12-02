@@ -73,10 +73,11 @@
               (p._raw && typeof p._raw.favorite !== "undefined"
                 ? !!p._raw.favorite
                 : !!p.favorite),
-            favoriteCount:
+        favoriteCount:
               typeof p.favoriteCount !== "undefined"
                 ? p.favoriteCount
                 : p._raw?.favoriteCount ?? 0,
+        anomalyAlert: p.anomalyAlert ?? p._raw?.anomalyAlert ?? false,
         _raw: p._raw || p,
       };
     }
@@ -210,8 +211,10 @@
         typeof p.favoriteCount !== "undefined"
           ? p.favoriteCount
           : p._raw?.favoriteCount ?? 0,
+      anomalyAlert: p.anomalyAlert ?? p._raw?.anomalyAlert ?? false,
       _raw: p,
     };
+    return normalized;
   }
 
   function getElems(buf) {
@@ -230,6 +233,7 @@
       favBtn: qs(`#favorite-button-${suffix}`),
       favIcon: qs(`#favorite-icon-${suffix}`),
       contactBtn: qs(`#contact-broker-button-${suffix}`),
+      anomalyBalloon: qs(`#anomaly-alert-balloon-${suffix}`),
     };
   }
 
@@ -286,6 +290,7 @@
     let propertyId = d._raw?.propertyId || d.id;
     if (el.overlay && propertyId) {
     el.overlay.dataset.propertyId = propertyId;
+    el.overlay.dataset.anomalyAlert = d.anomalyAlert; // Store anomaly alert status
     }
 
     // 이미지
@@ -493,6 +498,15 @@
       updateCloseButtonForFullscreen(buf, false);
       el.closeBtn.__eventSet = true;
     }
+
+    // 허위매물 위험 말풍선 표시
+    if (el.anomalyBalloon) {
+        if (d.anomalyAlert) {
+            el.anomalyBalloon.classList.remove("hidden");
+        } else {
+            el.anomalyBalloon.classList.add("hidden");
+        }
+    }
   }
 
   // 상세용 매물 찾기: 우선 /full API → 실패 시 로컬 properties
@@ -602,6 +616,7 @@
           brokerName: data.brokerName || data.broker_name || data.ownerName || "",
           brokerPhone: "",
           brokerId: data.brokerId || data.broker_id,
+          anomalyAlert: data.anomaly_alert, // API 응답에서 매핑
           offers, // 진짜 offers
           images: images || [],
           maintenanceFee,
