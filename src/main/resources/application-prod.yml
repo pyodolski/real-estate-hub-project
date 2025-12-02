@@ -21,6 +21,19 @@ spring:
       file-size-threshold: 2KB
       location: ${java.io.tmpdir}
 
+    # Gmail SMTP
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   flyway:
     enabled: true          # 운영에서는 Flyway 사용
 
@@ -53,19 +66,6 @@ supabase:
   storage:
     bucket: property_image
     base-folder: property
-
-# Gmail SMTP
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
 
 # 네이버 지도/오픈API
 naver:
