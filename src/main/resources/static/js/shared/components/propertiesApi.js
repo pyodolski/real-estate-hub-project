@@ -1,5 +1,5 @@
 // src/main/resources/static/js/api/propertiesApi.js
-const API = 'http://localhost:8080';
+const API = 'real-estate-hub-project-production.up.railway.app';
 
 function authHeaders() {
   const token = localStorage.getItem('accessToken');
